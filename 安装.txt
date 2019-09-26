@@ -1,0 +1,148 @@
+#设置hostname
+#vim /etc/hostname
+#vim /etc/hosts
+
+# 关闭selinux 否则mysql安装不成功
+setenforce 0 && sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+
+#设置服务器时区
+# 设置/etc/localtime的软连接地址
+ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+【yum】
+yum -y install epel-release wget unzip
+
+
+【java】
+#1.8.0_181 oracle官网下载指定版本jdk(需要登录oracle账户)
+tar -zxvf jdk-8u181-linux-x64.tar.gz  -C /data/jdk/ --strip-components 1
+#cat << EOF > /etc/profile.d/jdk.sh
+#export JAVA_HOME=/data/jdk
+#export PATH=$PATH:$JAVA_HOME/bin
+#EOF
+
+#source /etc/profile.d/jdk.sh
+
+【maven】
+
+【git】
+yum -y install git
+
+【node】
+yum -y install nodejs
+
+【grunt】
+
+【nginx】
+#yum默认安装nginx/1.12.2版本
+yum -y install nginx && systemctl enable nginx && systemctl restart nginx 
+ 
+【mysql】 
+#yum默认安装5.5.60-MariaDB MariaDB Server
+yum -y install mariadb-server
+#cp /etc/my.cnf /etc/my.cnf.bak
+#修改mysql配置文件
+
+mkdir -p /data/mysql/data /data/mysql/log /data/mysql/run
+
+systemctl enable mariadb
+systemctl restart mariadb	
+
+#默认root用户无密码(密码为空)
+#修改root密码并开放登录ip  
+GRANT ALL PRIVILEGES ON *.* TO root@'%' IDENTIFIED BY '【pass】';
+GRANT ALL PRIVILEGES ON *.* TO root@'localhost' IDENTIFIED BY '【pass】';
+FLUSH PRIVILEGES;
+
+firewall-cmd --permanent --zone=public --add-port=3306/tcp --permanent
+
+【redis】
+#3.2.12
+yum -y install redis && systemctl enable redis && systemctl restart redis	
+
+#开启远程访问 
+# 修改/etc/redis.conf 注释掉bind行 并将protected-mode设置为no
+# 设置防火墙开放6379端口
+# firewall-cmd --permanent --zone=public --add-port=6379/tcp --permanent(先检查防火墙是否开启)
+# systemctl restart firewalld 重启防火墙  /   firewall-cmd --reload （reload无效）
+	
+	
+【erlang】
+#Erlang R16B03-1 (erts-5.10.4)
+yum -y install erlang
+
+【rabbitmq】
+#下载 wget https://www.rabbitmq.com/releases/rabbitmq-server/v3.6.8/rabbitmq-server-3.6.8-1.el7.noarch.rpm
+yum -y install rabbitmq-server-3.6.6-1.el7.noarch.rpm 
+
+#启动
+systemctl enable rabbitmq-server && systemctl start rabbitmq-server
+#创建用户 默认的guest用户只能登录localhost
+rabbitmqctl add_user admin admin
+rabbitmqctl set_user_tags admin administrator 
+rabbitmqctl set_permissions -p "/" admin '.*' '.*' '.*'
+#开启rabbitmq控制台
+rabbitmq-plugins enable rabbitmq_management
+
+#开启远程访问
+firewall-cmd --permanent --zone=public --add-port=15672/tcp --permanent
+
+
+【elasticsearch】
+wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.2.3.tar.gz
+tar -zxvf elasticsearch-6.2.3.tar.gz -C /usr/local/elasticsearch --strip-components 1
+
+#修改配置
+#[1]: max file descriptors [4096] for elasticsearch process is too low, increase to at least [65536]
+# /etc/security/limits.conf追加内容
+#*               soft    nofile          262144
+#*               hard    nofile          262144
+
+#[1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+# /etc/sysctl.conf追加内容
+#vm.max_map_count=655360
+
+#sysctl -p
+
+#创建用户 es不能使用root账户启动
+adduser elasticsearch
+chown -R elasticsearch:elasticsearch /usr/local/elasticsearch
+
+#修改配置文件
+#elasticsearch.yml
+#network.host: 【ip】
+
+su - elasticsearch -c "/usr/local/elasticsearch/bin/elasticsearch -d"
+
+firewall-cmd --permanent --zone=public --add-port=9200/tcp --permanent
+
+systemctl restart firewalld
+
+【ik分词器】
+# ik分词器的版本必须与es版本一致
+wget https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.2.3/elasticsearch-analysis-ik-6.2.3.zip
+unzip elasticsearch-analysis-ik-6.2.3.zip -d /usr/local/elasticsearch/plugins/
+#重启es
+
+【es-head】
+git clone git://github.com/mobz/elasticsearch-head.git
+#npm install phantomjs-prebuilt@2.1.16 --ignore-script
+npm install
+npm run start >> es-head.log 2>&1 &
+
+firewall-cmd --permanent --zone=public --add-port=9100/tcp --permanent
+systemctl restart firewalld
+
+【consul】
+wget https://releases.hashicorp.com/consul/0.8.5/consul_0.8.5_linux_amd64.zip
+unzip consul_0.8.5_linux_amd64.zip -d /usr/local/bin/
+
+/usr/local/bin/consul agent -server -bootstrap-expect=1 -data-dir=/data/consul/data/node -client=0.0.0.0 -ui >> consul.log 2>&1 &
+
+firewall-cmd --permanent --zone=public --add-port=8500/tcp --permanent
+systemctl restart firewalld
+
+【应用】
+#开放80 25端口
+firewall-cmd --permanent --zone=public --add-port=80/tcp --permanent
+firewall-cmd --permanent --zone=public --add-port=25/tcp --permanent
