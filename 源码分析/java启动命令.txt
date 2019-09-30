@@ -1,0 +1,99 @@
+
+-cp                                         指定类运行所依赖其他类的路径，通常是类库，jar包 (jar包没有指定主类的话 启动时需要指定-cp和主类的名字)
+-classpath
+-javaagent
+-javaagent:xxx.jar                          指定一个代理程序 可以在加载前或运行时对应用进行代理
+
+-Xms[size]                                  指定堆的初始化大小 eg：-Xms2G  -Xms2048m  -Xms2097152K  - Xms2147483648 (单位不区分大小)
+-XX:InitialHeapSize=size
+
+-Xmx[size]                                  指定堆的最大大小  (对于server模式 建议Xms与Xmx设置一样大的值)
+-XX:MaxHeapSize=size
+
+-Xmn[size] 								    指定堆中新生代的初始化的值
+-XX:NewSize=size
+
+-Xss[size] 								    指定线程栈的大小
+-XX:ThreadStackSize=size
+
+-XX:MaxMetaspaceSize=size 					设置元数据大小(java8)
+-XX:MaxPermSize=size                        设置永久代大小(java8以下)
+
+-XX:MaxDirectMemorySize=size                设置Java Nio可以使用的最大直接内存
+
+-XX:+HeapDumpOnOutOfMemoryError             开启堆转储功能
+-XX:HeapDumpPath=path						指定堆转储文件地址
+-XX:OnOutOfMemoryError=command              设置发生OutOfMemoryError后执行的处理命令
+-XX:-OmitStackTraceInFastThrow              禁用省略异常栈信息从而快速抛出
+
+-XX:LogFile=path 							设置日志文件的地址 (默认当前目录hotspot.log)
+
+
+-XX:+PrintGCDetails                         打印详细GC日志
+-XX:+PrintGCDetails 
+-XX:+PrintGCDateStamps 
+-XX:+PrintTenuringDistribution 
+-XX:+PrintGCApplicationStoppedTime 
+
+-Xloggc:logs/gc.log 
+-XX:+UseGCLogFileRotation 
+-XX:NumberOfGCLogFiles=32 
+-XX:GCLogFileSize=64m 
+
+==============CMS====================
+-XX:+UseConcMarkSweepGC                     开启并行并发CMS垃圾回收器
+-XX:CMSMaxAbortablePrecleanTime=time        设置并发预清理阶段的执行时间
+-XX:+CMSScavengeBeforeRemark                开启在进行重新标记Remark之前，强制对新生代执行一次MinorGC
+-XX:CMSInitiatingOccupancyFraction=75 
+-XX:+UseCMSInitiatingOccupancyOnly 
+-XX:+UseCMSCompactAtFullCollection
+-XX:CMSFullGCsBeforeCompaction=1
+=====================================
+
+
+-XX:AutoBoxCacheMax                         设置自动装箱的缓存大小 如默认的Integer会缓存-128 ~ +127 
+-XX:+AlwaysPreTouch                         分配内存给jvm 而不是等到使用的时候再分配
+
+
+
+
+
+
+
+
+
+
+
+=====================================
+-D[property]=value                          设置系统属性
+
+-Djava.awt.headless=true 
+-Dfile.encoding=UTF-8 
+-Djna.nosys=true 
+
+-Dio.netty.noUnsafe=true 
+-Dio.netty.noKeySetOptimization=true 
+-Dio.netty.recycler.maxCapacityPerThread=0 
+
+-Dlog4j.shutdownHookEnabled=false 
+-Dlog4j2.disable.jmx=true 
+-Djava.io.tmpdir=/tmp/elasticsearch.7D3NBwwl 
+
+-Des.path.home=/usr/local/elasticsearch 
+-Des.path.conf=/usr/local/elasticsearch/config 
+
+-Dmaven.multiModuleProjectDirectory=D:\LocalGitRepository\yegoo-marking 
+-Dmaven.home=path
+-Dclassworlds.conf=path
+-DskipTests=true
+-Dmaven.test.skip=true
+
+...
+
+
+
+
+
+
+
+

@@ -1,0 +1,8 @@
+#安装samba
+yum -y install samba
+
+vim /etc/samba/smb.conf
+
+# 安装sshfs
+yum -y install fuse-sshfs 
+#yum -y install sshfs 

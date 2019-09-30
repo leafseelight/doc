@@ -1,0 +1,195 @@
+1.调用SpringApplication的静态run方法
+2.创建SpringApplication对象 初始化属性
+	初始化sources为空set集合
+	设置banner模式为CONSOLE
+	设置logStartInfo属性为true
+	设置添加commandLine属性为true，即允许启动完成后执行CommandLineRunner中定义的方法
+	设置headless属性为true
+	设置是否注册shutdown钩子为true，即允许通过调用特定方法停止程序
+	初始化额外的profiles为空set集合
+	设置是否定制environment标识为false
+	设置resource loader 默认流程中此时仍为null
+	设置主source (即主启动类,主启动类是一个JavaConfig,属于source的概念)
+	设置web应用类型(根据classpath下是否有指定类推断)
+		通过反射创建对象 如果创建成功 则classpath下存在该类
+		应用是SERVLET类型的必要条件是classpath下存在javax.servlet.Servlet和org.springframework.web.context.ConfigurableWebApplicationContext
+	设置initializer
+		【ApplicationContextInitializer的作用是设置应用上下文applicationContext】
+		加载META-INF/spring.factories配置文件 
+			如果classlader不为空 加载当前classpath下面的META-INF/spring.factories 否则加载系统用户目录下的META-INF/spring.factories
+			【扩展点: 多项目条件下可以配置全局的自定义factories，不推荐】
+		获取key为ApplicationContextInitializer的所有值 value即为ApplicationContextInitializer所有实现类的全路径名 结果会缓存到一个多值map中方便下次使用
+		创建所有ApplicationContextInitializer实例并根据@Order排序
+		
+			DelegatingApplicationContextInitializer 代理应用上下文初始化器	(spring-boot)
+			ContextIdApplicationContextInitializer (spring-boot)
+			RestartScopeInitializer (spring-boot-devtools)
+			ConfigurationWarningsApplicationContextInitializer (spring-boot)
+			ServerPortInfoApplicationContextInitializer (spring-boot)
+			SharedMetadataReaderFactoryContextInitializer (spring-boot-autoconfigure)
+			ConditionEvaluationReportLoggingListener (spring-boot-autoconfigure)
+		
+	设置listener
+	   【ApplicationListener的作用是在启动过程中通过监听事件以回调的方式处理一些逻辑】
+	   【ApplicationListener实现具体被调用是在SpringApplicationRunListener的相关方法中】
+		同上方式 创建所有ApplicationListener实例
+		
+			RestartApplicationListener    (spring-boot-devtools)
+			ConfigFileApplicationListener  (spring-boot)
+			AnsiOutputApplicationListener   (spring-boot)
+			LoggingApplicationListener       (spring-boot)
+			ClasspathLoggingApplicationListener  (spring-boot)
+			BackgroundPreinitializer          (spring-boot-autoconfigure)
+			DelegatingApplicationContextInitializer  (spring-boot)
+			ParentContextCloserApplicationListener    (spring-boot)
+			ClearCachesApplicationListener            (spring-boot)
+			FileEncodingApplicationListener            (spring-boot)
+			LiquibaseServiceLocatorApplicationListener  (spring-boot)
+			
+	设置主应用的class类型(推断)
+		手动创建一个RuntimeException 获取栈轨迹信息
+		方法名为main的栈轨迹对应的declaringClass就是主启动类
+		
+	
+
+3.调用对象的run方法 返回ConfigurableApplicationContext :【扩展点：可以手动创建SpringApplication对象 通过set属性值修改默认的配置 然后调用对象的run方法】
+	创建StopWatch 用于统计启动耗时
+	
+	处理headless属性
+		Headless模式是在缺少显示屏、键盘或者鼠标时的系统配置
+		设置系统java.awt.headless属性为初始化过程中设置的headless属性 默认流程为true
+		
+	创建SpringApplicationRunListeners对象listeners
+		SpringApplicationRunListeners封装了所有的SpringApplicationRunListener为一个list
+		SpringApplicationRunListener默认只有一个实现： 【扩展点: 可以自定义一个SpringApplicationRunListener实现类并设置到factories中】
+		EventPublishingRunlistener (spring-boot)
+	
+	调用listeners的starting()方法
+	
+	封装启动参数为ApplicationArguments
+		通过SimpleCommandLineArgsParser解析命令行参数为source (SimpleCommandLinePropertySource的子类)
+
+	=============================================================================================================================================
+	准备环境prepareEnvironment(listeners, applicationArguments)
+		如果springApplication对象手动设置了environment 则使用该environment 【扩展点：可以在创建springApplication对象时设置自定义environment】
+		否则根据web应用类型创建对应的environment
+			如果是SERVLET 则创建StandardServletEnvironment
+			如果是NONE 则创建StandardEnvironment
+			
+	配置environment的propertySource和profile
+		StubPropertySource {name='servletConfigInitParams'}         // 封装了servletConfigInitParams
+		StubPropertySource {name='servletContextInitParams'}        // 封装了servletContextInitParams
+		MapPropertySource {name='systemProperties'}                 // 封装了系统属性
+		SystemEnvironmentPropertySource {name='systemEnvironment'}  // 封装了环境变量
+		MapPropertySource {name='defaultProperties'}                // 封装了自定义的properties 如果存在的话 【扩展点: 可以在创建springApplication对象时设置自定义properties】
+		
+		如果springApplication对象的addCommandLineProperties属性为true(即允许添加命令行参数作为属性的话)，则设置命令行参数对应的source
+			【扩展点：可以在创建springApplicatin对象的时候设置是否允许使用命令行参数】
+			如果已经存在名为commandLineArgs的source 则进行合并
+			CompositePropertySource {name='commandLineArgs'}            // 组合封装了所有命令行参数
+				SimpleCommandLinePropertySource {name='springApplicationCommandLineArgs'} // 封装了命令行参数
+			否则直接创建SimpleCommandLinePropertySource {name='commandLineArgs'}
+			
+		
+		设置activeProfiles 如果在创建SpringApplication对象的时候设置了additionalProfiles 则进行合并
+		【扩展点：可以在创建springApplication的时候设置自定义的activeProfiles】
+
+
+	配置enviroment完成后，调用所有listeners的environmentPrepared方法
+		OriginAwareSystemEnvironmentPropertySource {name='systemEnvironment'}
+		RandomValuePropertySource {name='random'}
+		OriginTrackedMapPropertySource {name='applicationConfig: [classpath:/application.yml]'}
+		MapPropertySource {name='refresh'}
+
+
+	参数绑定bindToSpringApplication(environment)
+		处理属性中的占位符 解析具体的属性值进行设置 默认占位的格式为${} 以:分隔
+
+	如果isCustomEnvironment为false 则将environment转换为对应的容器环境类型的environment 默认会进行转换
+	【扩展点: 如果创建springApplication对象的时候手动设置了自定义的environment 则可以配置isCustomEnvironment为true 并配合设置web应用类型来将自定义的environment转换成对应的容器类型environment】
+
+	附加propertySource
+		SpringConfigurationPropertySources {name='configurationProperties'}
+
+	=========================================================================================================================================================
+	
+	设置spring.beaninfo.ignore系统属性 如果不存在则设置为true
+	spring.beaninfo.ignore作用： 跳过搜索BeanInfo类
+	
+	打印banner图
+	
+	==========================================================================================================================================================
+	创建应用上下文applicationContext
+	
+	如果web应用类型是SERVLET 则通过反射实例化org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext
+	如果web应用类型不是SERVLET或REACTIVE 则通过反射实例化org.springframework.context.annotation.AnnotationConfigApplicationContext
+
+	===========================================================================================================================================================
+	
+	创建exceptionReporters 用来处理一些异常报告
+		通过factories机制创建SpringBootExceptionReporter的实现类对象
+		
+	===========================================================================================================================================================
+	初始化应用上下文applicationContext的一些属性
+	prepareContext(context, environment, listeners, applicationArguments, printedBanner)
+		
+		给应用上下文设置环境setEnvironment
+		进行预处理postProcessApplicationContext
+			如果创建springApplication对象时指定了自定义的beanNameGenerator 则设置该beanNameGenerator并注册为单例
+			【扩展点：可以再创建springApplication时自定义bean名称生成器】
+			
+			如果创建springApplication对象时没有设置resourceLoader 则设置resourceLoader
+			
+		执行初始化器的initialize方法
+		
+		执行listeners的contextPrepared方法 处理上下文准备完成之后的逻辑
+		
+		如果logStartupInfo为true 【扩展点：可以在创建springApplication对象的时候设置logStartupInfo 表示不打印相关信息】
+			如果当前上下文是根上下文 则打印启动信息
+			如果mainApplicationClass属性为null 则使用SpringApplication类的logger进行打印操作 否则使用主启动类的logger打印
+			打印profile信息
+		
+			示例
+				Starting AppApplication on PC-201703081556 with PID 4920 (D:\LocalGitRepository\yegoo-marking\app\target\classes started by Administrator in D:\LocalGitRepository\yegoo-marking)  ：启动信息 INFO等级
+				Running with Spring Boot v2.0.6.RELEASE, Spring v5.0.10.RELEASE                                                                                                                    ：运行信息 DEBUG等级
+				No active profile set, falling back to default profiles: default                                                                                                                   ：profile信息 INFO等级
+				
+		注册applicationArguments为单例 bean名字为springApplicationArguments
+		注册printedBanner为单例 bean名字为springBootBanner
+		
+		校验primarySources属性和sources属性不能同时为空
+		获取合并后的sources
+		
+		load()方法加载bean  (重要)
+				
+		执行listeners的contextLoaded方法 处理上下文加载完成之后的逻辑		
+		
+	=====================================================================================================================================================================
+	刷新应用上下文
+	refreshContext(context)			
+		如果context是AbstractApplicationContext类型 则 todo
+		
+		
+		如果registerShutdownHook属性为true 注册shutdown钩子
+		【扩展点：创建springApplication对象的时候可以设置是否允许shutdown钩子】
+				
+	
+	
+	========================================================================================================================================================================			
+	打印启动耗时信息 从stopWatch获取信息		
+		示例 ：Started AppApplication in 65.108 seconds (JVM running for 72.244)
+
+	执行listeners的started方法
+	
+	=========================================================================================================================================================================
+	
+	容器启动成功后的最后一步回调
+	callRunners
+		获取所有ApplicationRunner类型对象和CommandLineRunner类型对象 并按照@Order排序	
+		遍历调用其run方法
+		
+		
+		
+		
+		
+		

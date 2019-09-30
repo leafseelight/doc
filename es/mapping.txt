@@ -1,0 +1,73 @@
+字符串
+	text       用于全文索引 该类型字段会通过分词器进行分词 最终构建索引
+	keyword    不分词
+	
+数值型
+		long
+		integer
+		short
+		byte
+		double
+		float
+		half_float
+		scaled_float
+		
+布尔boolean
+		false/"false"
+		true/"true"
+		
+日期date
+		es中没有date类型 因为json中没有date类型
+		es会format日期字符串 最终存储的是毫秒
+		
+二进制binary
+		把值当做base64编码的字符串 默认不存储 不可搜素
+		
+
+范围类型
+
+
+复杂类型
+
+
+=========================================================================
+
+字段属性：
+
+type    数据类型
+
+index   如果设置了index属性 则该字段会被创建一个倒排索引(相当于在该字段创建索引)
+
+store   是否存储(默认false) 都会存储 默认是存储在_source字段 如果store为true 则不会存储在_source 而存储在外部 适用于一些大字段
+
+doc_values  对not_analyzed字段，默认都是true。即不分词字段直接存储值
+
+format  如果数据类型是日期格式 需要格式字符串进行日期转换
+
+analyzer 分词器
+
+search_analyzer 搜索时的分词器 默认和analyzer一致
+
+boost  加权值
+
+fielddata
+
+null_value  设置缺失字段的初始化值 只有string可以使用。   分词字段的null值也会被分词
+
+similarity
+
+term_vector
+
+norms
+
+include_in_all
+
+index_options
+
+ignore_malformed
+
+precision_step
+
+
+
+		

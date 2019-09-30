@@ -1,0 +1,120 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by Fernflower decompiler)
+//
+
+package org.springframework.core.io.support;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Map.Entry;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.springframework.core.io.UrlResource;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
+
+/*
+ * factoryClass加载器
+ */
+public abstract class SpringFactoriesLoader {
+    public static final String FACTORIES_RESOURCE_LOCATION = "META-INF/spring.factories";    // factories资源路径
+    private static final Log logger = LogFactory.getLog(SpringFactoriesLoader.class);        // 日志
+    private static final Map<ClassLoader, MultiValueMap<String, String>> cache = new ConcurrentReferenceHashMap();  // 缓存 Map<类加载器, Map<factoryClass接口全路径名,factoryClass实现类全路径名>>
+
+    public SpringFactoriesLoader() {
+    }
+
+	/*
+	 * 获取指定factoryClass配置的所有实现类并实例化
+	 */
+    public static <T> List<T> loadFactories(Class<T> factoryClass, @Nullable ClassLoader classLoader) {
+        Assert.notNull(factoryClass, "'factoryClass' must not be null");
+        ClassLoader classLoaderToUse = classLoader;
+        if (classLoader == null) {
+            classLoaderToUse = SpringFactoriesLoader.class.getClassLoader();   // 默认使用SpringFactoriesLoader类的类加载器
+        }
+
+        List<String> factoryNames = loadFactoryNames(factoryClass, classLoaderToUse);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Loaded [" + factoryClass.getName() + "] names: " + factoryNames);
+        }
+
+        List<T> result = new ArrayList(factoryNames.size());
+        Iterator var5 = factoryNames.iterator();
+
+        while(var5.hasNext()) {
+            String factoryName = (String)var5.next();
+            result.add(instantiateFactory(factoryName, factoryClass, classLoaderToUse));
+        }
+
+        AnnotationAwareOrderComparator.sort(result);  // 按照@Order的值排序 
+        return result;
+    }
+
+	/*
+	 * 获取指定factoryClass配置的所有实现类
+	 */
+    public static List<String> loadFactoryNames(Class<?> factoryClass, @Nullable ClassLoader classLoader) {
+        String factoryClassName = factoryClass.getName();
+        return (List)loadSpringFactories(classLoader).getOrDefault(factoryClassName, Collections.emptyList());
+    }
+
+    private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoader classLoader) {
+        MultiValueMap<String, String> result = (MultiValueMap)cache.get(classLoader);  // 从缓存中获取
+        if (result != null) {
+            return result;
+        } else {
+            try {
+                Enumeration<URL> urls = classLoader != null ? classLoader.getResources("META-INF/spring.factories") : ClassLoader.getSystemResources("META-INF/spring.factories"); // 如果classLoader不为空则从classpath获取 否则从系统用户目录下获取该配置文件
+                LinkedMultiValueMap result = new LinkedMultiValueMap();
+
+                while(urls.hasMoreElements()) {
+                    URL url = (URL)urls.nextElement();
+                    UrlResource resource = new UrlResource(url);
+                    Properties properties = PropertiesLoaderUtils.loadProperties(resource); // 加载META-INF/spring.factories文件的内容
+                    Iterator var6 = properties.entrySet().iterator();
+
+                    while(var6.hasNext()) {
+                        Entry<?, ?> entry = (Entry)var6.next();
+                        List<String> factoryClassNames = Arrays.asList(StringUtils.commaDelimitedListToStringArray((String)entry.getValue()));
+                        result.addAll((String)entry.getKey(), factoryClassNames);
+                    }
+                }
+
+                cache.put(classLoader, result); // 放到缓存中
+                return result;
+            } catch (IOException var9) {
+                throw new IllegalArgumentException("Unable to load factories from location [META-INF/spring.factories]", var9);
+            }
+        }
+    }
+
+    private static <T> T instantiateFactory(String instanceClassName, Class<T> factoryClass, ClassLoader classLoader) {
+        try {
+            Class<?> instanceClass = ClassUtils.forName(instanceClassName, classLoader);
+            if (!factoryClass.isAssignableFrom(instanceClass)) {
+                throw new IllegalArgumentException("Class [" + instanceClassName + "] is not assignable to [" + factoryClass.getName() + "]");
+            } else {
+                return ReflectionUtils.accessibleConstructor(instanceClass, new Class[0]).newInstance();  // 反射创建实现类的实例
+            }
+        } catch (Throwable var4) {
+            throw new IllegalArgumentException("Unable to instantiate factory class: " + factoryClass.getName(), var4);
+        }
+    }
+}

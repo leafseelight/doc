@@ -1,0 +1,2 @@
+Automatic Resource Management (ARM)
+自动资源管理
