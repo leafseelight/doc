@@ -1,0 +1,324 @@
+========================html=========================
+meta
+
+<!-- 视口 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+width属性设置屏幕宽度，比如320表示320像素，device-width表示使用原始的分辨率 即设备的屏幕宽度
+initial-scale属性是视口最初的比例 当设置为 1.0 时，将呈现设备的原始宽度 即按照1:1的比例呈现 不缩放
+user-scalable=no 表示禁用缩放(zooming)
+maximum-scale=1.0 与 user-scalable=no 一起使用来禁用缩放功能 只能滚动屏幕
+
+
+
+
+
+=========================css==========================
+全局显示
+	body  移除了body的边距
+	
+排版样式	
+	使用 @font-family-base、 @font-size-base 和 @line-height-base 属性作为排版样式
+
+全局链接	
+	通过属性 @link-color 设置全局链接的颜色
+	
+通过Normalize.css为Html元素的默认样式提供了跨浏览器的一致性
+
+
+	:before 伪元素防止上边距崩塌
+	:after 伪元素清除浮动
+
+	.container      容器 默认情况下容器不能嵌套。左右外边距margin-right、margin-left由浏览器控制 padding-right、padding-left内边距固定宽度。
+	
+	.img-responsive 图片响应式布局
+	
+	
+=========================== 网格系统 Grid System ====================================	
+响应式、移动设备优先、不固定的流式网格系统，随着屏幕或视口尺寸的增加 系统会自动分为最多12列
+
+	行必须放置在 .container class 内，以便获得适当的对齐（alignment）和内边距（padding）。
+	使用行来创建列的水平组。
+	内容应该放置在列内，且唯有列可以是行的直接子元素。
+	预定义的网格类，比如 .row 和 .col-xs-4，可用于快速创建网格布局。LESS 混合类可用于更多语义布局。
+	列通过内边距（padding）来创建列内容之间的间隙。该内边距是通过 .rows 上的外边距（margin）取负，表示第一列和最后一列的行偏移。
+	网格系统是通过指定您想要横跨的十二个可用的列来创建的。例如，要创建三个相等的列，则使用三个 .col-xs-4。
+	
+	<div class="container">
+		<div class="row">
+			<div class="col-*-*"></div>
+			<div class="col-*-*"></div>      
+		</div>
+		<div class="row">...</div>
+		</div>
+	<div class="container">
+	
+	.col-xs-  超小设备手机  不支持偏移
+	.col-sm-  小型设备
+	.col-md-  中型设备
+	.col-lg-  大型设备
+	
+	.col-md-offset-*  偏移列：把一个列的左外边距（margin）增加 * 列  * 范围是从 1 到 11
+	
+	.row 可以嵌套 嵌套列 最大也是12列
+	
+	列排序：
+		.col-md-push-*   右偏移*列
+		.col-md-pull-*   左偏移*列
+	
+媒体查询
+
+================================ 排版 =================================================
+使用 Helvetica Neue、 Helvetica、 Arial 和 sans-serif 作为其默认的字体栈
+
+标题：
+	默认定义了标题h1~h6的样式
+	
+内联子标题
+	内嵌<small>或者使用.small类。字号更小颜色更浅
+	
+引导主体副本
+	.lead类  更大更粗行高更高 使段落突出显示
+	
+强调
+	html默认标签<small>缩小为85%  <strong>加粗  <em>斜体
+	
+	.text-left        向左对齐文本
+	.text-center      居中对齐文本
+	.text-right       向右对齐文本
+	.text-justify     设定文本对齐,段落中超出屏幕部分文字自动换行
+	.text-nowrap	  段落中超出屏幕部分不换行
+	.text-lowercase   设定文本小写
+	.text-uppercase   设定文本大写
+	.text-capitalize  设定单词首字母大写
+	.text-muted       文本内容减弱    浅灰色
+	.text-primary     文本带primary类 蓝色
+	.text-success     文本带success类 绿色
+	.text-info        文本带info类    浅蓝色
+	.text-warning     文本带warning类 棕色
+	.text-danger      文本带danger类  红色
+	
+缩写
+	<abbr>  文本底部加一条虚线框 title属性展示鼠标悬停展示完整的文本  .initialism类使字体变小
+	
+地址
+	<address>  在网页上显示联系信息
+			   <address>默认为 display:block;需要<br>为封闭的地址文本换行
+			
+引用
+	<blockquote>  .pull-right右对齐
+	
+列表
+	有序列表  以数字或其他有序字符开头的列表
+	无序列表  没有特定顺序的列表 以传统的着重号开头  可以使用.list-unstyled移除着重号 使用.list-inline把所有列表项放到同一行
+	定义列表  <dt>表头 <dd>表数据
+
+	
+======================================== 代码 ========================================================	
+显示代码： 即直接展示html标签 而不被解释		
+1.使用<code>包裹  内联显示代码
+2.使用<pre>包裹   块级显示代码   多行代码带有滚动条使用.pre-scrollable
+	被包围的代码 开始结束标签需要使用&lt; 和 &gt;
+	
+<var>表示变量
+<kbd>按键提示CTRL + P
+<samp>电脑程序输出: Sample output
+
+========================================== 表格 ==========================================================
+<table>     表格  .table基础样式
+<thread>    表格标题行的容器元素（<tr>），用来标识表格列
+<tbody>     表格主体中的表格行的容器元素（<tr>）
+<tr>        一组出现在单行上的表格单元格的容器元素（<td> 或 <th>）
+<td>        默认的表格单元格
+<th>        特殊的表格单元格，用来标识列或行（取决于范围和位置）。必须在 <thead> 内使用
+<caption>	关于表格存储内容的描述或总结
+
+响应式表格
+通过把任意的 .table 包在 .table-responsive class 内，您可以让表格水平滚动以适应小型设备
+<div class="table-responsive"><table class=".table"></table></div>
+
+=========================================== 表单 ============================================================
+垂直表单 基本表单
+	向父 <form> 元素添加 role="form"。
+	把标签和控件放在一个带有 class .form-group 的 <div> 中。这是获取最佳间距所必需的。
+	向所有的文本元素 <input>、<textarea> 和 <select> 添加 class ="form-control" 
+	
+内联表单
+	 <form>  添加.form-inline类
+
+水平表单【重要】
+	向父 <form> 元素添加 class .form-horizontal
+	把标签和控件放在一个带有 class .form-group 的 <div> 中
+	向标签添加 class .control-label
+	
+表单控件
+		输入框input
+		文本框Textarea
+		复选框Checkbox     .checkbox-inline
+		单选框Radio        .radio-inline
+		选择框Select       multiple="multiple" 可多选
+
+	静态控件
+		表单标签后面放置静态纯文本而不是表单控件 .form-control-static 静态纯文本
+		
+	表单控件状态
+		输入框焦点 :focus
+		禁用输入框 disabled属性 不仅会禁用输入框 还会改变输入框的样式和鼠标的指针悬停在元素上时鼠标指针的样式
+		禁用字段集 对 <fieldset> 添加 disabled 属性来禁用 <fieldset> 内的所有控件
+		验证状态 .has-warning、 .has-error 或 .has-success
+		
+	表单控件大小
+		.input-lg 和 .col-lg-* 来设置表单的高度和宽度
+	
+	表单帮助文本  <input> 后使用 .help-block
+	
+============================================= 按钮 ==============================================================================	
+任何带有 class .btn 的元素都会继承圆角灰色按钮的默认外观
+
+	.btn    		基本样式
+	.btn-default    默认/标准按钮
+	.btn-primary    原始按钮样式（未被操作）  蓝色
+	.btn-success    表示成功的动作
+	.btn-info       该样式可用于要弹出信息的按钮
+	.btn-warning    表示需要谨慎操作的按钮
+	.btn-danger     表示一个危险动作的按钮操作
+	.btn-link       让按钮看起来像个链接 (仍然保留按钮行为)
+	.btn-lg         制作一个大按钮
+	.btn-sm         制作一个小按钮
+	.btn-xs         制作一个超小按钮
+	.btn-block      块级按钮(拉伸至父元素100%的宽度)
+	.active         按钮被点击
+	.disabled       禁用按钮
+	
+	.btn-group           按钮组  
+	.btn-group-lg|sm|xs  控制按钮组的大小
+	.btn-group-vertical  按钮组垂直方向
+	.btn-group-justified 自适应大小的按钮组
+	
+	内嵌下拉菜单的按钮组
+		button 加属性data-toggle="dropdown" 并定义一个列表
+		
+================================================ 图片 ====================================================================================
+<img>
+	.img-rounded	 添加 border-radius:6px 来获得图片圆角
+	.img-circle      添加 border-radius:50% 来让整个图片变成圆形
+	.img-thumbnail   添加一些内边距（padding）和一个灰色的边框    缩略图功能
+	.img-responsive  图片响应式 (将很好地扩展到父元素) .img-responsive 类将 max-width: 100%; 和 height: auto; 样式应用在图片上
+	
+================================================ 其他 ===================================================================================
+文本
+	同上
+背景
+	.bg-primary
+	.bg-success
+	.bg-info
+	.bg-warning
+	.bg-danger
+其他
+	.pull-left		元素浮动到左边
+	.pull-right 	元素浮动到右边
+	.center-block   设置元素为 display:block 并居中显示
+	.clearfix		清除浮动
+	.show			强制元素显示
+	.hidden			强制元素隐藏
+	.sr-only        除了屏幕阅读器外，其他设备上隐藏元素
+	.sr-only-focusable    与 .sr-only 类结合使用，在元素获取焦点时显示(如：键盘操作的用户)
+	.text-hide		将页面元素所包含的文本内容替换为背景图
+	.close			显示关闭按钮
+	.caret			显示下拉式功能
+
+
+
+
+	
+	
+字体图标Glyphicons 
+下拉菜单Dropdowns
+	.dropdown				指定下拉菜单，下拉菜单都包裹在 .dropdown 里
+	.dropdown-menu			创建下拉菜单
+	.dropdown-menu-right	下拉菜单右对齐
+	.dropdown-header		下拉菜单中添加标题
+	.dropup					指定向上弹出的下拉菜单
+	.disabled				下拉菜单中的禁用线
+	.divider				下拉菜单中的分割线
+按钮组
+	.btn-group			    组合.btn形成最基本的按钮组  
+	.btn-toolbar		    把几组 <div class="btn-group"> 结合到一个 <div class="btn-toolbar"> 中，一般获得更复杂的组件
+	.btn-group-lg 			这些 class 可应用到整个按钮组的大小调整，而不需要对每个按钮进行大小调整
+	.btn-group-sm			...
+	.btn-group-xs			...
+	.btn-group-vertical		该 class 让一组按钮垂直堆叠显示，而不是水平堆叠显示
+	
+	按钮组可嵌套
+按钮下拉菜单
+	如需向按钮添加下拉菜单，只需要简单地在在一个 .btn-group 中放置按钮和下拉菜单即可。您也可以使用 <span class="caret"></span> 来指示按钮作为下拉菜单
+
+输入框组
+	把前缀或后缀元素放在一个带有 class .input-group 的 <div> 中。
+	接着，在相同的 <div> 内，在 class 为 .input-group-addon 的 <span> 内放置额外的内容。
+	把该 <span> 放置在 <input> 元素的前面或者后面。
+	
+	.input-group
+	.input-group-addon
+	.input-group-lg
+	.input-group-sm
+	
+	利用输入框组 组合形成插件，如把复选框和单选插件作为输入框组的前缀或者后缀元素，形成复选框和单选插件
+								 把按钮作为输入框组的前缀或者后缀元素 此时使用 class .input-group-btn 来包裹按钮
+								 
+导航元素
+    基类  .nav
+	.nav-justified 自适应 让导航菜单与父元素等宽
+	.disabled 对具体的某个菜单/tab进行禁用	会创建一个灰色的链接，同时禁用了该链接的 :hover 状态
+	
+		表格导航/标签
+			以一个带有 class .nav 的无序列表开始。
+			添加 class .nav-tabs。
+		胶囊式的导航菜单
+			.nav .nav-pills  如果需要让胶囊垂直堆叠 再加.nav-stacked类
+			
+		带有下拉菜单的标签
+			以一个带有 class .nav 的无序列表开始。
+			添加 class .nav-tabs。
+			添加带有 .dropdown-menu class 的无序列表。
+			
+		带有下拉菜单的胶囊	
+			把 .nav-tabs class 改为 .nav-pills
+			
+			
+		.tab-content     
+		.tab-pane		 
+		与 data-toggle="tab" (data-toggle="pill")一同使用, 设置标签页对应的内容随标签的切换而更改
+		
+		
+导航栏
+		默认的导航栏
+			向 <nav> 标签添加 class .navbar、.navbar-default。
+			向上面的元素添加 role="navigation"，有助于增加可访问性。
+			向 <div> 元素添加一个标题 class .navbar-header，内部包含了带有 class navbar-brand 的 <a> 元素。这会让文本看起来更大一号。
+			为了向导航栏添加链接，只需要简单地添加带有 class .nav、.navbar-nav 的无序列表即可。
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
