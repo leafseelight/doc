@@ -297,6 +297,54 @@ maximum-scale=1.0 与 user-scalable=no 一起使用来禁用缩放功能 只能�
 			向上面的元素添加 role="navigation"，有助于增加可访问性。
 			向 <div> 元素添加一个标题 class .navbar-header，内部包含了带有 class navbar-brand 的 <a> 元素。这会让文本看起来更大一号。
 			为了向导航栏添加链接，只需要简单地添加带有 class .nav、.navbar-nav 的无序列表即可。
+			
+		导航栏中的表单
+			 .navbar-form
+
+		导航栏中的按钮
+			.navbar-btn  向不在 <form> 中的 <button> 元素添加按钮
+			
+		导航栏中的文本
+			.navbar-text
+			
+		结合图标
+			.glyphicon .glyphicon-*
+			
+		组件对齐方式
+			.navbar-left .navbar-right 
+			
+		固定到顶部
+			.navbar-fixed-top
+		固定到底部
+			.navbar-fixed-bottom
+		静态的顶部
+			.navbar-static-top
+			
+		反色  .navbar-inverse
+
+面包屑导航Breadcrumbs
+		面包屑导航（Breadcrumbs）是一个简单的带有 .breadcrumb class 的无序列表
+		
+分页Pagination
+		分页是一种无序列表
+		
+		.pagination     	显示分页
+		.disabled			定义不可点击的连接
+		.active				指示当前页面
+		.pagination-lg, .pagination-sm   尺寸
+		
+		翻页Pager  翻页也是无序列表
+		.pager				获取翻页连接
+		.previous, .next	连接左右对齐
+		.disabled
+		
+标签Label
+		计数 提示 或者页面上的其他标记提示  .label
+		label-default、label-primary、label-success、label-info、label-warning、label-danger 
+		
+徽章Badges		
+		徽章与标签相似，主要的区别在于徽章的边角更加圆滑
+		主要用于突出显示新的或未读的项。如需使用徽章，只需要把 <span class="badge"> 添加到链接、Bootstrap 导航等这些元素上即可
 	
 	
 	
