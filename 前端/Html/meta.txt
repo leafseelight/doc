@@ -1,0 +1,44 @@
+<meta> 元标签
+
+	属性
+		name			描述网页
+		http-equiv		相当于http头的设置
+		content			对应name或者http-equiv的value
+		charset			仅h5支持
+		scheme			h5不支持
+
+		
+		name
+			keywords			页面关键字 用于seo
+			description			页面描述   用于seo
+			robots				设置索引规则 all none index noindex follow nofollow 用于se
+			author				作者
+			generator			制作工具
+			COPYRIGHT			版权信息
+			revisit-after		设置网站的重访 30day表示30天
+			viewport			控制浏览器窗口的大小和缩放
+			topic				网站主旨
+			subject				网站主题
+			
+		http-equiv
+			expires				设置网页的过期时间
+			Pragma				设置缓存规则 no-cache表示禁止从本地缓存中获取页面
+			Refresh				设置自动刷新并跳转新页面
+			Set-Cookie			设置Cookie
+			Window-target		强制页面再当前窗口以独立页面显示
+			content-Type		设置页面使用的字符集
+			Content-Language	设置页面语言
+			Cache-Control		设置页面缓存
+			Content-Script-Type	设置页面中的脚本类型
+			charset				设置字符编码	
+			imagetoolbar		是否显示图片工具栏
+			
+			X-UA-Compatible		定义兼容模式
+									 IE=edge：告诉 IE 以最高级模式渲染文档，也就是任何IE版本都以当前版本所支持的最高级标准模式渲染，避免版本升级造成的影响。
+									 chrome=1：激活 Google Frame。【Google 官方提供了对 Google Frame 插件安装情况的检测，这里直接调用方法即可】
+									 
+			Pics-label			网页等级评定
+			Page-Enter			进入离开网页的效果
+									 
+									 
+		其他自定义属性等。。。							 

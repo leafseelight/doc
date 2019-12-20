@@ -345,19 +345,109 @@ maximum-scale=1.0 与 user-scalable=no 一起使用来禁用缩放功能 只能�
 徽章Badges		
 		徽章与标签相似，主要的区别在于徽章的边角更加圆滑
 		主要用于突出显示新的或未读的项。如需使用徽章，只需要把 <span class="badge"> 添加到链接、Bootstrap 导航等这些元素上即可
+		
+超大屏幕Jumbotron
+		可以增加标题的大小  .jumbotron
+
+页面标题Page Header
+		在网页标题四周添加适当的间距  .page-header 
 	
+缩略图
+	    在图像周围添加带有 class .thumbnail 的 <a> 标签。
+		这会添加四个像素的内边距（padding）和一个灰色的边框。
+		当鼠标悬停在图像上时，会动画显示出图像的轮廓。
 	
+	添加自定义内容
+		把带有 class .thumbnail 的 <a> 标签改为 <div>。
+		在该 <div> 内，您可以添加任何您想要添加的东西。由于这是一个 <div>，我们可以使用默认的基于 span 的命名规则来调整大小。
+		如果您想要给多个图像进行分组，请把它们放置在一个无序列表中，且每个列表项向左浮动
+
+警告Alerts
+		可以为警告框添加一个可选的关闭按钮
+		
+		.alert .alert-success、.alert-info、.alert-warning、.alert-danger
 	
+		可取消的警告Dismissal Alerts
+			通过创建一个 <div>，并向其添加一个 .alert class 和四个上下文 class（即 .alert-success、.alert-info、.alert-warning、.alert-danger）之一，来添加一个基本的警告框。
+			同时向上面的 <div> class 添加可选的 .alert-dismissable。
+			添加一个关闭按钮
 	
+		警告中的连接
+			通过创建一个 <div>，并向其添加一个 .alert class 和四个上下文 class（即 .alert-success、.alert-info、.alert-warning、.alert-danger）之一，来添加一个基本的警告框。
+			使用 .alert-link 实体类来快速提供带有匹配颜色的链接。
 	
+进度条
+		Bootstrap 进度条使用 CSS3 过渡和动画来获得该效果。
+		
+		默认进度条
+			添加一个带有 class .progress 的 <div>。
+			接着，在上面的 <div> 内，添加一个带有 class .progress-bar 的空的 <div>。
+			添加一个带有百分比表示的宽度的 style 属性，例如 style="width: 60%"; 表示进度条在 60% 的位置。
+		
+		交替的进度条
+			添加一个带有 class .progress 的 <div>。
+			接着，在上面的 <div> 内，添加一个带有 class .progress-bar 和 class progress-bar-* 的空的 <div>。其中，* 可以是 success、info、warning、danger。
+			添加一个带有百分比表示的宽度的 style 属性，例如 style="60%"; 表示进度条在 60% 的位置。
+					
+		条纹的进度条
+			添加一个带有 class .progress 和 .progress-striped 的 <div>。
+			接着，在上面的 <div> 内，添加一个带有 class .progress-bar 和 class progress-bar-* 的空的 <div>。其中，* 可以是 success、info、warning、danger。
+			添加一个带有百分比表示的宽度的 style 属性，例如 style="60%"; 表示进度条在 60% 的位置
+		
+		动画的进度条
+			添加一个带有 class .progress 和 .progress-striped 的 <div>。同时添加 class .active。
+			接着，在上面的 <div> 内，添加一个带有 class .progress-bar 的空的 <div>。
+			添加一个带有百分比表示的宽度的 style 属性，例如 style="60%"; 表示进度条在 60% 的位置。
+		
+		堆叠的进度条
+			把多个进度条放在相同的 .progress 中即可实现堆叠
+			
+多媒体对象Media Object
+		图像 视频 音频
+		
+		 .media 		创建多媒体对象
+		 .media-left	左对齐
+		 .media-right	右对齐
+		 .media-body	放置文本内容
+		 .media-heading	设置标题
+		 .media-top		顶部对齐
+		 .media-middle	居中对齐
+		 .media-bottom  底部对齐
+		 
+		 多媒体对象可嵌套
+		 
+列表组
+	列表组件用于以列表形式呈现复杂的和自定义的内容
+		向元素 <ul> 添加 class .list-group。
+		向 <li> 添加 class .list-group-item
+			
+	向任意的列表项添加徽章组件，它会自动定位到右边  只需要在 <li> 元素中添加 <span class="badge"> 即可
 	
+	向列表组添加链接 使用 <a> 代替 <li> 元素
 	
+	向列表组添加自定义内容
 	
+面板Panels
+	面板组件用于把 DOM 组件插入到一个盒子中
+	.panel  
+	.panel-default
+	.panel-heading		面板头部
+	.panel-title		面板标题
+	.panel-body			面板内容
+	.panel-footer		面板脚注
 	
+	带语境色彩的面板
+		panel-primary、panel-success、panel-info、panel-warning、panel-danger
+	带表格的面板
+		在面板中使用.table
+	带列表组的面板
+		在面板中使用.panel
 	
-	
-	
-	
+Well	井?
+	Well 是一种会引起内容凹陷显示或插图效果的容器
+	.well 
+	.well-lg
+	.well-sm
 	
 	
 	

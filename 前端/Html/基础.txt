@@ -1,0 +1,54 @@
+超文本标记语言
+扩展名可以是.html .htm 但是标准应该使用.html
+
+当显示页面时，浏览器会移除源代码中多余的空格和空行。所有连续的空格或空行都会被算作一个空格 HTML 代码中的所有连续的空行（换行）也被显示为一个空格。
+
+
+申明
+	h5			<!DOCTYPE html>
+	html4.0.1  	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+    xhtml1.0    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	
+html元素
+	开始标签start tag到结束标签end tag的所有内容 包含标签 可以为空
+	开始标签也叫开放标签 结束标签也叫闭合标签
+	空元素可以在开始标签中进行关闭
+	大部分元素具有属性
+		
+
+标签
+	标签大小写不敏感 html4推荐小写
+	
+	默认情况下，HTML 会自动地在块级元素前后添加一个额外的空行，比如段落、标题元素前后
+	
+属性	
+	属性和属性值对大小写不敏感 html4推荐小写
+	属性值应该始终被包括在引号内 单引号双引号都可以
+	
+	全局属性
+		accesskey			规定激活元素的快捷键。
+		class				规定元素的一个或多个类名（引用样式表中的类）。
+		contenteditable		规定元素内容是否可编辑。
+		contextmenu			规定元素的上下文菜单。上下文菜单在用户点击元素时显示。
+		data-*				用于存储页面或应用程序的私有定制数据。
+		dir					规定元素中内容的文本方向。
+		draggable			规定元素是否可拖动。
+		dropzone			规定在拖动被拖动数据时是否进行复制、移动或链接。
+		hidden				规定元素仍未或不再相关。
+		id					规定元素的唯一 id。
+		lang				规定元素内容的语言。
+		spellcheck			规定是否对元素进行拼写和语法检查。
+		style				规定元素的行内 CSS 样式。
+		tabindex			规定元素的 tab 键次序。
+		title				规定有关元素的额外信息。
+		translate			规定是否应该翻译元素内容。
+
+		
+XHTML
+	可扩展超文本标记语言 比html更严格
+	xhtml是以xml格式编写的html
+	
+shiv
+		<!--[if lt IE 9]>
+		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->

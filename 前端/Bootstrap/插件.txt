@@ -1,0 +1,230 @@
+Bootstrap自带12种jQuery 插件，扩展了功能
+
+单独引用 
+编译引用
+
+使用data属性即可使用所有Bootstrap插件
+关闭 $(document).off('.data-api')
+关闭一个特定的插件需要加上插件名称作为命名空间 如$(document).off('.alert.data-api')
+
+编程方式的API
+	支持单独或链式调用
+	
+避免命名空间冲突
+	// 返回 $.fn.button 之前所赋的值
+	var bootstrapButton = $.fn.button.noConflict() 
+	// 为 $().bootstrapBtn 赋予 Bootstrap 功能                           
+	$.fn.bootstrapBtn = bootstrapButton 
+
+事件
+		动词不定式
+		过去分词形式
+		
+=============================================================================================		
+		
+		data-toggle
+		data-target				要加载的目标 比如一个模态框
+		data-dismiss			取消加载
+		data-offset				偏移
+		
+		
+		aria-labelledby
+		aria-hidden				隐藏
+		
+		
+		
+=============================================================================================
+过渡效果Transition插件
+		使用案例： 模态框Model 标签页Tab 警告框Alert 轮播Carousel
+
+模态框Model插件
+		模态框（Modal）是覆盖在父窗体上的子窗体。多个模态框不能同时加载
+		
+		.modal
+		.fade		模态框被切换时淡入淡出
+		
+		data-toggle="modal"
+		data-target="#identifier" 		指定要切换的模态框 或href="#identifier"
+		data-dismiss="model"
+		
+		.modal-dialog
+		.modal-content
+		.modal-header
+		.modal-title
+		.modal-body
+		.modal-footer
+		
+		$('#identifier').modal(options)	触发模态框
+		
+		选项
+			定制模态窗口（Modal Window）的外观和感观
+			data-backdrop		指定一个静态的背景，当用户点击模态框外部时不会关闭模态框
+			data-keyboard		为true时 当按下 escape 键时关闭模态框
+			data-show			为true时初始化时显示模态框
+			data-remote			为模态框的主体注入内容
+		
+		方法 
+			.model(options)      把内容作为模态框激活。接受一个可选的选项对象。
+			.modal('toggle')	 手动切换模态框
+			.modal('show')		 手动打开模态框
+			.modal('hide')		 手动隐藏模态框
+		
+		事件
+			show.bs.modal		 在调用 show 方法后触发
+			shown.bs.modal		 当模态框对用户可见时触发
+			hide.bs.modal		 当调用 hide 实例方法时触发
+			hidden.bs.modal		 当模态框完全对用户隐藏时触发
+			
+			
+下拉菜单Dropdown插件
+		data-toggle="dropdown"
+		
+		$('.dropdown-toggle').dropdown()  触发下拉菜单
+		
+		方法
+			.dropdown('toggle')		显示或隐藏下拉菜单
+			
+滚动监听Scrollspy插件
+		自动更新导航 会根据滚动条的位置自动更新对应的导航目标
+			
+		 data-spy="scroll"	
+		 
+		 选项
+			data-offset			当计算滚动位置时，距离顶部的偏移像素
+			
+		 方法
+			.scrollspy('refresh')	更新DOM
+			
+		 事件
+			activate.bs.scrollspy	每当一个新项目被滚动监听激活时，触发该事件。
+			
+标签页Tab插件
+		 data-toggle="tab" 或 data-toggle="pill" 
+		 
+		 方法
+			.tab()
+			
+		 事件
+			show.bs.tab
+			shown.bs.tab
+			
+提示工具Tooltip插件
+		默认提示在顶部
+		选项
+			data-animation		使用css渐变滤镜效果
+			data-html			向提示工具插入html 可能会造成xss攻击
+			data-placement		规定如何定位提示工具（即 top|bottom|left|right|auto）
+			data-selector		提供一个选择器 提示工具对象将被委派到指定的目标
+			data-title
+			data-trigger		定义如何触发提示工具 click| hover | focus | manual
+			data-delay			延迟显示和隐藏提示工具的毫秒数
+			data-container		向指定元素添加提示工具
+			
+		方法
+			.tooltip(options)	向元素集合附加提示工具句柄
+			.tooltip('toggle')	切换显示/隐藏元素的提示工具
+			.tooltip('show')	显示元素的提示工具
+			.tooltip('hide')	隐藏元素的提示工具
+			.tooltip('destroy')	隐藏并销毁元素的提示工具
+			
+		事件
+			show.bs.tooltip		当调用 show 实例方法时立即触发该事件
+			shown.bs.tooltip	当提示工具对用户可见时触发该事件
+			hide.bs.tooltip		当调用 hide 实例方法时立即触发该事件
+			hidden.bs.tooltip	当提示工具对用户隐藏时触发该事件
+			
+弹出框Popover插件
+		弹出框（Popover）与工具提示（Tooltip）类似，提供了一个扩展的视图
+		默认弹出框在顶部
+		data-toggle="popover"
+		
+		选项
+			与提示工具一样 多了data-content
+		方法
+			.popover(options)  .popover('toggle')  .popover('show') .popover('hide') .popover('destroy')
+		事件
+			show.bs.popover shown.bs.popover hide.bs.popover hidden.bs.popover
+			
+警告框Alert插件
+		方法
+			.alert()		该方法让所有的警告框都带有关闭功能
+			.alert('close')	关闭所有的警告框
+		事件
+			close.bs.alert	closed.bs.alert
+			
+按钮Button插件
+		加载状态
+			data-loading-text="Loading..."
+		单个切换
+			 data-toggle="button"
+		复选框（Checkbox）、单选按钮（Radio）
+			data-toggle="buttons"
+			
+		.button() 启用button插件
+
+		方法
+			button('toggle')		切换按压状态
+			.button('loading')		当加载时，按钮是禁用的，且文本变为 button 元素的 data-loading-text 属性的值
+			.button('reset')		重置按钮状态，文本内容恢复为最初的内容
+			.button(string)			使用该方法，重置按钮状态，并添加新的内容
+			
+折叠Collapse插件
+		data-toggle="collapse" 添加到您想要展开或折叠的组件的链接上。
+		href 或 data-target 属性添加到父组件，它的值是子组件的 id。
+		data-parent 属性把折叠面板（accordion）的 id 添加到要展开或折叠的组件的链接上
+		
+		.collapse	隐藏内容
+		.collapse.in	显示内容
+		.collapsing		当过渡效果开始时被添加，当过渡效果完成时被移除
+		
+		选项
+			data-parent		如果提供了一个选择器，当可折叠项目显示时，指定父元素下的所有可折叠的元素将被关闭
+			data-toggle		切换调用可折叠元素
+		方法	
+			.collapse(options)	.collapse('toggle')	.collapse('show')	 .collapse('hide')
+		事件
+			show.bs.collapse	shown.bs.collaps	hide.bs.collapse	hidden.bs.collapse
+			
+轮播Carousel插件		
+		.carousel
+		.carousel-indicators
+		.carousel-inner
+		.carousel-caption
+		.carousel-control
+		
+		选项
+			data-interval		自动循环每个项目之间延迟的时间量
+			data-pause			默认hover 鼠标进入时暂停轮播循环，鼠标离开时恢复轮播循环
+			data-wrap			轮播是否连续循环
+		方法 
+			.carousel(options)	初始化并开始循环
+			.carousel('cycle') 	从左到右循环轮播项目
+			.carousel('pause') 	停止轮播循环项目
+			.carousel(number)	循环轮播到某个特定的帧（从 0 开始计数，与数组类似）
+			.carousel('prev')	循环轮播到上一个项目
+			.carousel('next')	循环轮播到下一个项目
+		事件
+			slide.bs.carousel	当调用slide实例方法时触发
+			slid.bs.carousel	当轮播完成幻灯片过渡效果时触发
+			
+附加导航Affix插件
+		允许指定 <div> 固定在页面的某个位置
+		 data-spy="affix"
+		 
+		 通过css定位
+			 .affix、.affix-top 和 .affix-bottom
+		 
+		 选项
+			data-offset
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		

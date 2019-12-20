@@ -1,0 +1,218 @@
+层叠样式表 (Cascading Style Sheets)
+
+	大小写不敏感 但是class id的值是大小写敏感的 建议小写
+
+	浏览器缺省设置
+	外部样式表							<link rel="stylesheet" type="text/css" href="mystyle.css" /> 
+	内部样式表（位于 <head> 标签内部）  <style type="text/css">
+	内联样式（在 HTML 元素内部）		<p style="color: sienna; margin-left: 20px">
+	
+	样式层叠 优先级越来越高
+	
+语法
+		selector {declaration1; declaration2; ... declarationN }
+		selector {property: value}
+		选择器 		一条或多条申明；每条申明由一个属性和一个值组成，以分号结尾(最后一条语法层面上可不加 建议加;)
+					值可以不加引号 但是有多个值时必须加引号（或者逗号分开）
+					xml也可用选择器设置样式
+		
+		继承 理论上子元素从父元素继承属性
+
+元素选择器/类型选择器
+		
+通配符选择器
+		* {}
+		
+选择器分组【逗号隔开多个同组选择器】
+		h1,h2 {color: green;}
+		
+派生选择器(上下文选择器) 【派生选择器中间用逗号隔开】
+		li strong {font-style: italic;}  // 即定义<li>下<strong>的样式
+
+		后代选择器/包含选择器
+		
+id选择器【#】	值区分大小写	
+		id选择器可以结合派生选择器
+		p#fancy {}   //<p id="fancy">
+		*.p#fancy {}  // 可以忽略通配选择器
+		
+类选择器【.】   值区分大小写
+		类选择器也可以结合派生选择器
+		.fancy p {}  //fancy类下的p的样式
+		p.fancy {}   //<p class="fancy">
+		*.p.fancy {}  // 可以忽略通配选择器
+		
+属性选择器
+		只有在规定了 !DOCTYPE 时，IE7 和 IE8 才支持属性选择器。在 IE6 及更低的版本中，不支持属性选择
+		
+		[title] {color: red;} 		 	// 为带有title属性的所有元素设置样式
+		[title=x] {color: red;}		 	// 为带有title属性且值为x的所有元素设置样式
+		[title~=x] { color:red; }       // 为带有title属性且值包含x的所有元素设置样式	适用于由空格分隔的属性值
+		[title|=x] { color:red; } 		// 为带有title属性且值包含x的所有元素设置样式   适用于由连字符分隔的属性值
+		
+		input[type="button"] {}			// 为按钮类型的输入框设置样式
+		
+子元素选择器
+		h1 > strong {color:red;}
+相邻兄弟选择器
+		h1 + p {margin-top:50px;}
+		
+		
+伪类Pseudo-classes
+		selector : pseudo-class {property: value}
+		伪类名称对大小写不敏感
+		
+		锚伪类
+		:first-child	第一个元素
+		:lang
+
+伪元素Pseudo-elements
+		selector:pseudo-element {property:value;}
+		
+		:first-line 
+		:first-letter
+		:before
+		:after
+		
+====================================================== 样式 =====================================================================	
+背景
+	background				简写属性 
+	background-color		背景色，默认值transparent 透明。 所有的背景属性不能被继承
+	background-image		背景图，默认值none 			url(xx.jpg)
+	background-repeat		背景重复 对背景图像进行平铺
+	background-position		背景定位 默认top left 即(0% 0%)
+	background-attachment	背景关联 默认scroll随文档滚动。  fixed固定
+	
+文本
+	text-indent				文本缩进
+	text-align				水平对齐 left center right 默认left
+	word-spacing			字间隔   默认normal  即0
+	letter-spacing			字母间隔 默认normal
+	text-transform			字符转换 默认none。  uppercase lowercase capitalize
+	text-decoration			文本装饰 默认none。  underline overline line-through blink
+	white-space				处理空白符
+	color					颜色
+	direction				文本方向
+	line-height				行高
+	
+字体
+	通用字体系列 5种
+		Serif 字体
+		Sans-serif 字体
+		Monospace 字体
+		Cursive 字体
+		Fantasy 字体
+	特定字体系列
+	
+	font					简写属性
+	font-family				指定字体系列或字体
+	font-style				字体风格 默认normal。 italic  oblique 
+	font-variant			字体变形 值small-caps设定小型大写字母
+	font-weight				字体加粗 默认normal。 bold加粗
+	font-size				字体大小	普通文本（比如段落）的默认大小是 16 像素 (16px=1em)
+	
+链接
+	链接的四种状态
+		a:link - 普通的、未被访问的链接
+		a:visited - 用户已访问的链接
+		a:hover - 鼠标指针位于链接的上方
+		a:active - 链接被点击的时刻
+
+列表
+	list-style				简写属性
+	list-style-type			列表项的标志类型
+	list-style-image		列表项标志使用图片
+	list-style-position		列表项标志的位置
+	
+表格
+	border 				表格边框 双线条边框
+	border-collapse		折叠边框 单线条边框
+	width				宽度
+	height				高度
+	text-align			水平对齐方式	left center right
+	vertical-align		垂直对齐方式	top center bottom
+	padding				内边距
+	color				文本颜色
+	background-color	背景颜色
+	
+ 	outline				简写属性
+	outline-color		轮廓颜色
+	outline-style		轮廓样式
+	outline-width		轮廓宽度
+	
+===================================================== 框模型 =========================================================
+框模型Box Model	
+	外边距 边框 内边距 内容区域(宽 高)
+	整体叫元素框
+	外边距默认是透明的 不会遮挡其后的元素
+	内容区域是实际的内容
+	背景应用于由内容和内边距、边框组成的区域
+	
+	内边距padding、边框border和外边距margin都是可选的，默认值是零。可以应用于所有边 也可应用于单个边
+	外边距可以是负值
+	width height指的是内容区域的宽度和高度
+	可以为元素的内外边距设置百分数值。百分数值是相对于其父元素的 width 计算的
+	
+	padding					内边距简写属性
+	padding-top
+	padding-right
+	padding-bottom
+	padding-left
+	border-style			边框简写属性 默认none。即没有边框 此时宽度没有作用
+	border-top-style
+	border-right-style
+	border-bottom-style
+	border-left-style
+	border-width		    边框宽度
+	border-top-width
+	border-right-width
+	border-bottom-width
+	border-left-width
+	border-color			边框颜色
+	border-top-color
+	border-right-color
+	border-bottom-color
+	border-left-color
+	margin 					外边距简写属性
+	margin-top
+	margin-right
+	margin-bottom
+	margin-left
+	
+	外边距合并/叠加   只有普通文档流中块框的垂直外边距才会发生外边距合并。行内框、浮动框或绝对定位之间的外边距不会合并
+	
+======================================================== 定位 =============================================================
+定位Positioning 
+	一切都是框 display属性
+	由一行形成的水平框称为行框（Line Box） 不同于行内框
+	
+	定位机制
+		普通流
+		浮动
+		绝对定位
+	
+	position属性
+		static			元素框正常生成 行内元素则会创建一个或多个行框，置于其父元素中
+		relative		元素框偏移某个距离。元素仍保持其未定位前的形状，它原本所占的空间仍保留
+		absolute		元素框从文档流完全删除，并相对于其包含块定位。包含块可能是文档中的另一个元素或者是初始包含块。
+						元素原先在正常文档流中所占的空间会关闭，就好像元素原来不存在一样。元素定位后生成一个块级框，而不论原来它在正常流中生成何种类型的框
+		fixed			元素框的表现类似于将 position 设置为 absolute，不过其包含块是视窗本身
+		
+	top					定义了一个定位元素的上外边距边界与其包含块上边界之间的偏移
+	right				定义了定位元素右外边距边界与其包含块右边界之间的偏移。
+	bottom				定义了定位元素下外边距边界与其包含块下边界之间的偏移。
+	left				定义了定位元素左外边距边界与其包含块左边界之间的偏移。
+	overflow			设置当元素的内容溢出其区域时发生的事情。
+	clip				设置元素的形状。元素被剪入这个形状之中，然后显示出来。
+	vertical-align		设置元素的垂直对齐方式。
+	z-index				设置元素的堆叠顺序。
+	
+	float 				浮动
+		
+============================================================ 高级 ============================================================
+对齐
+		对齐块元素
+			1.<h1> <p> <div>	本身是占用全部宽度的
+			2.左右外边距设置为auto
+			3.使用 position 属性进行左和右对齐
+			4.使用float属性进行左和右对齐
