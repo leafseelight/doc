@@ -1,0 +1,76 @@
+
+ssh本地端口映射 
+	
+	在本地这台机器上监听一个端口，然后所有访问这个端口的数据都会通过ssh 隧道传输到远端的对应端口上
+
+						serviceserver提供服务的服务器
+	ssh -L <local port>:<remote host>:<remote port> <SSH hostname>
+		proxyserver本地作为服务的代理服务器			sshserver(提供端口转发功能的服务器)
+		
+	clients <----> proxyserver <--firewall--> sshserver <----> serviceserver	
+
+	1. 建立隧道
+	使用本地端口10020 通过A主机(192.168.10.233 本地可控的主机) 连接到B主机(192.168.10.89 本地不可控的主机) A作为sshserver
+	(A主机在外网 B主机在内网 但是A能连接到B 可以通过这种方式直接访问到内网机器)
+	(B主机限制了本地ip 但是A能连接到B 可以通过A重新访问到B)
+
+	proxyserver和sshserver肯定不能是同一台机器，否则就没必要建立SSH通道了
+	sshserver和serviceserver可以是同一台机器，也可以不同；如果是不同那么必须保证他们之间的互通性，如果相同，serviceserver的地址可以使用localhost
+
+	-L 本地端口转发
+	-f 后台运行进程
+	-N 不执行登录shell
+	-g 复用访问时作为网关，支持多主机访问本地侦听端口。如果不指定 本地端口只能本机访问
+	-C 压缩数据传输
+	-P ？
+	
+	ssh -fNg -L 10020:192.168.10.89:22 root@192.168.10.233 -p 22
+	(建立隧道时需要A主机的密码)
+
+
+	2. 连接
+	ssh root@127.0.0.1 -p 10020
+	(连接时需要B主机的密码 A机器上登录B配置了免密登录也不行)
+	
+	【说明】
+		sshserver上必须有serviceserver的known_hosts？
+	
+	
+ssh远程端口映射	
+
+	打开ssh隧道以后，在远端服务器监听一个端口，所有访问远端服务器指定端口都会通过隧道传输到本地的对应端口上
+
+						   serviceserver
+	ssh -R <local port>:<remote host>:<remote port> <SSH hostname>
+		端口在sshserver上						     sshserver
+
+	使用A主机的端口10030 通过A主机(192.168.10.233 本地可控的主机) 连接到C主机
+	(B主机在内网 B主机通过A主机与公网主机C通信)
+	
+	proxyserver和serviceserver可以是同一台机器，也可以不同；如果是不同那么必须保证他们之间的互通性，如果相同，serviceserver的地址可以使用localhost
+	
+	serviceserver <----> proxyserver <--firewall--> sshserver  <----> clients
+	
+	1. 建立隧道
+	ssh -fNg -R 10030:ip:80 root@192.168.10.233 -p 22
+	
+	-R 远程端口转发
+	
+	
+	2. 连接
+	ssh root@192.168.10.233 -p 10030
+	
+	
+ssh动态端口映射
+	点到多的隧道	
+	
+	ssh -fNg -D 10001 root@172.20.163.136 -p 22
+	
+	-D 动态端口转发
+	10001 本地启动的socks代理端口
+	
+	
+关闭隧道：kill相关进程	
+	
+其他：	
+X协议转发	
