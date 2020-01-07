@@ -1,0 +1,84 @@
+搜索请求构造器
+
+SearchRequestBuilder   继承  ActionRequestBuilder<SearchRequest, SearchResponse, SearchRequestBuilder>
+	SearchRequestBuilder(ElasticsearchClient client, SearchAction action)  构造
+	SearchRequestBuilder setIndices(String... indices)			设置执行搜索请求的索引
+	SearchRequestBuilder setTypes(String... types)				设置执行请求的文档类型 默认全部类型
+	SearchRequestBuilder setSearchType(SearchType searchType)	设置搜索类型
+	SearchRequestBuilder setSearchType(String searchType)
+	
+		DFS_QUERY_THEN_FETCH
+		QUERY_THEN_FETCH	  默认类型。 先查各分片 获取id和score es客户端排序后 第二次用id去分片精确查document
+		QUERY_AND_FETCH       直接获取所有分片的document和score 再排序 已废弃 5.3之前可用
+		
+	SearchRequestBuilder setScroll(Scroll scroll)				设置游标
+	SearchRequestBuilder setScroll(TimeValue keepAlive)
+	SearchRequestBuilder setScroll(String keepAlive)
+	
+	SearchRequestBuilder setTimeout(TimeValue timeout)			设置请求的超时时间 
+	SearchRequestBuilder setTerminateAfter(int terminateAfter)	搜索到指定的文档记录数后就终止搜索
+	
+	SearchRequestBuilder setRouting(String routing)				设置路由键 逗号分隔 可以指定路由到哪些分片
+	SearchRequestBuilder setRouting(String... routing)
+	
+	SearchRequestBuilder setPreference(String preference)		设置路由的优先级 可以设置为自定义的路由键的名字
+																_local表示本地分片优先 _primary表示只在主分片上执行
+	SearchRequestBuilder setIndicesOptions(IndicesOptions indicesOptions)	设置索引参数
+	
+	SearchRequestBuilder setQuery(QueryBuilder queryBuilder)	使用QueryBuilder设置查询
+	SearchRequestBuilder setPostFilter(QueryBuilder postFilter)	设置查询完之后的过滤器 只影响命中 不影响聚合
+	SearchRequestBuilder setMinScore(float minScore)			设置文档必须满足的最小得分score
+	SearchRequestBuilder setFrom(int from)						设置搜索结果数据集开始的索引 
+	SearchRequestBuilder setSize(int size)						设置搜索结果需要返回的数据数
+	SearchRequestBuilder setExplain(boolean explain)			设置SearchHit是否需要返回命中的说明
+	SearchRequestBuilder setVersion(boolean version)			设置SearchHit是否需要返回版本信息
+	
+	SearchRequestBuilder addIndexBoost(String index, float indexBoost)	设置索引的权重
+	SearchRequestBuilder setStats(String... statsGroups)				设置需要的统计stats信息
+	SearchRequestBuilder setStats(List<String> statsGroups)
+	
+	SearchRequestBuilder setFetchSource(boolean fetch)			设置响应是否要为每个命中包含stored已存储的_source(原文档)信息
+	SearchRequestBuilder setFetchSource(@Nullable String include, @Nullable String exclude)
+	SearchRequestBuilder setFetchSource(@Nullable String[] includes, @Nullable String[] excludes)
+																设置响应要包含_source信息 并提供了include/exclude对_source进行了模式匹配
+																
+	SearchRequestBuilder addDocValueField(String name)			设置docvalue字段 docvalue字段不需要存储 不建议设置在分词字段和数值型字段上
+	SearchRequestBuilder addStoredField(String field)			设置stored字段
+	SearchRequestBuilder addScriptField(String name, Script script)	设置脚本字段 脚本字段不需要存储 不建议设置在分词字段和数值型字段上
+	
+	SearchRequestBuilder addSort(String field, SortOrder order)	设置字段排序 	ASC DESC
+	SearchRequestBuilder addSort(SortBuilder sort)				使用SortBuilder来设置排序
+	SearchRequestBuilder searchAfter(Object[] values)			设置应该search after使用的排序字段
+	
+	SearchRequestBuilder slice(SliceBuilder builder)			设置分片
+	
+	SearchRequestBuilder setTrackScores(boolean trackScores)	默认为false。设为true时表示sort时依然可以跟踪分数并将它们作为每次命中的一部分返回
+																否则设置了字段sort 默认的score就会失效
+	SearchRequestBuilder setTrackTotalHits(boolean trackTotalHits) 	默认为true 记录总命中数
+	SearchRequestBuilder fields(String... fields)				已废弃 使用storedFields方法
+	SearchRequestBuilder storedFields(String... fields)			设置store字段 必须设置 如果没有也得设为_none_
+	
+	SearchRequestBuilder addAggregation(AggregationBuilder aggregation)				设置聚合
+	SearchRequestBuilder addAggregation(PipelineAggregationBuilder aggregation)
+	
+	SearchRequestBuilder highlighter(HighlightBuilder highlightBuilder)				设置高亮
+	SearchRequestBuilder suggest(SuggestBuilder suggestBuilder)						设置查询建议(比如可以做拼写检查 自动补全)
+	
+	SearchRequestBuilder setRescorer(RescorerBuilder<?> rescorer)
+	SearchRequestBuilder setRescorer(RescorerBuilder rescorer, int window)
+	SearchRequestBuilder addRescorer(RescorerBuilder<?> rescorer)
+	SearchRequestBuilder addRescorer(RescorerBuilder<?> rescorer, int window)
+	SearchRequestBuilder clearRescorers()
+	
+	SearchRequestBuilder setSource(SearchSourceBuilder source)		设置source
+	SearchRequestBuilder setRequestCache(Boolean requestCache)		设置请求是否缓存
+	SearchRequestBuilder setProfile(boolean profile)				设置查询是否profile 默认false 主要是监控的 方便分析查询性能
+	
+	SearchRequestBuilder setCollapse(CollapseBuilder collapse)
+	
+	SearchSourceBuilder sourceBuilder()								获取SearchSourceBuilder		
+	
+	SearchRequestBuilder setBatchedReduceSize(int batchedReduceSize)						设置一次处理的最大分片数量 如果分片数量大于这个数量 则需要分批处理
+	SearchRequestBuilder setMaxConcurrentShardRequests(int maxConcurrentShardRequests)		设置最大并发分片请求数 最大256
+	SearchRequestBuilder setPreFilterShardSize(int preFilterShardSize)						
+	

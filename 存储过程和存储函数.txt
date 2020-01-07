@@ -1,0 +1,112 @@
+#mysql列名和列的别名不区分大小写
+#字段内容默认也不区分大小写
+
+#
+BEGIN 
+
+#DECLARE申明变量
+#DECLARE 变量名 变量类型 [default 默认值]
+DECLARE done INT DEFAULT FALSE; #FALSE即0
+DECLARE m_skuid VARCHAR(256);
+
+#申明一个游标(游标的声明必须在变量和条件声明之后，在handler声明之前)
+#游标：用来申明一个数据集 通常数据集合是一个select语句
+#游标特性
+#	不灵敏：服务器可以或不复制其结果
+#	只读：不可更新
+#	不可滚动：只能在一个方向上遍历 不能跳过行
+
+#打开游标
+#OPEN cursor_name
+
+#获取游标指定数据集的下一行数据并将各个字段值赋予后面的变量
+#FETCH [[NEXT] FROM] cursor_name INTO var_name [, var_name] ...
+#数据集中的字段需要和INTO语句中定义的变量一一对应
+#数据集中的数据都fetch完之后，则返回NOT FOUND
+
+#关闭游标
+#CLOSE cursor_name
+#关闭一个未打开的游标会报错
+#如果未显式的关闭游标 则游标会在申明的begin...end语句块执行之后自动关闭
+
+DECLARE cursor_single_goods CURSOR FOR select g.skuid from sn_goods g left join sn_prod_cluster c on g.skuid = c.skuid where g.yegoo_goodsId is null and g.del_flag = '0' and snprice >0 group by g.skuid having GROUP_CONCAT(c.del_flag) regexp '^[1,]+$' or GROUP_CONCAT(c.del_flag) is null;
+DECLARE cursor_cluster_goods CURSOR FOR select g.skuid from sn_prod_cluster c inner join sn_goods g  on c.skuid=g.skuid where yegoo_goodsId is null and c.del_flag = '0' and g.snprice >0 ;
+
+#申明异常处理 满足条件时触发sql执行
+#DECLARE {EXIT | CONTINUE} HANDLER FOR {error-number | SQLSTATE error-string | condition} SQL statement
+#			Handler Action						Handler Condition						  	  SQL
+#触发条件：MYSQL错误代码 
+#		   ANSI-standard SQLSTATE code 
+#		   命名条件 如系统内置的SQLEXCEPTION,SQLWARNING和NOT FOUND或者自己申明的条件			  
+#触发操作：执行完sql后操作
+#		   CONTINUE：继续执行
+#		   EXIT：退出申明此handler的begin...end语句块
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+#命名特定的错误条件
+#DECLARE condition_name CONDITION FOR condition_value
+#condition_value：mysql_error_code| SQLSTATE [VALUE] sqlstate_value
+#eg：DECLARE foreign_key_error CONDITION FOR 1216;
+
+UPDATE sn_goods SET sn_skuid = CONCAT('sn_',skuid) WHERE sn_skuid IS NULL OR sn_skuid ='';
+OPEN cursor_single_goods;
+loop_single_goods:LOOP
+	FETCH cursor_single_goods INTO m_skuid;
+	IF done THEN
+	  LEAVE loop_single_goods;
+	END IF;
+	CALL insert_single_sn_goods(m_skuid,creator_name);
+END LOOP;
+CLOSE cursor_single_goods;
+-- 多规格商品
+SET done = FALSE;
+OPEN cursor_cluster_goods;
+loop_cluster_goods:LOOP
+	FETCH cursor_cluster_goods INTO m_skuid;
+	IF done THEN
+	  LEAVE loop_cluster_goods;
+	END IF;
+	CALL insert_cluster_sn_goods(m_skuid,creator_name);
+END LOOP;
+close cursor_cluster_goods;
+END
+
+
+
+#########################################
+begin
+-- create index idx_goods_no on np_goods(goods_no)
+declare rc_g int;
+declare rc_gi int;
+CREATE TABLE IF NOT EXISTS sn_log (
+    id bigint not null auto_increment comment '主键', 
+    level varchar(50) comment 'Log等级', 
+    operation varchar(200) comment '操作', 
+    message varchar(200) comment 'Log信息', 
+    message_detail varchar(2000) comment 'Log详细信息', 
+    create_time datetime DEFAULT CURRENT_TIMESTAMP comment 'Log创建时间',
+PRIMARY KEY (`id`)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+#sn_goods表苏宁货品id(sn_skuid)字段加'sn_'前缀
+update sn_goods set sn_skuid = concat('sn_',skuid);
+
+update np_goods_info i 
+inner join sn_goods s 
+on i.goods_info_item_no=s.sn_skuid 
+set i.goods_info_cost_price=s.price, i.goods_info_prefer_price=s.snPrice, i.goods_info_market_price=s.snPrice
+where s.price>0 and s.snPrice>0 and s.del_flag = '0' 
+	  and i.goods_source = 'suning' and i.goods_info_delflag='0' 
+	  and (s.price !=i.goods_info_cost_price or s.snPrice != i.goods_info_prefer_price or s.snPrice != i.goods_info_market_price);
+
+select ROW_COUNT() 更新货品数 into rc_gi;
+
+#更新苏宁商品价格
+update np_goods g left join sn_goods s on g.goods_no=s.sn_skuid set g.goods_price=s.snprice where g.goods_price!=s.snPrice;
+select ROW_COUNT() 更新商品数 into rc_g;
+
+#插入日志记录
+insert into sn_log (level,operation,message,message_detail) values ('INFO','sync_price',concat('已更新',rc_g,'个商品',rc_gi,'个货品'),concat(rc_g,' ', rc_gi));
+select rc_g 更新商品数,rc_gi 更新货品数;
+end
