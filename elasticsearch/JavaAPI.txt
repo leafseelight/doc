@@ -1,0 +1,128 @@
+【连接到集群】
+	所有es的操作都是由一个客户端对象来执行的 所有操作都是异步的
+	
+	1.传输机连接
+	TransportClient(传输机)
+	传输机的版本必要要和es一致 即jar包的版本需要和安装的es的版本一致。
+	这种方式不会把client加入到集群 传输机通过轮询多个传输地址来和es服务器交互
+	Settings设置集群名称 cluster.name=xx 默认为elasticsearch
+	自带集群嗅探功能 可以自动添加新的主机自动移除旧的主机 需要设置client.transport.sniff=true
+	
+	2.节点连接
+	客户端作为es的一个节点。可以减少客户端和服务器的交互次数。如果集群不在同一个局域网中不可行。不推荐
+	
+【索引管理】	
+	IndicesAdminClient      transportClient.admin().indices()
+	
+	#判断索引是否存在
+	prepareExists(String... indices)
+	exists(IndicesExistsRequest request)
+	
+	#判断type是否存在
+	prepareTypeExists(String... indices)
+	typesExists(TypesExistsRequest request)
+	
+	#创建一个索引
+	prepareCreate(String indexname)
+	create(CreateIndexRequest request)
+	
+	#设置Settings
+	setSettings()
+	
+	#更新副本
+	prepareUpdateSettings(String... var1)
+	updateSettings(UpdateSettingsRequest var1)
+	
+	#获取Settings
+	prepareGetSettings(String... var1)
+	getSettings(GetSettingsRequest var1)
+	
+	#设置mapping
+	preparePutMapping(String... var1)
+	putMapping(PutMappingRequest var1)
+	
+	#获取mapping
+	prepareGetMappings(String... var1)
+	getMappings(GetMappingsRequest var1)
+	
+	#删除索引
+	prepareDelete(String... var1)
+	delete(DeleteIndexRequest var1)
+	
+	#刷新
+	prepareRefresh(String... var1)
+	refresh(RefreshRequest var1)
+	
+	#关闭索引
+	prepareClose(String... var1)
+	close(CloseIndexRequest var1)
+	
+	#打开索引
+	prepareOpen(String... var1)
+	open(OpenIndexRequest var1)
+	
+	#设置别名
+	prepareAliases()
+	aliases(IndicesAliasesRequest var1)
+	
+	#获取别名
+	prepareGetAliases(String... var1)
+	getAliases(GetAliasesRequest var1)
+	
+【文档管理】
+	TransportClient extends AbstractClient implements Client
+	
+	#新建文档
+	文档内容格式支持json字符串 json字符串转成的字节数组 map XContentBuilder构建的json Jackson等第三方库构建的json
+	IndexRequestBuilder prepareIndex()
+	IndexRequestBuilder prepareIndex(String index, String type)
+	IndexRequestBuilder prepareIndex(String index, String type, @Nullable String id)
+	
+	#获取文档
+	GetRequestBuilder prepareGet()
+	GetRequestBuilder prepareGet(String index, String type, String id)
+	
+	#删除文档
+	DeleteRequestBuilder prepareDelete()
+	DeleteRequestBuilder prepareDelete(String index, String type, String id)
+	
+	#更新文档 支持upsert
+	ActionFuture<UpdateResponse> update(UpdateRequest request)
+	UpdateRequestBuilder prepareUpdate()
+	UpdateRequestBuilder prepareUpdate(String index, String type, String id)
+	
+	#查询删除
+	DeleteQueryAction.INSTANCE.newRequestBuilder(transportClient)
+	
+	#批量获取
+	MultiGetRequestBuilder prepareMultiGet()
+	
+	#批量操作
+	BulkRequestBuilder prepareBulk()
+	BulkProcessor.Listener可以在批量操作前后添加响应的操作
+	
+【搜索】	
+	SearchRequestBuilder prepareSearch(String... indices)
+	SearchRequestBuilder setQuery(QueryBuilder queryBuilder)
+
+	QueryBuilders工具类
+	
+【聚合】
+	SearchRequestBuilder prepareSearch(String... indices)
+	SearchRequestBuilder addAggregation(AggregationBuilder aggregation)
+
+	AggregationBuilders工具类
+	
+【排序】
+	SearchRequestBuilder prepareSearch(String... indices)
+	SearchRequestBuilder addSort(SortBuilder sort)
+	
+	SortBuilders工具类
+	
+【集群管理】
+	ClusterAdminClient		transportClient.admin().cluster()
+	
+	
+	
+	
+	

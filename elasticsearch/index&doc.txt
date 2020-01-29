@@ -1,0 +1,293 @@
+RESTful API
+
+	说明:各版本差异较大
+
+	通用参数 ?pretty : 格式化输出
+	
+		_index 			索引名
+		_settings		索引配置信息
+		_aliases		索引别名
+		_shrink			索引收缩
+		_all			全部索引
+		_open			打开索引
+		_close			关闭索引
+		_reindex		复制索引
+		_mapping		映射
+		
+		_type 			类型
+		_id 			文档id
+		_version		版本号(乐观锁)
+		_shards			分片信息
+		_seq_no
+		_primary_term
+		_score			文档得分
+		_source			文档原始值
+		_query          查询 通常指定查询参数
+		_update			更新文档
+		_update_by_query查询更新
+		_delete_by_query查询删除
+		_search			搜索
+		_mget			多查询 multi get
+		
+		
+
+###############################################################################################################################################################################	
+【索引】	
+# 创建索引indexname(索引名称必须小写)
+curl -XPUT http://localhost:9200/indexname
+简单表示：
+PUT indexname		创建索引 默认5个分片 1个副本 (索引创建之后 分片数不能修改 副本数可以修改)
+
+PUT indexname		创建索引  (同名索引无法创建成功 索引名称必须小写)
+{
+	"settings": {
+		"number_of_shards": 3,			#三个分片
+		"number_of_replicas": 0         #没有副本
+	},
+	"mappings": {
+		"typeA": {
+			"dynamic": "strict",		#dynamic默认为true:自动添加字段(新字段会被自动映射类型)； false表示忽略新的字段； strict：严格模式 发现新的字段抛出异常
+			"data_detection": false,	#关闭日期检测 (日期检测会把日期样式的字符串识别为date类型)
+			"properties": {				#定义typeA类型下的字段名和字段类型
+				"title": {
+					"type": "text",
+					"analyzer": ik_max_word""
+				},
+				"age": {
+					"type": "integer"
+				},
+				"created": {
+					"type": "date",											#静态映射 显示指定created字段为date类型 并设置格式化
+					"format": "strict_date_optional_time||epoch_millis"		#默认的日期格式 存储毫秒值
+				},
+				"price": {
+					"type": "scaled_float",									#浮点类型推荐优先使用缩放浮点类型 结合缩放因子 底层会存储整数类型。 存储整数比存储浮点类型占用更少的空间
+					"scalling_factor": 100									#缩放因子
+				}
+			},
+			#"_source": {"enabled": false}	#关闭_source 即不存储文档的原始值
+		}
+	}
+}
+
+# 修改索引
+PUT indexname/_settings
+{
+	"number_of_replicas": 2,				#修改副本数为2
+	"blocks.write": true					#禁止对当前索引进行写操作
+	#"blocks.read": true					#禁止对当前索引进行读操作
+	#"blocks.read_only": true				#设置当前索引只允许读 不允许写或更新
+}
+
+# 查看索引
+GET indexname
+GET indexname/_setttings
+GET indexname1,indexname2.../_settings      #查看多个索引的配置信息
+GET _all/_settings							#查看所有索引的配置信息
+
+# 删除索引
+DELETE indexname
+
+# 打开/关闭索引 (关闭的索引几乎不占用系统资源)
+POST indexname/_open											#打开索引
+POST indexname1,indexname2/_close								#同时关闭多个索引
+POST _all/_close?ignore_unavailable=true						#关闭所有索引 如果索引不存在则忽略 否则会报错
+POST test*/_close												#关闭以test开头的索引
+
+# 复制索引
+POST _reindex							#不会复制源索引的配置信息 需要提前设置目标索引的分片数等
+{
+	"source": {
+		"index": "index1",				#源索引名称
+		"type": "type1",				#可以添加筛选条件 只复制type1类型下field1中含有a关键字的文档
+		"query": {
+			"term": {
+				"field1": "a"
+			}
+		}
+	},
+	"dest": {
+		"index": "index2"				#目标索引名称
+	}
+}
+
+# 收缩索引
+##索引的分片数无法修改 但是可以收缩shrink 收缩后的分片数是原分片数的约数(不包括本身)。 每个分片都需要在同一个节点上
+##提前创建新索引 将源索引硬链接到新索引 设置源索引只读
+POST indexold/_shrink/indexnew
+{
+	"settings": {
+		"index.number_of_replicas": 0,
+		"index.number_of_shards": 1,			#收缩成一个分片
+		"index.codec": "best_compression"
+	}
+}
+
+# 索引别名
+POST /_aliases
+{
+	"actions": [
+		{"add": {"index": "test1", "alias": "alias1"}},     #添加test1索引的别名：alias1  (索引名称支持通配符)
+		{"add": {"index": "test2", "alias": "alias2"}},		#添加test2索引的别名：alias2
+		{"add": {"indices": ["test4", "test5"], "alias": "alias45"}},	#添加索引test4和test5的别名都是alias45
+		{"remove": {"index": "test3", "alias": "alias3"}}	#移除test3索引的别名alias3
+	]
+}
+
+# 查看索引别名
+GET /indexname/_aliases			#查看索引indexname的别名
+GET /aliasname/_aliases			#查看别名aliasname对应的索引
+GET /_aliases					#查看所有别名
+
+###############################################################################################################################################################################
+【文档】
+# 新增typename类型的文档(6.x版本不允许一个索引下面有多个type)
+# PUT且指定的id存在 则为全量更新
+# 新增时可以指定路由routing的值
+POST /indexname/typename/ -H 'Content-type':'application/json' -d '{"author" : "Doug Cutting"}' 
+PUT /indexname/typename/1 -H 'Content-type':'application/json' -d '{"author" : "Doug Cutting"}'  # 指定文档id 否则es会自动生成 PUT请求必须指定id PUT是幂等的 POST不是
+
+# 根据文档id查询数据
+HEAD /indexname/typename/id				可以检查文档是否存在 如果存在返回200 否则返回404
+
+GET /indexname/typename/id
+GET /indexname/typename/id?version=1
+GET /indexname/typename/id?_source  							获取source所有数据(等同于不加_source参数)
+GET /indexname/typename/id?_source=author   					获取source中字段名为author的数据
+GET /indexname/typename/id?_source=author,name&pretty			获取source中字段名为author和name的数据
+
+
+# 根据多个id查询
+GET indexname/typename/_mget
+{
+	"ids": ["1", "2"]
+}
+
+GET indexname/_mget
+{
+	"docs": [
+		{
+			"_type": "typeA",
+			"_id": "1"
+		},
+		{
+			"_type": "typeB",
+			"_id": "2"
+		}
+	]
+}
+
+GET _mget
+{
+	"docs": [
+		{
+			"_index": "index1",
+			"_type": "typeA",
+			"_id": "1"
+		},
+		{
+			"_index": "index2",
+			"_type": "typeB",
+			"_id": "2"
+		}
+	]
+}
+
+
+GET /_search													# 查询所有索引的所有数据 搜索时可以使用路由参数routing
+GET /indexname/_search											# 查询指定索引中的所有数据
+GET /indexname/typename/_search									# 查询指定类型中的所有数据
+GET /_all/typename1,typename2/_search
+GET /indexname/typename/_search?q=author:Doug Cutting&pretty    #条件查询author值为Doug Cutting的文档
+GET /indexname1,indexname2/typename1,typename2/_search?from=0&size=2&pretty&_timeout=1000  #多索引多类型分页查询
+
+GET /_search
+{
+	"from": 0,						#分页 from:返回结果的开始位置 to:返回结果的最大条数
+	"size": 100,
+	"_source": ["title", "name"],   #只返回文档中的指定字段
+	"query": {
+		"term": {"title": "java"}   #term查询 词项搜索 词项不会被进一步解析 返回包含查询词的文档
+	},
+	"version": true,				#默认返回结果不包含版本号 设为true则返回
+	"min_score": 0.6,				#过滤掉评分低于0.6的文档  [基于最小评分的过滤机制]
+	"highlight": {					#高亮查询关键字
+		"fields": {
+			"title": {}
+		}
+	}
+}
+
+
+# 部分更新
+# 先将旧数据的文档标记为删除状态 然后添加新的文档 删除状态的文档会在后续统一清除
+# 外层json数据的必须要有名为doc或者script的键
+# 添加字段或更新字段值 
+POST /indexname/typename/id/_update -H 'Content-type':'application/json' -d '{"doc":{"age" : 30}}' 
+
+POST /indexname/typename/id/_update
+{
+	"script": {
+		"inline": "ctx._source.num += params.count",		#使用painless脚本更新文档中的num字段为num+4
+		"lang": "painless",									#painless是es内置的一种脚本语言 ctx是脚本语言中的一个执行对象(上下文) 通过_source获取源文档
+		"params": {											#ctx还可以访问_index _type _id _version _routing _parent等字段
+			"count": 4										#params是参数集合
+		},													#脚本可以修改值 添加删除字段 支持逻辑判断
+		#"upsert": {										#upsert表示如果文档或字段不存在 则新增文档或字段并设置字段值
+		#	"num": 1
+		#}
+	}
+}
+
+# 查询更新 与_update类似 但是外层json数据多了query表示查询条件
+POST /indexname/_update_by_query
+{
+	"query": {
+		"term": {"field1": val1"}
+	},
+	"script": {...}
+}
+
+# 删除文档
+# 文档不存在 删除操作也会导致_version值+1(保证多节点间的不同操作的顺序被正确标记了)
+# 删除不会立即删除 而是先标记为删除状态
+DELETE /indexname/typename/id
+DELETE /indexname/typename/id?routing=123	   #可以指定路由 路由值不正确时会导致删除失败。 如果_routing为true则删除时必须指定路由参数
+DELETE /indexname/typename/_query?q=name:val   #条件删除indexname中所有typename类型中字段名称name为val的文档
+DELETE /_all/_query?q=name:val                 #条件删除所有索引中字段name值为val的文档
+
+# 查询删除
+POST /indexname/typename/_delete_by_query		#typename可省略表示查询删除该索引下的所有类型下的指定文档
+{
+	"query": {...}
+}
+
+# 批量操作bulk
+POST /indexname/typename/_bulk --data-binary @file
+#file文件中写入多个请求操作 单个请求格式如下
+#	action_and_meta_data\n
+#	optional_source\n
+#每行都需要换行符
+#action指定了操作类型： index create update delete
+#metadata指定了需要被操作文档的_index _type _id
+# create 如果数据存在则报错； index 如果数据存在仍会执行成功
+
+
+####################################################################################################################################################################################
+【其他】
+
+#查看索引的mapping
+GET /indexname/_mapping
+
+# 查看所有索引信息
+GET /_cat/indices?v
+
+# 查看集群健康信息
+GET /_cluster/health
+# 查看集群状态
+GET /_cluster/state
+# 查看分片分配信息
+GET /_cluster/allocation/explain
+
+#使用分词器查看分词结果
+GET /indexname/_analyze?analyzer=ik_smart

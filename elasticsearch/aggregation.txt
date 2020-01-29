@@ -1,0 +1,260 @@
+【指标聚合】
+Max Aggregation
+	用于最大值统计
+	GET /_search {
+		"size": 0,
+		"aggs": {
+			"max_price": {
+				"max": {"field": "price"}   #获取price字段的最大值 赋值给max_price
+			}
+		}
+	}
+	
+Min	Aggregation
+	最小值统计
+	GET /_search {
+		"size": 0,
+		"aggs": {
+			"min_price": {
+				"min": {"field": "price"}   
+			}
+		}
+	}
+	
+Avg Aggregation
+	计算平均值
+	GET /_search {
+		"size": 0,
+		"aggs": {
+			"avg_price": {
+				"avg": {"field": "price"}   
+			}
+		}
+	}
+	
+Sum Aggregation
+	计算总和
+	GET /_search {
+		"size": 0,
+		"aggs": {
+			"sum_price": {
+				"sum": {"field": "price"}   
+			}
+		}
+	}
+	
+Cardinality Aggregation
+	用于基数统计 去重后统计 类似sql中的distinct+count
+	GET /_search {
+		"size": 0,
+		"aggs": {
+			"all_lang": {
+				"cardinality": {"field": "language"}   
+			}
+		}
+	}
+	
+Stats Aggregation
+	基本统计 一次性返回count max min avg sum5个指标
+	GET /_search {
+		"size": 0,
+		"aggs": {
+			"s": {
+				"stats": {"field": "price"}   
+			}
+		}
+	}
+	
+Extended Stats Aggregation	
+	高级统计 比基本统计多四个指标：平方和 方差 标准差 平均值加/减两个标准差的区间
+	GET /_search {
+		"size": 0,
+		"aggs": {
+			"es": {
+				"extended_stats": {"field": "price"}   
+			}
+		}
+	}
+	
+Percentiles Aggregation	
+	用于百分位统计
+	GET /_search {
+		"size": 0,
+		"aggs": {
+			"p_price": {
+				"percentiles": {"field": "price"}   
+			}
+		}
+	}
+	
+Value Count Aggregation
+	按字段统计文档数量
+	POST /_search {
+		"size": 0,
+		"aggs": {
+			"doc_count": {
+				"value_count": {"field": "author"}   
+			}
+		}
+	}
+	
+#######################################################################################################################################################################
+【桶聚合】
+bucket桶 会遍历文档中的内容 符合条件的会放到一个桶中 分桶相当于sql中的group by
+
+Terms Aggregation
+	分组聚合 
+	POST /_search?size=0 {
+		"aggs": {
+			"per_count": {
+				"terms": {"field": "language"}    		#按language字段分组 并统计每组文档数量
+				"aggs": {								#可以在分组的基础上 再对每个桶进行指标聚合
+					"avg_price": {
+						"avg": {"field": "price"}
+					}
+				}
+			}
+		}
+	}
+	
+Filter Aggregation
+	过滤器聚合 把符合过滤器中的条件的文档分到一个桶中
+	POST /_search?size=0 {
+		"aggs": {
+			"java_avg_price": {
+				"filter": {"terms": {"title": "java"}}, #查询title字段包含java的文档
+				"aggs": {								#可以在过滤的基础上 再进行指标聚合
+					"avg_price": {
+						"avg": {"field": "price"}
+					}
+				}
+			}
+		}
+	}
+	
+Filters Aggregation
+	多过滤器聚合 可以把符合每个过滤器条件的文档分到不同的桶中
+	POST /_search?size=0 {
+		"aggs": {
+			"per_avg_price": {
+				"filters": {							#多过滤器聚合
+					"filters": [						#定义多个过滤器
+						{"match": {"title": "java"}},
+						{"match": {"title": "python"}}
+					]
+				},
+				"aggs": {								#可以在过滤分组的基础上 再进行指标聚合
+					"avg_price": {
+						"avg": {"field": "price"}
+					}
+				}
+			}
+		}
+	}
+	
+Range Aggregation
+	范围聚合 用于反映数据的分布情况
+	POST /_search?size=0 {
+		"aggs": {
+			"price_ranges": {
+				"range": {
+					"field": "price",
+					"ranges": [						#按照~50 50-80 80~ 进行分组聚合 统计每组数量 （左闭右开）
+						{"to": 50},
+						{"from": 50, "to": 80},
+						{"from": 80}
+					]
+				}
+			}
+		}
+	}	
+	
+Date Range Aggregation
+	专用于日期类型的范围聚合 范围值支持数学表达式
+	POST /_search?size=0 {
+		"aggs": {
+			"r": {
+				"date_range": {
+					"field": "publish_time",
+					"format": "yyyy-MM-dd",
+					"ranges": [						
+						{"to": "now-24M/M"},
+						{"from": "now-24M/M"}
+						
+					]
+				}
+			}
+		}
+	}	
+	
+Date Histogram Aggregation
+	时间直方图聚合 常用于按照日期对文档进行统计并绘制条形图
+	POST /_search?size=0 {
+		"aggs": {
+			"r": {
+				"date_histogram": {
+					"field": "publish_time",
+					"interval": "month"
+				}
+			}
+		}
+	}
+	
+Missing Aggregation
+	空值聚合 把文档集合中所有缺失字段的文档分到一个桶中
+	POST /_search?size=0 {
+		"aggs": {
+			"without_price": {
+				"missing": {
+					"field": "price"
+				}
+			}
+		}
+	}
+	
+Children Aggregation
+	一种特殊的单桶聚合 根据父子文档进行分桶
+	POST /_search?size=0 {
+		"aggs": {
+			"c": {
+				"children": {			#统计子类型是typeA的文档数量
+					"type": "typeA"
+				}
+			}
+		}
+	}	
+	
+Geo Distance Aggregation
+	对地理点(geo_point)做范围统计
+	POST /_search?size=0 {
+		"aggs": {
+			"city_from_sh": {
+				"geo_distance": {
+					"field": "location",
+					"origin": "34.3412700000,108.9398400000",
+					"unit": "km",
+					"ranges": [
+						{"to": 500},
+						{"from":500, "to": 1000},
+						{"from": 1000}
+					]
+				}
+			}
+		}
+	}
+	
+IP Range Aggregation
+	对ip类型数据范围聚合
+	POST /_search?size=0 {
+		"aggs": {
+			"ip": {
+				"ip_range": {
+					"field": "ip",
+					"ranges": [
+						{"to": "10.0.0.5"},
+						{"from": 10.0.0.5}
+					]
+				}
+			}
+		}
+	}

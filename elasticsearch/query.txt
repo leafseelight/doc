@@ -1,0 +1,419 @@
+【全文查询】
+match query
+	会对查询语句进行分词, 分词后的词项有任何一个匹配, 文档就满足。
+	GET /_search {
+		"match": {
+			"title": {					  #字段名
+				"query": "java编程思想",  #查询内容 会被分词
+				"operator": "or"          #默认or 如果是and则要匹配所有关键字的文档才满足
+			}
+		}
+	}
+	
+match_phrase query
+	会对查询内容进行分词，分词后的所有词项都要出现在该字段中，字段的顺序要一致，这样文档才满足
+	GET /_search {
+		"query": {
+			"match_phrase": {
+				"foo": "hello world"
+			}
+		}
+	}
+	
+match_phrase_prefix query
+	与match_phrase类似 并支持最后一个term前缀匹配
+	GET /_search {
+		"query": {
+			"match_phrase_prefix": {
+				"foo": "hello w"
+			}
+		}
+	}
+	
+multi_match query
+	用于搜索多个字段 支持通配符 可以使用指数符指定搜索字段的权重
+	GET /_search {
+		"query": {
+			"multi_match": {			  
+				"query": "java编程思想",
+				"fields": ["title^3", "*desc"]
+			}
+		}
+	}
+	
+common_terms query
+	对查询内容进行分词 把分词后的词项分为低频词项(对评分影响大)和高频词(停用词 对评分影响不大)。
+	搜索时先搜索重要词项匹配的文档 然后第二次搜索对评分影响小的高频词项，但是不计算评分，只计算第一次查询已经匹配的文档得分
+	如果一个查询中只包含高频词 则会通过and连接符执行一个单独的查询
+	GET /_search {
+		"query": {
+			"common": {
+				"body": "nelly the elephant as a cartoon",
+				"cutoff_frequency": 0.001,					#区分高频词和低频词的阈值
+				"low_freq_operator": "and",					#设置低频词操作符为and 使所有低频词都是必须搜索的
+				#"high_freq_operator": "or"
+			}
+		}
+	}
+	
+	等价于
+	GET /_search {
+		"query": {
+			"bool": {
+				"must": [
+					{"term": {"body": "nelly"}},
+					{"term": {"body": "elephant"}},
+					{"term": {"body": "cartoon"}}
+				],
+				"should": [
+					{"term": {"body": "the"}},
+					{"term": {"body": "as"}},
+					{"term": {"body": "a"}}
+				]
+			}
+		}
+	}
+	
+query_string query
+	lucene查询语法 允许在一个查询语句中使用多个特殊关键字(AND|OR|NOT)对多个字段进行查询
+	
+simple_query_string	
+	lucene查询语法 解析过程中发生错误不会抛出异常
+	GET /_search {
+		"query": {
+			"simple_query_string": {
+				"query": "\"fried eggs\" +(eggplant | potato) -frittata",
+				"analyzer": "snowball",
+				"fields": ["body^5", "_all"],
+				"default_operator": "and"
+			}
+		}
+	}
+	
+#################################################################################################################################################
+【词项查询】
+term query
+	词项搜索 查询词不会再分词 查询文档中包含某个词的文档 是对倒排索引中存储的词项进行精确搜索
+	GET /_search {
+		"query": {
+			"term": {"title": "java"}   
+		}
+	}	
+	
+terms query	
+	查询文档中包含多个词的文档 或
+	GET /_search {
+		"query": {
+			"terms": {"title": ["java", "python"]}   
+		}
+	}
+	
+range query
+	匹配在某一范围内的数值型、日期类型或者字符串类型字段的文档。只能作用在一个字段上
+	支持参数 gt gte lt lte
+	GET /_search {
+		"query": {
+			"range": {
+				"price": {
+					"gt": 50,
+					"lte": 70
+				}
+			}
+		}
+	}
+	
+exists query
+	返回字段中至少有一个非空值(null和空数组[]，[null])的文档
+	GET /_search {
+		"query": {
+			"exists": {
+				"field": "user"
+			}
+		}
+	}
+	
+prefix query
+	查询某个字段中以给定前缀开始的文档 性能不高
+	GET /_search {
+		"query": {
+			"prefix": {
+				"name": "ja"
+			}
+		}
+	}
+	
+wildcard query
+	通配符查询 支持单字符通配符和多字符通配符 性能不高
+	?:匹配任意一个字符
+	*:匹配0个或多个字符
+	GET /_search {
+		"query": {
+			"wildcard": {
+				"name": "ja*"
+			}
+		}
+	}
+	
+regexp query
+	正则表达式查询
+	GET /_search {
+		"query": {
+			"regexp": {
+				"postcode": "W[0-9].+"
+			}
+		}
+	}
+	
+fuzzy query
+	模糊查询 效率很低 编辑距离(一个字符串转成另一个字符串需要的最少编辑次数)
+	GET /_search {
+		"query": {
+			"fuzzy": {
+				"name": "javascritp"
+			}
+		}
+	}
+	
+type query
+	查询具有指定类型的文档
+	GET /_search {
+		"query": {
+			"type": {
+				"value": "IT"
+			}
+		}
+	}
+	
+ids query	
+	查询具有指定id的文档
+	GET /_search {
+		"query": {
+			"ids": {
+				#"type": "IT",			#类型可选
+				"value": ["1"， "2"]
+			}
+		}
+	}
+	
+	
+#######################################################################################################################################################################
+【复合查询】	
+constant_score query
+	包装一个其他类型的查询 并返回匹配过滤器中的查询条件且具有相同评分的文档
+	GET /_search {
+		"query": {
+			"constant_score": {
+				"filter": {
+					"term": {"title": "java"}
+				},
+				"boost": 1.2					#匹配title包含java且评分为1.2的文档
+			}
+		}
+	}
+	
+bool query
+	可以把任意多个简单查询组合在一起 使用must、should、must_not、filter来表示简单查询之间的逻辑
+	must		必须匹配 相当于逻辑运算符AND
+	should		可以匹配 相当于逻辑运算符OR should条件多个时可以设置should至少满足的个数
+	must_not	与must相反
+	filter		与must一样 但是filter不评分 只过滤
+	
+	GET /_search {
+		"query": {
+			"bool": {
+				"minimum_should_match": 1,
+				"must": {
+					"match": {"title": "java"}
+				}
+				"should": [
+					{"match": {"desc": "虚拟机"}}
+				],
+				"must_not": {
+					"range": {"price": {"gte": 70}}
+				}
+			}
+		}	
+	}	
+	
+dis_max query
+	支持多并发查询，可返回与任意查询条件子句匹配的任何文档类型。只是用最佳匹配查询条件的分数
+	GET /_search {
+		"query": {
+			"dis_max": {
+				"tie_breaker": 0.7,
+				"boost": 1.2,
+				"queries": [
+					{"term": {"age": 34}},
+					{"term": {"age": 35}}
+				]
+			}
+		}
+	}	
+	
+function_score query
+	修改查询的文档得分
+	
+	GET /_search {
+		"query": {
+			"function_score": {
+				"query": {"match_all": {}},		#返回所有文档
+				"boost": 5,						#最大得分5
+				"random_score": {},				#每个文档的得分随机生成
+				"boost_mode": "multiply"		#权重的计算模式为相乘
+			}
+		}
+	}	
+	
+	GET /_search {
+		"query": {
+			"function_score": {
+				"query": {"match": {"title": "java"}},
+				"script_score": {										#使用脚本自定义评分公式
+					"script": {
+						"inline": "Math.sqrt(doc['price'].value/10)"	#es内置的脚本 把price值的十分之一开方作为每个文档的得分
+					}
+				}
+			}
+		}
+	}	
+		
+boosting query
+	用于需要对两个查询的评分进行调整的场景
+	boosting查询会把两个查询封装在一起并降低其中一个查询的评分
+	
+	GET /_search {
+		"query": {
+			"boosting": {
+				"positive": {						#positive中的查询评分保持不变
+					"match": {"title": "java"}
+				},
+				"negative": {						#negative中的查询评分会降低
+					"range": {
+						"publish_time": {
+							"lte": "2015-01-01"
+						}
+					}
+				},
+				"negative_boost": 0.2				#降低的权值 (抑制因子) 
+			}
+		}
+	}	
+	
+indices query
+	用于在多个索引之间进行查询的场景
+	GET /_search {
+		"query": {
+			"indices": {
+				"indices": ["index1", "index2"],				#指定索引
+				"query": {"match": {"title": "javascript"}},	#搜索指定索引中满足条件的文档
+				"no_match_query": {"term": {"title": "java"}}   #搜索指定索引之外的满足条件的文档
+			}
+		}
+	}		
+				
+				
+#####################################################################################################################################################################
+【嵌套查询】
+nested query
+	嵌套查询 文档中可能包含嵌套类型的字段 这些字段用来索引一些数组对象 每个对象都可以作为一条独立的文档被查询出来
+	
+	
+has_child query 
+	有子查询 
+has_parent query
+	有父查询
+	父子关系可以存在单个索引的两个类型的文档之间。父子关系在创建索引时在映射中申明。
+	has_child 将返回其子文档能满足特定查询的父文档
+	has_parent 将返回其父文档能满足特点查询的子文档
+	
+	GET /_search {
+		"query": {
+			"has_child": {						#通过子文档查询父文档
+				"type": "eee",					#子文档类型
+				"min_children": 2,				#指定子文档的最小个数 即父文档要满足至少对应两个子文档
+				"query": {"match_all": {}}
+			}
+		}
+	}
+		
+		
+######################################################################################################################################################################
+【位置查询】
+geo_distance query
+	可以查找在一个中心点指定范围distance内的地理点文档
+	GET /_search {
+		"query": {
+			"bool": {
+				"must": {
+					"match_all": {}
+				},
+				"filter": {
+					"geo_distance": {				#查询指定坐标200km以内的文档
+						"distance": "200km",
+						"location": {
+							"lat": 39.0851000000,
+							"lon": 117.1993700000
+						}
+					}
+				}
+			}
+		}
+	}	
+	
+geo_bounding_box query
+	用于查找落入指定的矩形内的地理坐标 (两点确定一个矩形 top_left bottom_right)
+	
+geo_polygon query
+	用于查找指定多边形内的地理点 可以指定多个地理点points
+	
+geo_shape query
+	用于查询geo_shape类型的地理数据 地理形状之间的关系有相交 包含 不相交三种
+	
+	
+####################################################################################################################################################################
+【特殊查询】
+more_like_this query
+	查询和提供文本类似的文档 通常用于近似文本的推荐
+	GET /_search {
+		"query": {
+			"more_like_this": {
+				"fields": ["title", "desc"],				#要匹配的字段 默认是all字段
+				"like": "java virtual machine",				#要匹配的文本
+				"min_term_freq": 1,							#文档中词项的最低频率 默认是2 低于此频率的文档会被忽略
+				"max_query_terms": 12,						#查询中能包含的最大词项数目 默认25
+				#"min_doc_freq": 5,							#最小的文档频率 默认5
+				#"max_doc_freq": 100,						#最大的文档频率
+				#"min_word_length": 1,						#单词的最小长度
+				#"max_word_length": 10,						#单词的最大长度
+				#"stop_words": [],							#停用词列表
+				#"analyzer": standard,						#分词器
+				#"minimum_should_match": 1,					#文档应匹配的最小词项数 默认为query分词后的词项数的30%
+				#"boost_terms": 1,							#词项的权重
+				#"include": false,							#是否把输入文档作为结果返回
+				#"boost": 1.0								#整个query的权重 默认1.0
+			}
+		}
+	}	
+	
+script query
+	脚本查询
+	GET /_search {
+		"query": {
+			"bool": {
+				"must": [
+					{
+						"script": {						#脚本查询
+							"script": {					#脚本内容
+								"inline": "doc['price'].value > 80",		#查询price大于80的文档
+								"lang": "painless"
+							}
+						}
+					}
+				]
+			}
+		}
+	}	
+	
+percolate query
+	先注册查询条件 根据文档来查询query
+	适用于数据分类 数据路由 事件监控和预警

@@ -1,0 +1,2 @@
+【analyzer-ik】	ik中文分词器
+【mapper-size】 统计_source大小

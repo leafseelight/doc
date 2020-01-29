@@ -1,0 +1,33 @@
+es默认使用<em></em>标签标记关键字
+
+1.自定义高亮
+GET /_search {
+	"query": {...},
+	"highlight": {
+		"fields": {
+			"title": {
+				"pre_tags": ["<strong>"],
+				"post_tags": ["</strong>"]
+			}
+		}
+	}
+}
+
+2.多字段高亮
+GET /_search {
+	"query": {...},
+	"highlight": {
+		"require_field_match": false,		#默认为true 表示只会高亮匹配的字段。设为false之后 其他字段中的关键字也会高亮
+		"fields": {
+			"title": {},
+			"desc": {}
+		}
+	}
+}
+
+3.高亮性能分析
+
+	三种高亮器
+		highlighter					默认高亮器	需要对_source存储的原始文档进行二次分析 速度最慢 但是不需要额外的存储空间	
+		posting-highlighter			不需要二次分析 但是需要在映射中设置index_options的取值为offsets(即保存关键词的偏移量) 速度较快
+		fast-vector-highlighter		需要在字段的映射中设置term_vector的取值为with_positions_offsets(即保存关键词的位置和偏移信息) 占磁盘 速度最快

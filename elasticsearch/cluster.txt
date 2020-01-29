@@ -1,0 +1,142 @@
+【集群规划】
+
+	脑裂问题：
+		同一个集群中不同的节点对集群状态的感知发生了区别 (比如 如果由于网络原因 节点之间相互认为不可用 重新选举主节点可能导致多个主节点间不一致）
+		
+		解决:
+			es配置文件 elasticsearch.yml
+			discovery.zen.minimum_master_nodes=N/2+1   修改主节点最少是N/2+1个(N是全部节点数量)，默认为1
+			discovery.zen.ping.timeout 调大，默认为3s 网络延迟较高或者节点超载响应慢的情况下降低超时概率
+		
+	2节点集群minimum_master_nodes设为2 则一个节点挂了 整个集群就挂了 建议配置3节点集群(2主)
+	
+【索引规划】	
+	影响查询效率的主要因素
+		1.服务器性能 内存 cpu 硬盘
+		2.文档结构的复杂度
+		3.查询语句的复杂度
+		
+	按照单个分片的性能测试结果根据文档大小规划整体需要的分片数量	
+	默认分片数5 副本数1
+	
+【节点】
+		master节点		负责元数据的处理 如索引的新增 删除 分片分配，会将元数据信息同步到其他节点上
+		data节点		保存数据 分片的增删改查 搜索 整合
+		client节点		路由请求 作为一个负载均衡器。适用于高并发访问的场景
+		
+		一个节点要么是数据节点 要么是client节点。主节点也可以是数据节点?
+		
+		
+##################################################################################################################################################################
+【Cat API】		
+
+#cat aliases
+#显示索引的别名 包括过滤器和路由信息
+GET /_cat/aliases?v
+
+#cat allocation
+#查看每个节点的分片的分配数量以及硬盘空间大小等
+GET /_cat/allocation?v
+
+#cat count
+#快速查询整个集群或单个索引的文档数量
+GET /_cat/count?v					#查看整个集群文档数量
+GET /_cat/count/indexname?v			#查看单个索引文档数量
+
+#cat fielddata
+#查看每个节点上fielddata使用的堆内存大小
+GET /_cat/fielddata?v	
+
+#cat health
+#显示集群健康信息
+GET /_cat/health?v
+
+#cat indices
+#查看索引信息 包括健康状态 索引开关状态 分片数 副本数 文档数量 标记为删除的文档数量 占用的存储空间等
+GET /_cat/indices?v
+GET /_cat/indices/indexname?v
+
+#cat master
+#显示master节点的节点id name host 
+GET /_cat/master?v
+
+#cat nodeattrs
+#显示节点属性信息
+GET /_cat/nodeattrs?v
+
+#cat nodes
+#查看集群拓补结构
+GET /_cat/nodes?v
+
+#cat pending tasks
+#查看正在执行的任务列表
+GET /_cat/pending_tasks?v
+
+#cat plugins
+#查看每个节点运行的插件信息
+GET /_cat/plugins?v
+
+#cat recovery
+#索引分片恢复的视图 包括恢复中的和已完成的
+GET /_cat/recovery/indexname?v
+
+#cat repositories
+#展示集群中注册的快照库
+GET /_cat/repositories?v
+
+#cat thread pool
+#展示集群中每一个节点线程池的统计信息 默认返回所有线程池的active、queue、rejected的统计信息
+GET /_cat/thread_pool?v
+
+#cat shards
+#查看节点包含的分片信息
+GET /_cat/shards/indexname?v
+
+#cat segments
+#查看索引的段信息
+GET /_cat/segments/indexname?v
+
+#cat templates
+#查看集群中的模板
+GET /_cat/templates?v
+
+#####################################################################################################################################################################
+【Cluster API】
+#Cluster Health	集群健康信息
+GET _cluster/health?level=shards		#level参数值为shards表示获取分片级别的健康信息
+GET _cluster/health/indexname
+
+#Cluster State	集群状态
+GET _cluster/state				#返回集群的全部信息
+GET _cluster/state/version		#返回集群的版本信息
+GET _cluster/state/nodes		#返回集群中节点的配置信息
+GET _cluster/state/metadata,routing_table/indexname1,indexname2		#返回集群中indexname1 indexname2索引的元数据和路由表信息
+
+#Cluster Stats  集群统计
+GET _cluster/stats
+
+#Cluster Pending Tasks 任务列表
+GET _cluster/pending_tasks
+
+#Cluster Reroute 重新路由
+GET _cluster/reroute
+
+#Cluster Update Settings 更新配置 如果是永久配置 需要重启集群
+GET _cluster/settings
+
+#Cluster Alloction Explain	分片分配说明
+GET _cluster/allocation/explian
+
+---------------------------
+#Nodes Stats  节点统计
+GET /_nodes/stats
+GET /_nodes/node1,node2/stats
+
+#Nodes Info
+GET /_nodes
+GET /_nodes/node1,node2
+
+#Task Managment
+GET /_tasks
+
+
