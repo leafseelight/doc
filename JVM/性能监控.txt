@@ -1,0 +1,30 @@
+jdk自带小工具
+【jps】
+	JVM Process Status Tool 查看虚拟机进程
+	
+【jstat】
+	JVM Statistics Tool 查看虚拟机运行状态
+	
+【jinfo】
+	Configuration Info for Java	查看虚拟机配置信息
+	
+【jmap】
+	Memory Map for Java 内存映像工具 用于生成堆转储快照
+	
+【jhat】777777777777777777777777777777777777777777777
+	JVM Heap Analysis Tool	虚拟机堆转储快照分析工具
+	
+【jstack】
+	Stack Trace or Java	生成线程快照
+	
+---------------------------------------
+HSDIS：JIT生成代码的反汇编插件
+
+---------------------------------------
+可视化工具
+【JConsole】
+	Java onitoring and Management Console 监视和管理控制台，基于JMX
+	
+【VisualVM】
+	All-in-One Java Troubleshooting Tool 多合一故障处理工具
+	
