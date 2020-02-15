@@ -40,7 +40,7 @@ public class Thread implements Runnable {
     ThreadLocalMap inheritableThreadLocals = null;         // 保存继承的局部变量
     private long stackSize;                                // 栈深
     private long nativeParkEventPointer;
-    private long tid;                                      // 线程序号
+    private long tid;                                     
     private static long threadSeqNumber;                   // 线程序号
     private volatile int threadStatus = 0;                 // 线程状态
     volatile Object parkBlocker;
