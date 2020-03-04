@@ -1,0 +1,15 @@
+net start/stop {serviceName} ：启动/停止服务 （管理员权限）
+	net start MySQL 启动MySQL服务(MySQL需要安装成服务且服务名为MySQL)
+	net stop MySQL 停止MySQL服务
+
+	【tip】： service mysql start|stop|restart|status  (linux服务操作命令)
+
+创建服务 sc create
+sc create "Proxy" DisplayName="MySQL Proxy" start="auto" 
+		binPath="D:\DB\MySQL\MySQL Proxy\mysql-proxy-0.8.5-windows-x86-32bit\bin\mysql-proxy-svc.exe 
+			--proxy-backend-addresses=127.0.0.1:3306"
+停止服务
+sc stop proxy
+
+删除服务
+sc delete proxy

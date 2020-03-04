@@ -1,0 +1,142 @@
+-------------文件------------
+
+任何设备在Linux下都是文件，包括数据通信的接口等
+
+【文件种类】
+	普通文件regular file  【-】【白色】
+		纯文本文件ASCII，可以用cat命令读取内容，几乎所有配置文件等
+		二进制文件binary file，linux中的可执行文件（不包括scripts 文字批处理文件）就是这种类型。cat命令就是二进制文件
+		数字格式文件data file，可以用last文件读取内容，使用cat则会乱码
+	目录directory 【d】【蓝色】
+	连接文件linkfile 【l】【淡蓝色】 ：即windows系统下的快捷方式
+	设备与设备文件：与外设和存储相关的文件，大多在/dev下
+		块设备文件block 【b】 【黄色】存储数据，提供系统随机访问的接口设备，如硬盘、软盘等
+		字符设备文件character 【c】 【黄色】一些串行端口的接口设备，如键盘、鼠标等 “一次性读取”
+		数据接口文件/套接字sockets 【s】 【紫色】网络上的数据连接  /var/run下
+		管道FIFO,pipe 【p】 解决多个程序同时访问一个文件造成的错误问题 
+		
+【文件扩展名】
+	Linux的文件没有windows系统下的扩展名的概念，文件能不能被执行与文件名字没有关系
+	可执行与执行成功是两个概念
+
+	*.sh：脚本或批处理文件(scripts),因为批处理文件是用shell写的
+	*.Z、*.tar、*.tar.gz、*.zip、*.tgz：经过打包的压缩文件【红色】，根据压缩软件不同而区分
+	*.html、*.php：网页相关文件，分别代表html语法和php语法的网页文件
+
+【文件名长度】
+	默认的Ext2/Ext3文件系统限制单一文件或目录的名字的长度为255字符，限制全路径为4096个字符，限制包含特殊字符
+	linux下的很多文件名都很长，因为要见名知意  【tab自动提示！】
+
+
+-------------目录-------------
+	目录配置标准FHS（Filesystem Hierarchy Standard）
+	/(root,根目录)：与开机系统有关
+	/usr(UNIX software resource)：与软件安装/执行有关
+	/var(variable)：与系统运作过程有关
+
+	目录类型
+		可分享的shareable ：可以分享给其他系统挂载使用
+ 		不可分享的unshareable ：自己机器上运行的设备文件或是根程序有关的socket文件等
+		不变的static ： 函数库、文件说明文件、系统管理员所管理的主机服务配置文件等
+		可变动的variable ：经常改变的数据，如登录文件、新闻组等
+
+	/根目录（所在分区越小越好，应用程序所安装非软件最好不要放在根目录同所在分区）
+		/bin 放置单用户维护模式下还能被操作的命令，cat、chmod、chown、data、mv、mkdir、cp、bash等
+		/boot 放置开机文件，包括linux内核文件、开机菜单、开机所需配置文件
+			/vmlinuz：linux内核文件
+			/grub/：使用grub引导装载程序
+		/dev 任何设备和设备接口都以文件形式存放在这个目录，访问某个文件相当于访问某个设备
+			/null
+			/zero
+			/tty
+			/lp*
+			/hd*
+			/sd*
+		/etc 系统主要配置文件，如账号密码文件、各种服务的起始文件等
+			/inittab 
+			/init.d/  所有服务的默认启动脚本
+			/modprobe.conf 
+			/X11/ 与windows有关的各种配置文件，尤其是xorg.xconf这个XServer的配置文件
+			/fstab
+			/sysconfig
+			/xinetd.d/：super daemon管理的各项服务的配置文件目录
+		/home 系统默认的用户主文件夹【home directory】，创建一个一般用户账号时，默认的用户主文件夹就会规范到这里
+			~代表目前这个用户的主文件夹
+			~dmtsai代表dmtsai的主文件夹
+		/lib 函数库（开机时会用到的函数库以及/bin、/sbin下的命令会调用的函数库）
+			/modules/ 放置内核相关的模块（驱动程序）
+		/media 放置可删除的设备，包括软盘、光盘、DVD等
+			/floppy
+			/cdrom
+		/mnt 暂时挂载某些额外的设备
+		/opt 第三方软件放置的目录【以前的linux系统还是习惯放在/usr/local/下】
+		/root 系统管理员的主文件夹
+		/sbin 开机所需要的命令，fdisk、fsck、ifconfig、init、mkfs等
+			【某些服务器软件程序，一般放置在/usr/sbin/;本机自行安装的软件所产生的执行文件，放置到/usr/local/sbin下】
+		/srv 网络服务启动后所需要的数据
+		/tmp 一般用户或正在执行我的程序临时存放文件的目录
+
+		/lost+found 当文件系统发生错误时，将一些丢失的片段放置到这个目录【标准的ext2/ext3文件系统格式】
+		/proc 【虚拟文件系统】表示内存！不占硬盘空间
+			/cpuinfo
+			/dma
+			/interrupts
+			/ioports		
+			/net/*
+		/sys 【虚拟文件系统】记录内核相关的信息
+
+		/usr 【安装时会占较大硬盘容量的目录，可分享的不可变动的】
+		     【不是用户数据！！】(UNIX software resource)：与系统默认软件安装/执行有关，类似于windows的C:\Windows\和C:\Program files
+			/X11R6/ X Windowx系统重要数据放置的目录
+			/bin/ 绝大部分用户可使用命令都放置在这里【与/bin区分：/bin与开机过程有关】
+			/include/ C系列语言等的头文件与包含文件放置处
+			/lib/ 或/lib64/ 各应用软件的软件库、目标文件，以及不被一般用户惯用的执行文件或脚本
+			/local/ 系统管理员在本机安装自己下载的软件建议放到这
+				/bin/
+				/etc/
+				/include/
+				/lib/
+			/sbin/ 非正常系统运行所需要的系统命令，如某些服务器软件的服务命令
+			/share/ 放置共享文件的地方
+				/man/ 在线帮助文件
+				/doc/ 软件杂项的文件说明
+				/zoneinfo 与时区有关的时区文件
+			/src 一般源码建议放置在这里【内核的源码放置到/usr/src/linux下】
+
+		/var  【系统运行后才逐渐占用硬盘容量的目录，常态性变动的】
+                       存放缓存、登录文件以及某些软件运行时产生的文件，如MYSQL数据库文件
+			/cache/  缓存
+			/lib/   程序运行需要的数据文件放置目录
+			/lock/  需要在运行时加锁的文件
+			/log/   登录文件放置位置
+				/messages
+				/wtmp ：记录登陆者的信息
+			/mail/  放置个人电子邮箱的目录  【与/var/spool/mail目录互为连接文件】
+			/run/   某些程序启动后会将PID放置在此
+			/spool/  放置一些队列数据
+			
+		      
+				
+		
+			
+			
+			
+
+
+
+
+var
+	log
+		wtmp：记录登录数据
+
+etc
+	passpwd：所有账号与一般身份用户，包括root的相关信息
+	shadow：账号管理 个人的密码
+	group：所有的用户组信息
+
+	sysconfig
+		i18n：系统语言
+
+
+/etc/sysctl.conf  ：内核参数    执行sysctl -p 命令生效
+/etc/ ：环境变量      		执行source 命令生效

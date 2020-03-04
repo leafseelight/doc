@@ -1,0 +1,18 @@
+AsychronousFileChannel extends Object implements AsynchronousChannel
+	读取、写入和操作文件的异步通道
+	与FileChannel概念类似，但是没有直接的api关系
+	异步是通过CompletionHandler回调的方式实现的
+	
+	---AsychronousFileChannel API---
+	static AsynchronousFileChannel open(Path file, OpenOption... options)		打开文件时创建一个异步文件通道
+	Future<FileLock> lock()
+	<A> void lock(A attachment, CompletionHandler<FileLock,? super A> handler)
+	
+	---CompletionHandler<V,A> API---
+	void completed(V result, A attachment)			操作成功时调用
+	void failed(Throwable exc, A attachment)		操作失败时调
+	
+	
+AsynchronousServerSocketChannel extends Object implements AsynchronousChannel, NetworkChannel	
+AsynchronousSocketChannel extends Object implements AsynchronousByteChannel, NetworkChannel
+	面向流的侦听套接字的异步通道

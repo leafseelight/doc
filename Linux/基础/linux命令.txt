@@ -1,0 +1,213 @@
+首先 #表示root用户 $表示普通用户
+Linux中的断行字符用$表示 而windows中用^M$
+Linux中的Tab字符用^I表示
+atime ：access time 文件内容被取用的时间
+mtime： modification time 文件内容数据修改时间
+ctime： status time 文件状态（权限、属性）改变时间
+;代表连续命令的执行
+终端机模式连续按两次tab会显示所有当前可执行的命令
+
+exit：注销
+sync：数据同步写入磁盘（shutdown、reboot、halt命令默认都会执行sync）
+poweroff：关机【关机有很多 还有init 0】
+date：显示时间与日期
+cal：显示日历   cal [[month] year]
+bc：打开计算器
+df：查看文件系统
+fdisk：新建分区 ..
+mount：挂载 ..
+alias:查看别名
+ulimit:限制
+dmesg：列出内核信息
+
+
+
+updatedb：更新数据库。linux会将系统内的所有文件记录在一个数据库文件里面 默认每天更新一次
+
+echo $LANG  查看语言及编码
+echo $PATH  查看PATH查询目录
+LANG=en_US
+uname -a ：查看Linux内核版本
+lsb_release -a ： 查看lsb版本
+passwd：修改密码
+
+PATH="$PATH":/root  将/root加入到执行文件查询路径PATH中
+
+
+pwd ：查看当前所在目录
+find / name {文件名} ：查找文件
+
+who：查看有哪些用户在线
+netstat -a ：查看网络的联机状态
+ps aux|grep {进程名} ：查看进程的信息
+
+
+查看ls
+	ls [-aAdfFhilnrRSt] [--color={never,auto,always}] [--full-time] [--time={atime,ctime}]{文件/目录名称（可以是多个）}
+	ls     列出当前目录下所有文件及目录
+	ls -l  列出当前目录下所有文件及目录的详细权限与属性【常用】【别名：ll】
+	ls -al 列出当前目录下所有文件及目录的详细权限与属性(包括隐藏)【隐藏文件和隐藏目录以.开头】
+	ls [p] [全路径文件名] 列出指定文件的详细权限与属性 【文件也可以用*通配符的方式指定】
+	ls [p] [--full-time] 包括详细的创建/修改时间
+	ls -a  列出当前目录下所有隐藏文件及目录【常用】
+	ls -d  列出目录【常用】
+
+	【man ls或info ls查看ls的详细用法    man命令的使用】
+
+切换目录cd
+	.		当前目录
+	..		上一级目录    【根目录的上一级目录就是自己】
+	-		前一个目录
+	~		当前用户所在主文件夹  root用户：/root  普通用户：/home/{用户名} 【直接cd也是回到自己的主文件夹】
+	~{账户名}	指定用户所在文件夹
+
+显示当前目录pwd
+	如果当前目录是连接路径 使用pwd -P则显示连接到的目录的路径
+新建目录mkdir
+	mkdir [-mp] {directoryname}
+	mkdir -m 711 test   设置目录的属性，如果不设置则是系统默认属性755
+	mkdir -p test1/test2  创建多级目录
+删除空目录rmdir
+	rmdir [-p] {directoryname}   【空目录下没有文件和目录】
+	rmdir -p test1/test2  删除多级目录【test2必须是空目录】
+	rmdir -r test3  删除目录【包括目录下的东西】
+	
+
+移动mv
+	mv [-fiu] {sourcefilename/directory} {destinationdirectory}
+		【源文件/目录可以是多个 如果目标是一个不存在的目录的话 会当成文件名进行重命名（此外还有个rename命令也可以重命名）】
+
+复制cp
+	cp [-adfilprsu] {源文件} {目标文件}
+	cp [sourcefile] [destinationfile]   【复制默认也会复制执行者的属性与权限，如果是root权限的复制给一般用户，用户是没有权限的】
+					    【目标文件可以重命名】【源文件可以是多个，但是此时目标文件必须是目录】	
+					    【目标文件可以是. 表示复制到当前目录，复制目录一定要-r】
+	常用参数-p （源文件的属性也会复制，否则是默认属性）  
+		-d 如果源文件是连接文件，则复制连接属性而非文件本身
+		-i 若目标文件已经存在 会询问是否覆盖
+		-r 递归复制 用于目录的复制 
+		-a ：即-pdr
+
+移除文件rm
+	rm [-fir] {文件或目录}
+取得文件名basename
+取得目录名dirname
+	basename /etc/test  结果是test
+	dirname /etc/test  结果是/etc
+
+修改文件时间或创建空文件touch
+	touch [-acdmt] {文件名}  【如果文件不存在 则会创建文件】
+
+查看文件类型file
+	file {filename}
+
+
+<<<查看文件内容>>>
+cat ：由第一行显示文件内容
+	cat [-AbEnTv] {文件名}
+	常用参数-n 显示行号 包括空白行
+tac： 从最后一行开始显示
+
+nl：显示的时候 顺便输出行号 
+	nl [-bnw] {文件名}
+more：一页一页的显示文件内容
+	more {文件名}
+	最后一行会显示光标：
+		按空格键： 向下翻一页
+		按回车：向下滚动一行
+		q：退出
+		b或者ctrl + b ：往回翻页
+		:f 立即显示文件名及目前显示的行数
+		/字符串 ：向下查询"字符串这个关键字"
+less：与more类似 支持向前翻页（使用上下键来向前向后翻页）
+
+head：只看头几行 默认显示头10行
+tail：只看结尾几行 以行为单位进行数据选取 默认显示最后10行
+	tail [-n number] {文件名} 显示最后多少行，如果数字前带+表示显示除了前面100行的后面所有   
+	tail -f {文件名} 持续检测文件内容
+
+od： 以二进制方式读取文件内容
+	od [-t TYPE] {文件名}  
+
+查找执行文件which
+	which [-a] {command}  查询某个命令所在目录【根据用户设置的PATH变量内的目录去查找可执行文件的】
+
+查找文件
+	find [PATH] [option] [action]    【直接到硬盘查找文件，速度慢】
+		find / -mtime 0  ： 查询过去24小时内有改动的文件列出
+		find / -nouser   ： 查询系统中不属于任何人的文件列出
+		find / -name {名字} ： 按照名字查找文件
+	whereis [-bmsu] {文件或目录名}   【利用数据库查找文件，可能会找到已删除的文件或者找不到新创建的文件】
+	locate [-ir] {关键字}            【利用数据库查找文件，可能会找到已删除的文件或者找不到新创建的文件】
+					 【数据库文件在/var/lib/mlocate】
+
+
+权限管理  
+	chgrp：改变文件的所属用户组
+		chgrp [-R] [groupname] [filename/dirname]  -R表示递归更改目录下的所有文件及目录的所属用户组【组名必须在/etc/group文件中存在】
+	chown：改变文件所有者
+		chown [-R] [username] [filename/firname]           用户名必须在/etc/passwd文件中存在
+		chown [-R] [username:groupname/username.groupname] [filename/firname] 也能修改组名
+		chown [-R] [.groupname] [filename/firname]         单纯修改组名
+	chmod：改变文件的权限
+		chmod [-R] [xyz] [filename/dirname]  【xyz分别表示每组权限之和，如770表示rwxrwx---】
+
+	umask：查看uamsk分数0022,这个权限就是用户在新建文件或目录时的默认权限  【第一个0是特殊权限】
+		umask -S ：以符号类型来显示权限u=rwx,g=rx,o=rx
+		umask 002 ：设定权限为002
+
+	lsattr：查看文件隐藏属性
+		lsattr [-adR] {文件或目录}
+	chattr：修改文件隐藏属性。【chattr属性只在ext2/ext3文件系统里有效】
+		chattr [+-=] [ASacdistu] {文件或目录} ：设置文件的隐藏属性
+		常用属性a：文件只能增加数据，不能删除也不能修改数据。只有root才能设置这个属性
+			i：文件不能删除、改名，设置连接也无法写入数据或添加数据。只有root可以设置这个属性。
+		
+
+解压
+tar -zxvf {压缩包名}.tar.gz ：解压.tar.gz包
+
+切换身份
+	su - {账号名}
+	exit  ：切换回root身份
+
+备份dump
+	【tar也可以用来作为备份使用】
+	【dump可以备份单一文件系统和目录，备份目录时只支持level 0，即完整备份】【dump时可以带上压缩功能】
+	dump [-Suvj] [-level] [-f 备份文件] 待备份数据
+	dump -W ：列出在/etc/fstab里面的具有dump设置的分区是否有备份过【就是查看被dump过的数据】
+恢复restore
+	restore [-t|-C|-i|-r] [-f filename] 
+备份整块磁盘/分区dd
+	dd if="input file" of="output file" bs="block size" count="number"
+备份cpio 【可以备份任何东西】
+	
+
+ifconfig
+	ifconfig eth0
+		普通用户可以执行 /sbin/ifconfig eth0  【因为该命令在/sbin下 只有root用户下该目录是被定义成路径，可以在任意工作目录下使用的】
+
+
+光盘
+	mkisofs [-o 镜像文件] [-rv] [-m file] 待备份文件 [-V vol] -graft-point  新建镜像文件
+	cdrecord  光盘刻录
+ 
+
+
+安装
+	./configure       检测操作系统内核和已安装的软件 参数的解析 中间目录的生成 生成C源码文件、Makefile文件等
+	make		  根据configure命令生成Makefile文件编译XX工程 并生成目标文件、最终的二进制文件 
+	make install      根据configure命令执行时的参数将XX部署到指定的安装目录 包括相关目录的建立和二进制文件、配置文件的复制
+
+
+yum安装
+	yum install -y gcc         		安装gcc 用来编译c语言程序
+	yum install -y gcc-c++	   		安装g++ 用来编译c++程序
+	yum install -y pcre pcre-devel		安装pcre-devel库 用来解析正则表达式
+	yum install -y zlib zlib-devel		安装zlib-devel库 用来对HTTP包的内容做gzip压缩
+	yum install -y openssl openssl-devel    安装openssl-devel库 支持ssl以及md5 sha1等散列函数
+	yum install ncompress			安装cnompress，用于压缩解压*.Z【现在gzip也能解压*.Z】
+	
+
+	
+

@@ -1,0 +1,67 @@
+服务
+	常驻在内存中，并且提供一些系统或网络的功能，就是服务service
+	提供服务需要进程的运行，这个程序就是daemon（守护进程）
+
+daemon分类
+	stand_alone：可以单独启动服务，响应速度较快，如httpd vsftpd
+	super daemon：通过这个特殊的deamon统一管理，如xinted telnet。当有请求时才唤醒对应的服务。
+		      响应速度较慢，不会一直占用系统资源，并且起到类似防火墙的作用
+
+	super daemon唤醒多个服务可以看做多线程，唤醒一个服务执行多个请求可以看做单线程
+
+	以工作形态分类：
+		signal-control 通过信号管理，如cupsd
+		interval-control 每隔一段时间就去主动执行某项任务，如atd、crond
+
+启动服务
+
+   stand alone的启动方式：
+	1.到/etc/init.d/目录下执行
+	  /etc/init.d/syslog status ： 查看系统日志进程
+	2.service [service name] (start|stop|restart|status|...)   【service name需要与init.d/对应】
+	  service --status-all ：将系统所有的stand alone的服务状态列出来
+
+   super daemon的启动方式
+	super daemon本身也是一个srand alone的服务，启动super daemon的方式与stand alone一样
+	
+	启动super daemon管理的服务：
+	到/etc/xinetd.d/目录下找到对应服务的文件，vim编辑这个文件（将disnable值改为no），重新启动xinetd，/etc/init.d/xinetd restart
+
+服务的防火墙管理：
+	防火墙：针对源ip或域进行允许或拒绝设置
+
+	1.xinted，修改具体受管理服务的配置文件
+	2./etc/hosts.deny   /etc/hosts/allow
+	   任何以xinted管理的服务都可以通过/etc/hosts.{deny|allow}来设置防火墙
+	3.TCP Wrappers
+	   支持TCP Wrappers函数的程序也可以使用/etc/hosts.{deny|allow}来设置防火墙
+	   
+	rpm -q tcp_wrappers：查看有没有安装TCP Wrappers
+
+	ldd命令：查询某个程序的动态函数库支持状态
+		eg： ldd $ {which sshd httpd}
+
+
+查看服务
+	netstat -tulp ：查看系统开启的网络服务（不带端口）
+	netstat -lnp  ：查看所有的有监听网络的服务（包含socket状态）
+	service --status-all
+
+开机启动服务
+	chkconfig --list [服务名称]  ：将目前各项服务状态栏列出来
+	chkconfig [--level [0123456]] [服务名称] [on|off] ：设置某个服务在某个运行等级下的默认开机启动与否（不管目前是否启动，也不会去启动）
+
+设置自己的系统服务
+	chkconfig [--add|--del] [服务名称]  增加/删除一个服务名称给chkconfig管理，该服务名称必须在/etc/init.d/内
+
+类图形界面管理模式
+	ntsysv （只有小红帽支持）
+	ntsysv [--level <levels>]  进入管理界面设置开机启动的服务
+
+
+
+
+
+
+
+

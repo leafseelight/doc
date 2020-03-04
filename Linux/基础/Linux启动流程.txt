@@ -1,0 +1,17 @@
+引导装载程序（Boot Loader）
+	LILO（早期）
+	grub（主流）
+	spfdisk
+
+启动过程
+	1、加载BIOS的硬件信息、进行自我测试。并依据设置取得第一个可启动的设备
+	2、读取并执行第一个启动设备内MBR的boot loader
+	3、依据boot loader的设置加载kernal，kernal会开始检测硬件与加载驱动程序
+	4、在硬件驱动成功后，kernal会主动调用init进程，为init会取得run-level信息
+	5、init执行/etc/rc.d/rc.sysinit文件来准备软件执行的操作环境
+	6、init执行run-level的各个服务的启动（script方式）
+	7、init执行/etc/rc.d/rc.local文件
+	8、init执行终端机模拟程序mingetty来启动login进程，等待用户登录
+
+BIOS
+	

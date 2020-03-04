@@ -1,0 +1,166 @@
+通道Channel
+	主要用来传输数据，在源缓冲区和目的缓冲区之间传输。(缓冲区主要用来打包数据)
+	Buffer基本上都是类，而Channel基本上都是接口，因为通道功能的实现依赖操作系统。
+	
+	Channel继承了Closeable接口，而Closeable接口继承了AutoCloseable接口。
+	Closeable接口表示I/O资源可关闭的，close()方法可以手动关闭，要求幂等，该方法抛出IOException
+	AutoCloseable接口是自动关闭被try-with-resource包含的任何资源，close()方法表示自动关闭，不幂等，该方法抛出Exception
+	
+	通道代表数据到硬件设备、文件、网络套接字的连接，可以处于打开或关闭两种状态。创建通道时，就处于打开状态，一旦将其关闭，则保持关闭状态。
+	对已经关闭的通道进行I/O操作会抛出ClosedChannelException
+	
+	---Channel API---
+	boolean isOpen();
+    void close() throws IOException;
+	
+	11个直接子接口：
+	1.AsynchronousChannel extends Channel
+		异步通道，使通道支持异步I/O操作，线程安全的。
+		关闭一个支持异步操作且正在进行I/O操作的通道时，I/O操作会失败，出现AsynchronousCloseException
+		某些通道支持并发读写(看实现)，但是不允许在一个未完成的I/O操作上再次调用read或write操作
+		异步通道支持取消操作，通过Future的cancel()方法来取消执行，会导致等待处理I/O结果的线程抛出CancellationException
+		void close()
+		
+	2.AsynchronousByteChannel extends AsynchronousChannel
+		异步字节通道，支持异步I/O，操作单位为字节。
+		若在上一个read()方法未完成之前，再次调用read()方法，会抛出ReadPendingException
+		若在上一个write()方法未完成之前，再次调用write()方法，会抛出WritePendingException
+		Future<Integer>	read(ByteBuffer dst)														从通道中读取字节序列到缓冲区中
+		<A> void read(ByteBuffer dst, A attachment, CompletionHandler<Integer,? super A> handler)
+		Future<Integer>	write(ByteBuffer src)														将缓冲区中的字节序列写入到通道
+		<A> void write(ByteBuffer src, A attachment, CompletionHandler<Integer,? super A> handler)
+		
+	3.ReadableByteChannel extends Channel
+		可读字节通道
+		只允许有一个读操作正在运行，并发情况下，其他读线程会被阻塞。
+		int	read(ByteBuffer dst)
+		
+	4.ScatteringByteChannel extends ReadableByteChannel
+		从通道中读取字节到多个缓冲区中
+		long read(ByteBuffer[] dsts)							读到多个缓冲区中
+		long read(ByteBuffer[] dsts, int offset, int length)    读到多个缓冲区的子序列中
+		
+	5.WriteableByteChannel extends Channel	
+		可写字节通道
+		只允许有一个写操作正在运行，并发情况下，其他写线程会被阻塞。
+		int	write(ByteBuffer src)			将字节缓冲区中的字节序列写入通道的当前位置
+		
+	6.GatheringByteChannel extends WritableByteChannel
+		将多个缓冲区中的数据写入到通道中
+		long write(ByteBuffer[] srcs)
+		long write(ByteBuffer[] srcs, int offset, int length)	将多个缓冲区的子序列写到通道中
+		
+	7.ByteChannel extends ReadableByteChannel, WritableByteChannel
+		字节通道，可读可写
+		
+	8.SeekableByteChannel extends ByteChannel
+		在字节通道中维护position(位置)，并允许position发生改变
+		long position()
+		SeekableByteChannel	position(long newPosition)
+		long size()
+		SeekableByteChannel	truncate(long size)
+		
+	9.NetworkChannel extends Channel
+		网络通道，使通道与Socket进行关联
+		NetworkChannel bind(SocketAddress local)						将通道的socket绑定到一个本地地址
+		SocketAddress getLocalAddress()									获取绑定在当前通道的socket地址
+		<T> T getOption(SocketOption<T> name)							获取socket选项
+		<T> NetworkChannel setOption(SocketOption<T> name, T value)		设置socket选项
+		Set<SocketOption<?>> supportedOptions()							获取该通道支持的socket选项集合
+		
+	10.MulticastChannel extends NetworkChannel
+		使通道支持IP多播(Internet Protocol Multicast)，就是将多个主机地址进行打包，形成一个组group，然后将IP报文向这个组进行发送，也就相当于同时向多个主机传输数据。
+		void close()
+		MembershipKey join(InetAddress group, NetworkInterface interf)						加入一个组，接收所有发送到这个组的数据报文，返回成员key
+		MembershipKey join(InetAddress group, NetworkInterface interf, InetAddress source)  加入一个组，接收指定源发送到这个组的数据报文，返回成员key
+		
+	11.InterruptibleChannel extends Channel
+		可中断通道，使通道以异步的方式进行关闭与中断。
+		当通道实现了异步性asynchronously和可关闭closeable特性，如果一个线程在某个I/O操作上出现了阻塞，那么其他线程调用这个通道的close()方法时，这个呈阻塞状态的线程会收到AsynchronousCloseException；
+		当通道实现了异步性asynchronously和可关闭closeable和可中断interruptible特性，如果一个线程在这个通道上出现了阻塞，那么其他线程调用这个阻塞线程的interrupt()方法后，通道将被关闭，
+		这个阻塞的线程将收到ClosedByInterruptException，这个阻塞线程的状态一直是中断状态。
+		void close()
+		
+	--
+	AbstractInterruptibleChannel类 implements Channel, InterruptibleChannel
+		可中断的通道的基本实现类，封装了能使通道实现异步关闭和中断所需的最低级别的机制
+			 boolean completed = false;
+			 try {
+				 begin();
+				 completed = ...;    // Perform blocking I/O operation
+				 return ...;         // Return result
+			 } finally {
+				 end(completed);
+			 }
+			 
+		protected void begin()						在阻塞操作前进行标记
+		void close()		
+		protected void end(boolean completed)		阻塞操作完成后进行标记
+		protected abstract void	implCloseChannel()  关闭通道的具体逻辑 子类实现(实现时不需要与其他关闭通道的线程同步，因为close进行了同步，close调用了implCloseChannel)
+		boolean	isOpen()
+		
+	
+FileChannel
+	文件通道。读取、写入、映射和操作文件的通道。是阻塞通道
+	extends AbstractInterruptibleChannel implements SeekableByteChannel, GatheringByteChannel, ScatteringByteChannel
+	可以通过静态方法创建文件通道，也可以使用io包下输入输出流的getChannel()方法获取
+	
+	---FileChannel API---
+	long write(ByteBuffer[] srcs) 									    写，返回写入的字节数，可能为0
+	abstract int write(ByteBuffer src)									将缓冲区中的remaining字节序列写入到文件通道的当前位置										
+	abstract long write(ByteBuffer[] srcs, int offset, int length)
+	abstract int write(ByteBuffer src, long position)					将缓冲区的remaining字节序列写入到文件通道的指定位置【不改变通道的位置】
+	long read(ByteBuffer[] dsts)										读，返回读取的字节数，可能为0。【如果通道已到达流的末尾，返回-1】
+	abstract int read(ByteBuffer dst)
+	abstract long read(ByteBuffer[] dsts, int offset, int length)
+	abstract int read(ByteBuffer dst, long position)
+	
+	abstract long position()											返回此通道的文件位置
+	abstract FileChannel position(long newPosition)						设置此通道的文件位置(可以设超过文件大小的值，但是实际文件大小不会改变，读返回-1，实际从此处开始写入后，文件大小才会发生变化)
+	abstract long size()												返回此通道关联文件的当前大小
+	
+	abstract FileChannel truncate(long size)							截断文件通道。如果size小于当前文件大小，则截取文件，丢弃后面字节；如果size大于等于当前大小，则不修改文件。
+	
+	abstract long transferTo(long position, long count, WritableByteChannel target)    将字节从此通道的文件传输到给定的可写字节通道，不改变当前通道位置
+	abstract long transferFrom(ReadableByteChannel src, long position, long count)	   将字节从给定可读字节通道传输到此通道的文件中，不改变此通道位置，不会增加此通道的文件的大小
+	
+	abstract void force(boolean metaData)												数据强制写入到文件中(默认操作系统不会立即写入)，metaData为true时表示同时会更新元数据信息
+	
+	abstract MappedByteBuffer map(FileChannel.MapMode mode, long position, long size)	将通道文件区域直接映射到内存。MappedByteBuffer是直接字节缓冲区
+	
+	static FileChannel open(Path path, OpenOption... options)											打开一个文件
+	static FileChannel open(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
+	
+	FileLock lock()																		获取一把文件锁，锁定文件0-Long.MAX_VALUE的区域，独占的。会阻塞
+	abstract FileLock lock(long position, long size, boolean shared)					获取文件锁，可指定锁定区域，是否是独占的还是共享的。会阻塞
+	FileLock tryLock()																	试图获取锁，不阻塞。如果没有获取到锁则立即返回null或者抛出相应的异常
+	abstract FileLock tryLock(long position, long size, boolean shared)
+	
+	锁FileLock
+		如果lock()方法调用期间，通道被其他线程关闭，则抛出AsynchronousCloseException
+		如果在等待获取锁的同时中断了调用线程，则将状态设为中断并抛出FileLockInterruptionException
+		
+		独占锁：独占锁自己可以读写，其他线程都不能读写。
+		共享锁：共享锁锁定的区域自己和其他线程都不能写入，自己和其他线程都能读。即共享锁是只读的。
+		
+		独占锁与独占锁之间是互斥关系，共享锁与共享锁之间是非互斥关系，独占锁与共享锁之间是互斥关系。
+		
+		---FileLock API---
+		Channel	acquiredBy()						返回获得文件锁的通道
+		FileChannel	channel()						返回获得文件锁的文件通道
+		void close()								关闭锁，调用了release方法
+		boolean	isShared()							是否是共享锁
+		abstract boolean isValid()					是否有效【锁在release或close之前、或对应通道在close之前、或jvm终止之前，锁是有效的】
+		boolean	overlaps(long position, long size)	是否锁定重叠
+		long position()								锁定区域的起始位置
+		abstract void release()						释放锁
+		long size()									锁定区域的大小(字节数)
+	
+	文件通道的映射模式FileChannel.MapMode
+		映射创建出来之后，关闭通道不会对映射有影响。
+		PRIVATE			专用，私有，即copy-on-write。其他线程看不到专用的映射，且对该映射的操作不会传播到文件
+		READ_ONLY		只读，如果对只读映射进行写操作会抛出ReadOnlyBufferException
+		READ_WRITE      读写，对该映射的操作会最终传播到文件，该映射其他线程不一定可见
+		
+		
+		

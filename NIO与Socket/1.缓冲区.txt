@@ -1,0 +1,91 @@
+Buffer
+	ByteBuffer
+	CharBuffer
+	DoubleBuffer
+	FloatBuffer
+	IntBuffer
+	LongBuffer
+	ShortBuffer
+	
+	都是抽象类，没有BooleanBuffer；StringBuffer在lang包下。
+	非线程安全的
+	
+	都提供了静态的包装方法，底层还是用的数组来保存数据，只不过进行了一层封装。如ByteBuffer.wrap(byte[] array)
+	
+	0 <= mark <= position <= limit <= capacity
+	
+	capacity：缓冲区容量(表示缓冲区的大小，就是数组长度)
+	limit：缓冲区限制(代表第一个不应该读取或写入的元素的索引)，初始化值可能是0，视不同类型的缓冲区而定
+	position：缓冲区位置(代表下一个要读取或写入的元素的索引)
+			  如果调整了limit且position大于limit，则position的值会变成新的limit的值
+	mark：缓冲区的标记。在reset()时，会将缓冲区的位置重置为标记的索引。
+		  如果定义了mark，当position或limit调整为小于mark的值的时候，mark会被丢弃(置为-1)；
+		  如果未定义mark，调用reset方法会抛出InvalidMarkException
+	
+	---Buffer API---
+	int limit()						返回此缓冲区的限制
+	Buffer limit(int newLimit)		设置此缓冲区的限制
+	int position()					返回此缓冲区的位置
+	Buffer position(int newPosition)设置此缓冲区的新的位置
+	int remaining()					返回当前位置与limit之间的元素数 limit - position
+	Buffer mark()					在此位置设置标记
+	Buffer reset()					重置缓冲区位置
+	abstract boolean isReadOnly()	返回此缓冲区是否只读
+	abstract boolean isDirect()		返回此缓冲区是否是直接缓冲区   【直接缓冲区：分配的是堆外内存，直接内存，性能稍好，因为少了中间内存的操作】
+	Buffer clear()					还原缓冲区到初始的状态 position置0，limit设为capacity，mark设为-1。但是不清除数据。适用于写之前 
+	Buffer flip()					反转此缓冲区 limit设为当前position的值 position置0，mark设为-1。适用于写完从头读
+	abstract boolean hasArray()     判断此缓冲区是否有可访问的底层实现数组。如果是直接缓冲区，则为false
+	boolean	hasRemaining()			判断当前位置和限制之间是否有元素，可以为null，因为只是判断有没有位置可以放元素
+	Buffer rewind()					重绕缓冲区 position置0 mark设为-1。适用于重新读取
+	abstract int arrayOffset()		返回此缓冲区的底层实现数组中第一个缓冲区元素的偏移量
+	abstract Object array()			返回此缓冲区包装的底层数组
+	
+	---ByteBuffer API---
+	static ByteBuffer allocateDirect(int capacity)	分配直接字节缓冲区DirectByteBuffer
+	static ByteBuffer allocate(int capacity)		分配缓冲区HeapByteBuffer
+	static ByteBuffer wrap(byte[] array, int offset, int length)	数组包装成缓冲区，不具有截取的作用
+	static ByteBuffer wrap(byte[] array)
+	abstract byte get()
+	abstract byte get(int index) 
+	ByteBuffer get(byte[] dst)
+	ByteBuffer get(byte[] dst, int offset, int length)
+	abstract ByteBuffer put(byte b)
+	...
+	abstract ByteBuffer	slice()						创建新的字节缓冲区，内容是此缓冲区内容的共享子序列 类似go中的切片，底层数组的共享的
+	ByteOrder order()								返回字节排序顺序 【不同的CPU在读取字节时的顺序是不一致的，有的从高位开始读，有的从低位开始读】
+	ByteBuffer order(ByteOrder bo)					设置字节排序顺序
+	abstract ByteBuffer	asReadOnlyBuffer()			创建只读缓冲区
+	abstract ByteBuffer	compact()					压缩缓冲区
+	boolean	equals(Object ob)						比较同类型的两个缓冲区的position到limit之间的内容是否完全一样
+	int	compareTo(ByteBuffer that)					按字典顺序比较两个缓冲区的剩余元素序列			
+	abstract ByteBuffer	duplicate()					复制缓冲区(与slice不同，复制是容量、位置、限制都相同)
+	
+	直接缓冲区如何释放内存
+		1.手动释放。直接缓冲区DirecrByteBuffer中有个Cleaner对象，调用其clean()方法
+		2.jvm自动处理
+		
+	相对位置的操作：从当前位置开始，操作之后会改变位置。get操作超出限制会抛出BufferUnderflowException，put操作超出限制会抛出BufferOverflowException
+	绝对位置的操作：根据指定索引值进行操作，不改变位置。get或put操作超出限制会抛出IndexOutOfBoundsException异常·
+	
+	ByteOrder字节顺序
+		BIG_ENDIAN 读写多字节的字节顺序是从最高有效位到最低有效位，默认值
+		LITTLE_ENDIAN
+		
+	缓冲区的扩容：
+		由于缓冲区的容量是固定不变的，扩容只能新建缓冲区，将原缓冲区中的内容put到新的更大容量的缓冲区中
+		
+	---CharBuffer API---
+	CharBuffer append(char c)								将指定字符添加到缓冲区 相当于put(char c)   重载append方法
+	CharBuffer append(CharSequence csq)						将指定字符序列添加到缓冲区
+	CharBuffer append(CharSequence csq, int start, int end) 将指定字符序列的子序列添加到缓冲区
+	char charAt(int index)									读取相对于当前位置的给定索引处的字符
+	CharBuffer put(String src)
+	int	read(CharBuffer target)								将当前字符缓冲区的字符写入指定的字符缓冲区
+	abstract CharBuffer	subSequence(int start, int end)     创建表示此缓冲区的指定序列、相对于当前位置的新字符缓冲区
+	static CharBuffer wrap(CharSequence csq)
+	static CharBuffer wrap(CharSequence csq, int start, int end)
+	int	length()											获取字符缓冲区的长度，等于remaining(), 是position和limit之间的长度                                                                                                               
+		
+		
+		
+		

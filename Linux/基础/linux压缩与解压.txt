@@ -1,0 +1,38 @@
+*.Z       ：compress程序压缩的文件	    
+	    compress [-rcv] {单一文件或目录} ：压缩【源文件就不存在了】
+	    uncompress {文件.Z}  ：解压【解压后.Z压缩文件就不存在了】
+
+*.gz      ：gzip程序压缩的文件【gzip可以解压*.Z、*.zip、*.gz，WinRAR也可以解压*.gz、*.tar.gz】
+	    gzip [-cdtv#] {文件名}  ：压缩  【如果使用-d参数表示解压】【#：压缩等级1-9】【gunzip命令相当于gzip -d 但是不用】
+	    zcat {文件.gz}          ：读取compress与gzip压缩后的文件
+	     
+*.bz2     ：bzip2程序压缩的文件
+	    bzip2 [-cdkzv#] {文件名}  ：压缩 【如果使用-d参数表示解压】【bunzip2命令相当于bzip2 -d】
+	    bzcat {文件.bz2}          ：读取compress与gzip压缩后的文件
+		【可以解压.bz、.bz2、.tbz、.tbz2】
+
+*tar.     ：tar程序打包的数据，并没有没压缩过
+*.tar.gz  ：tar程序打包的文件，其中经过gzip压缩
+*.tar.bz2 ：tar程序打包的文件，其中经过bzip2压缩
+
+
+tar
+	tar [-j|-z] [cv] [-f 新建的文件名] filename   打包与压缩
+	tar [-j|-z] [tv] [-f 新建的文件名]	      查看包中的文件名
+	tar [-j|-z] [xv] [-f 新建的文件名] [-C 目录]  解压缩 并指定输出目录
+
+	参数
+	  -c ：新建打包文件
+	  -x ：解打包或解压缩
+	  -t ：查看打包文件的内容包含哪些文件名
+	  -v ：在压缩或解压的过程中，显示正在处理的文件名
+	  -j ：通过bzip2的支持进行压缩或解压缩 此时文件名最好是*.tar.bz2
+	  -z ：通过gzip的支持进行压缩或解压缩，此时文件名最好是*.tar.gz
+	  -f ：后面接要被处理的文件名，最好-f单独写一个参数
+	  -C ：指定解压缩的目录
+
+	eg：	tar -zcvf filename.tar.gz filename/directory  压缩
+		tar -zxvf filename.tar.gz -C directory        解压
+		tar -cvf filename.tar filename/directory      打包
+	        tar -xvf filename.tar -C directory            解包
+

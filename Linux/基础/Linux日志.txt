@@ -1,0 +1,54 @@
+日志管理的服务
+	1.程序自行处理日志
+	2.CentOS使用syslogd服务统一管理日志文件
+	3.记录内核日志文件的服务：klogd
+
+	syslogd：主要登录系统与网络服务等信息
+	klogd：  主要登录内核产生的各项信息
+	logrotate：主要进行日志文件的轮替功能
+
+	syslog将日志分为7个等级
+		info		基本信息说明
+		notice		注意信息
+		warning(warn)	警示信息，不影响运行
+		err(error)	错误，会导致服务无法启动
+		crit		临界点（critical），比err严重
+		alert		警告，比crit严重
+		emerg(panic)	疼痛等级，系统几乎要死机的状态（一般来说是硬件出问题导致内核无法运行）
+		debug		错误检测等级
+		none		不需记录
+
+	syslog配置文件：
+		/etc/syslog.conf  用来设置很多服务的日志记录在哪个文件，记录什么等级的日志
+
+日志文件的安全性设置
+	chattr +a /var/log/messages   ：messages这个日志文件只能被增加，不能被删除或移动（会影响rotate，不建议使用）
+	
+设置日志文件服务器
+	
+日志文件的轮替【logrotate】（利用crontab来实现轮替功能的）
+	配置文件：
+		/logrotate.conf		logrotate配置文件(主要的参数文件，会加载./logrotate/logrotate.d/下可能存在的详细设置)
+		/logrotate.d/		logrotate配置文件（主要用于不同日志单独写在一个配置文件中，便于管理）	
+	/cron.daily/logrotate  	    记录每天要进行的日志轮替行为
+
+	logrotate [-vf] logfile     ：执行一次轮替（logfile指配置文件）
+		-v：显示运行过程
+		-f：强制执行，不论是否符合配置文件的配置
+
+分析日志文件
+	last、lastlog、dmesg等命令
+
+	logwatch套件：每天分析一次日志文件，并将数据以email格式发给root（CentOS默认提供）
+		（mail命令查看发给root的邮件）
+
+	自定义脚本
+
+
+
+
+
+
+
+
+	

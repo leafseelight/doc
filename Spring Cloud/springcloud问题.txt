@@ -1,0 +1,104 @@
+注册中心
+	注册中心的应用主类@EnableEurekaServer
+
+
+注册服务
+	服务提供者的应用主类加@EnableDiscoveryClient还是@EnableEurekaClient?   都可以
+	服务提供者的application.properties中指定服务注册中心地址 eureka.client.serviceUrl.defaultZone= / eureka.client.service-url=
+
+调用服务
+	消费者的应用主类是否需要@EnableDiscoveryClient？  需要
+	消费者的application.properties中指定服务注册中心地址 eureka.client.serviceUrl.defaultZone= / eureka.client.service-url=
+	调用被@LoadBalance修饰过的RestTemplate的方法【客户端负载均衡】
+
+
+	@RibbonClient 实现更细粒度的客户端配置，自定义RibbonClient的配置 默认是RibbonClientConfiguration
+
+断路器
+	消费者主类加@EnableCircuitBreaker主类
+
+	【@SpringCloudApplication：@SpringBootApplication @EnableDiscoveryClient @@EnableCircuitBreaker】
+
+	@HystrixCommand(fallback="{回调函数名}", commandKey="")
+
+
+【Hystrix仪表盘 监控】
+	添加相应依赖 仪表盘应用和消费者必须添加actuator、hystrix，此外仪表盘还需添加hystrix-dashboard
+	应用主类上加@EnableHystrixDashboard
+	服务实例的主类中必须添加@EnableCircuitBreaker 开启了断路器功能
+
+	访问仪表盘的/hystrix.stream端点即可看到对服务(consumer)的监控
+
+【Turbine集群监控】
+	新建Turbine应用 添加依赖:turbine、actuator
+	应用主类添加@EnableTurbine{开启Turbine} @EnableDiscoveryClient{集成Eureka}
+	配置文件配置需要监控的服务(消费者)，集群名字等
+
+	访问仪表盘的/turbine.stream端点即可看到对多个服务(consumer)的监控  （对默认集群）
+		    /tuibine.stream?cluster=[clusterName]                   (对clusterName集群)
+
+
+【Feign】
+	申明式服务调用(继续封装了Ribbon和Hystrix)
+
+	【快速入门】【参数绑定】
+	消费者引入eureka和feign依赖，一般是web，所以还得引入web依赖（需要通过spring mvc的注解来绑定服务接口）
+	消费者主类加@EnableFeignClients 开启支持Feign
+	消费者的Service层的service接口上添加@FeignClient("{服务名}")指定依赖的服务，
+	        service方法上加@RequestMapping("/具体服务路径")来绑定服务提供的REST接口。
+	消费者的Controller层正常调用Service即可
+	消费者应用也需要在配置文件中指定服务注册中心
+
+	【继承特性：将feign客户端的service做成一个单独的api项目给consumer和provider依赖，provider的controller可以直接继承/实现这个service】【不好】
+
+	【Ribbon配置】
+	ribbon.<key>=<value>             全局配置
+	<client>.ribbon.<key>=<value>    指定服务配置【可以配置重试机制】  @FeignClient的name或value属性就是服务名   在创建Feign客户端的时候也会创建同名的Ribbon客户端
+
+	【Hystrix配置】
+	hystrix.<key>=<value>             全局配置
+	hystrix.command.default.execution.timeout.enabled=false 关闭熔断功能
+	feign.hystrix.enabled=false                             关闭feign客户端的hystrix支持  
+								（如果需要针对某个服务客户端关闭Hystrix，需要使用@Scope("prototype")注解为指定的客户端创建Feign.Builder实例(略)）
+
+	【指定命令配置】
+	hystrix.command.<commandKey>.<key>=<value>    <commandKey>默认是Feign客户端的方法名
+
+	【服务降级配置】
+	实现service接口servicefallback 同时在service接口的@FeignClient注解上加属性fallback=servicefallback.class指定降级逻辑的实现类
+
+	【其他配置】
+		【请求压缩】  feign.compression.request/response.enabled=true   开启请求/响应的压缩功能(gzip压缩)  此外还可以设置对特定请求数据类型以及请求大小范围进行压缩
+		【日志配置】  使用@FeignClient会为每个客户端默认创建feign.LOGGER的实例(默认为NONE级别)
+			      创建配置类（创建Logger.Level的Bean）
+			      配置文件中开启DEBUG日志：logging.level.{feign客户端全路径}=DEBUG
+	
+
+
+
+Q：
+1.eureka-client服务停掉后 eureka-server管理页面为什么还是有这个服务显示注册了？重启server后没有这个服务。
+	因为注册中心的保护机制
+
+2.eureka-server保护机制？
+
+3.引起服务调用到故障实例：
+	触发了保护机制
+	服务剔除的延迟
+
+4.LoadBalancerClient的Bean是什么时候创建的？
+	创建LoadBalanceInterceptor的时候吗？
+
+5.Eureka 和 Zookeeper区别
+	CAP原理
+	Eureka ：   AP 可用性 可靠性  【一致性不好：解决：重试机制 Spring Retry， 增强RestTemplate的重试机制】
+	Zookeeper ：CP 一致性 可靠性
+
+6.什么时候触发熔断机制？
+	某个服务实例挂掉
+	某个服务阻塞/超时(Hystrix默认超时时间3000ms)
+
+7.为什么集群的两个服务 只挂掉一个 在请求该服务时也会触发熔断？
+
+8.耶购项目不是springboot的 怎么去配置它成为服务消费者？
+

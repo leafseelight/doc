@@ -1,0 +1,113 @@
+工作管理
+	直接将命令丢到后台执行：   命令后面加 &
+	将目前的工作丢到后台暂停： ctrl + z
+	查看目前的后台工作状况：   jobs
+		jobs [-lrs]   -l：  列出job number、命令串与PID
+			      -r：  仅列出正在后台run的工作
+			      -s：  仅列出正在后台stop的工作
+	将后台工作拿到前台处理：   fg
+		fg %{jobnumber}  【第一个工作+ 第二个工作-】  可以fg+ 表示将后台第一个工作拿到前台
+	让工作在后台下的状态变成运行中：bg
+	管理后台当中的工作：       kill
+		kill -signal %{jobnumber}
+		kill -l   ：列出目前kill能使用的信号有哪些
+		  【signal信号】  1：重新读取一次参数的配置文件（相当于reload）
+				  2：和键盘出入ctrl+c是同样的操作
+			          9：立刻强制删除一个工作
+				  15：以正常的程序终止方式终止一项工作
+		eg：kill -9 %2; jobs  杀死工作号码的2的job 并列出所有的后台工作
+		    kill -SIGTERM %1  正常终止工作号码是1的job  （signal可以用数字表示，也可以用名称表示，SIGTERM就表示15）
+
+	【工作管理的后台与终端机有关，并不是系统的后台，终端机关闭后，工作不会继续执行！】
+
+	
+脱机管理（就是可以在用户注销后还能继续执行，只要不是linux关机）：
+		
+	1.使用at将工作放到系统后台
+	2.或者使用nohup处理
+
+	nohup [命令与参数] ：在终端机前台操作
+	nohup [命令与参数] & ：在终端机后台操作
+		【nohup不支持bash内置的命令，必须是外部命令】  命令的输出会显示在nohup.out文件中
+
+进程管理
+	ps：将某个时间点的进程运行情况选取下来
+	ps aux：查看系统所有的进程数据   【不仅仅是自己的bash】 【常用】
+	ps -lA：查看所有系统的数据       【A表示所有进程  ps -l表示只查看自己的bash程序】
+	ps axjf：连同部分进程树状态      【也可以执行pstree】
+
+	eg：ps aux | egrep '(cron|syslog)'  ：找出cron与syslog这两个服务有关的PID号码
+
+	【僵尸进程：进程已经终止但是依然存在与内存中，只有init进程（所有进程的父进程）能够负责，由init自动处理或者reboot】
+
+	top：动态查看进程的变化【可以用来查看最耗CPU资源的进程】
+	top [-d 数字] | top [-bnp]
+
+	【自己的bash PID可以通过 echo $$ 取得】
+
+	pstree [-A|U] [-up] ：显示进程树，用来查看进程间的相关性  【linux内核主动调用的第一个进程就是init】
+
+	
+	【信号】
+		1      SIGHUP	类似于重新启动reboot
+		2      SIGINT   类似于键盘输入ctrl + c 来中断一个进程
+		9      SIGKILL  强制中断一个进程的进行
+		15     SIGTERM  以正常方式终止进程
+		17     SIGSTOP  类似于键盘输入ctrl + z 来暂停一个进程
+
+	【kill】
+	kill -signal %{jobnumber}
+	kill -signal {PID}                kill可以将signal传递给某个工作(jobnumber)或者PID
+	killall [-iIe] -signal {命令名称}   
+	
+	eg： killall -9 httpd  强制终止所有以httpd启动的进程
+
+	*【调整进程优先级】
+	通过PRI NI两个参数  priority不能修改(内核动态调整的，越低优先级越高) nice值可以修改
+	PRI(new) = PRI(old) + nice
+
+	nice [-n 数字] command  ：新执行命令给与新的nice值  【数字的范围是-20~19，对于一般用户只能调整0~19】
+	renice [number] PID     ：已存在进程的nice值的重新调整 （top也可以调整nice值）
+
+	【系统资源的查看】
+	free：查看内存使用情况
+		free [-b|-k|-m|-g] [-t] 
+	uname：查看系统与内核相关信息
+		uname [-asrmpi] 
+	uptime：查看系统启动时间与工作负载（结果和top命令的第一行一样）、
+
+	netstat：跟踪网络 【常用】 查看网络的连接和socket（进程间的通信）
+		netstat -[atunlp]  
+			-a：列出所有连接、监听、socket数据
+			-t：列出tcp网络数据包的数据
+			-u：列出udp网络数据包的数据
+			-n：不列出进程的服务名称，以端口号显示
+			-l：列出目前正在监听的服务
+			-p：列出该网络服务的进程PID
+
+		eg： netstat -tlnp
+
+	dmesg：分析内核产生的信息
+	vmstat：检测系统资源变化
+
+特殊文件与程序
+	SUID/SGID/SBIT
+
+	/proc/* 内存中的数据都是写入到这个目录下
+
+	fuser：通过文件(或文件系统)找出正在使用该文件的程序
+		fuser [-umv] [-k [i] [-signal]] {file/dir}
+
+	lsof：列出被进程所打开的文件名
+		lsof [-aUu] [+d {dir}]
+
+	pidof：找出某个正在执行的进程的pid
+		pidof -[sx] {进程名}
+	
+
+
+
+	
+
+	
+	

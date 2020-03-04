@@ -1,0 +1,175 @@
+TCP：基于流的长连接的数据传输
+UDP：无连接协议
+
+TCP连接的三次握手
+	SYN标志位：表示与服务端建立连接。
+	ACK标志位：对收到的数据包进行确认acknowledge。
+	PSH标志位：发送数据
+	
+	Seq：发送数据流序号sequence number，字节流的字节编号
+	Ack：值表示下一次期望接收到的Seq的值
+	Len：表示本次发送的数据大小
+
+	客户端向服务端发送SYN标志位
+	服务端向客户端发送SYN和ACK标志位
+	客户端向服务端发送ACK标志位
+	
+	
+TCP断开连接的四次挥手	
+	FIN标志位：结束会话
+	
+	客户端向服务端发送FIN和ACK标志位
+	服务端向客户端发送ACK标志位
+	服务端向客户端发送FIN和ACK标志位
+	客户端向服务端发送ACK标志位
+	
+端口复用
+	socket关闭后，系统不会立即释放当前使用的端口，此时的端口处于TIME_WAIT状态，如果允许端口复用，这个状态的端口就可以重用。
+
+ServerSocket
+	服务端与客户端握手的时机不是accept方法，而是ServerSocket创建出来并绑定到指定的地址与端口时
+	---ServerSocket API---
+	ServerSocket()									构造 创建Socket(套接字)的服务端 空参构造不会有默认的绑定地址和端口
+	ServerSocket(int port)
+	ServerSocket(int port, int backlog)				backlog表示允许客户端连接请求的个数，对port传0表示自动分配空闲端口号。
+	ServerSocket(int port, int backlog, InetAddress bindAddr)
+	
+	Socket accept()									侦听并接受此套接字的连接，连接传入之前会一直阻塞。【阻塞方法】  
+	void close()									关闭此套接字，如果socket关联了通道，则关闭该通道
+	void setSoTimeout(int timeout)					设置accept()的超时时间ms，如果超时，会抛出SocketTimeoutException，但是ServerSocket对象依然有效。默认值0，表示禁用超时，永远等待。
+	int	getSoTimeout()
+	void bind(SocketAddress endpoint)				绑定到指定的Socket地址(IP地址和端口号)
+	void bind(SocketAddress endpoint, int backlog)
+	InetAddress	getInetAddress()					获取Socket绑定的本地IP地址，如果是未绑定的 返回null
+	SocketAddress getLocalSocketAddress()			获取此socket绑定的socket地址，如果未绑定，返回null
+	int	getLocalPort()								获取socket绑定到本地的端口，如果没有则返回-1
+	boolean	isClosed()								返回ServerSocket的关闭状态
+	boolean	isBound()								返回绑定状态
+	void setReuseAddress(boolean on)				启用/禁用SO_REUSEADDR套接字选项
+	boolean	getReuseAddress()
+	void setReceiveBufferSize(int size)				设置套接字接收缓冲区的大小，必须在bind()之前设置，也就是必须用无参构造创建再设置
+	int	getReceiveBufferSize()
+	
+Socket
+	---Socket API---
+	protected Socket(String host, int port)			构造 创建Socket的客户端
+	protected Socket()
+	protected Socket(InetAddress address, int port)
+	
+	synchronized void close()
+	void bind(SocketAddress bindpoint)
+	InputStream	getInputStream()					获取输入流InputStream的read()方法也是阻塞方法 【如果关闭了输入流，则输入流关联的Socket也会被关闭】
+	OutputStream getOutputStream()					获取输出流
+	服务端先获得ObjectInputStream对象，客户端就要先获得ObjectOutputStream对象
+	服务端先获得ObjectOutputStream对象，客户端就要先获得ObjectInputStream对象
+	
+	void connect(SocketAddress endpoint)
+	void connect(SocketAddress endpoint, int timeout)
+	int	getPort()									返回此套接字连接到的远程端口
+	int	getLocalPort()								返回此套接字绑定到的本地端口
+	InetAddress	getLocalAddress()					获取套接字绑定的本地IP地址
+	SocketAddress getLocalSocketAddress()			获取套接字绑定本地端点信息(Socket地址：IP+port)
+	InetAddress	getInetAddress()					获取套接字绑定的远程IP地址
+	SocketAddress getRemoteSocketAddress()			获取套接字绑定远程端点信息(Socket地址：IP+port)
+	boolean	isBound()
+	boolean	isConnected()
+	boolean	isClosed()
+	void shutdownInput()							开启半读状态。将套接字的输入流置于流的末尾EOF，调用此方法的一端再读取都会返回EOF，即此端不能获取输入流，而另一端可以读。
+	void shutdownOutput()							开启半写状态。禁用此套接字的输出流，调用此方法的一端再写入到套接字输出流会抛出IOException，另一端能写。
+	boolean	isInputShutdown()
+	boolean	isOutputShutdown()
+	void setTcpNoDelay(boolean on)					启用/禁用TCP_NODELAY，即启用/禁用Nagle算法。默认是开启的
+	boolean	getTcpNoDelay()
+	synchronized void setSendBufferSize(int size)	设置Socket的SO_SNDBUF的值，即设置发送缓冲区的大小
+	int	getSendBufferSize()
+	void setReceiveBufferSize(int size)
+	int	getReceiveBufferSize()
+	void setSoLinger(boolean on, int linger)		启用/禁用具有指定逗留时间的SO_LINGER。（SO_LINGER是调用close方法到最终关闭中间的延迟时间，用于将发送缓冲区中的剩余数据发送出去）
+	int	getSoLinger()
+	void setSoTimeout(int timeout)					启用/禁用带有指定超时值的SO_TIMEOUT，即与socket关联的输入流的read的超时时间
+	int	getSoTimeout()
+	void setOOBInline(boolean on)					启用/禁用SO_OOBINLINE。在套接字上接收的所有TCP紧急数据都将通过套接字输入流接收，禁用则会静默丢弃紧急数据。【紧急数据被丢弃可以用来实现心跳机制】
+	boolean	getOOBInline()
+	void sendUrgentData(int data)					发送1个字节的紧急数据，这个数据并不存储在输出缓冲区中，而是直接发送数据。意味着比缓冲区中的数据先发送 
+	void setKeepAlive(boolean on)					启用/禁用SO_KEEPALIVE 【如果长时间没有收到对方的数据，会发送一个ACK探测，否则如果客户端宕机，服务端永远都不会关闭连接】
+	boolean	getKeepAlive()
+	void setTrafficClass(int tc)					在IP头中设置流量类别(0x02:IPTOS_LOWCOST;0x04:IPTOS_RELLABILITY;0x08:IPTOS_THROUGHPUT;0x10:IPTOS_LOWDELAY)
+	int	getTrafficClass()
+	
+-----------------------------------------------------	
+SocketAddress表示Socket地址的抽象类，不基于任何协议的Socket地址
+InetAddress表示IP地址
+InetSocketAddress表示IP套接字地址(IP地址/主机名+端口号)，基于IP协议的Socket地址
+InetSocketAddress extends SocketAddress	
+	InetSocketAddress(InetAddress addr, int port)
+	InetSocketAddress(int port)
+	InetSocketAddress(String hostname, int port)
+	
+	String getHostName()							获取主机名。如果地址是IP，则会进行名称服务反向查找
+	String getHostString()							获取主机名或地址的字符串形式，如果没有主机名，则返回IP地址，不会反向查找
+	InetAddress	getAddress()						获取IP地址
+	static InetSocketAddress createUnresolved(String host, int port) 创建未解析的套接字地址，不会把主机名解析为InetAddress
+	boolean	isUnresolved()							是否不能被解析
+	int	getPort()
+
+Nagle算法
+	解决了处理小数据包众多而造成的网络拥塞。一个数据包有40个字节的TCP/IP协议头。
+	原理是在未确认ACK之前让发送器把数据送到缓存中，直到得到确认ACK或攒到一定大小的数据之后再发送。
+	
+	默认开启。提高了网络吞吐量，但是实时性降低了。
+	
+	MSS（Maximum Segment Size）：最大报文段长度
+	MSS = MTU - 20字节的TCP报头 - 20字节的IP报头
+	
+========================================================================================================================================================================
+基于UDP的Socket通信
+	UDP：User Datagrm Protocol 用户数据报协议。是一种面向无连接的传输层协议，提供不可靠的信息传输服务。
+	可靠性差，因为没有顺序保证，没有流量控制等功能。但是延迟小、传输效率高。
+	音频、视频等数据可以使用UDP
+	
+DatagramSocket
+	继承Object。服务端与客户端都使用DatagramSocket。
+	总是启用UDP广播发送，一般将DatagramSocket绑定到通配符地址。
+	
+	---API---
+	protected DatagramSocket()
+	protected DatagramSocket(int port)
+	protected DatagramSocket(int port, InetAddress laddr)
+	protected DatagramSocket(SocketAddress bindaddr)
+	
+	void bind(SocketAddress addr)
+	void close()
+	synchronized void receive(DatagramPacket p)				从此套接字接收数据报包 【阻塞方法】
+	void send(DatagramPacket p)								从此套接字发送数据报包
+	void connect(SocketAddress addr)
+	void connect(InetAddress address, int port)
+	void disconnect()
+	boolean	getBroadcast()
+	void setBroadcast(boolean on)							设置是否广播
+
+MulticastSocket extends DatagramSocket	
+	void joinGroup(InetAddress mcastaddr)					加入广播组 【用来实现UDP组播】
+	void leaveGroup(InetAddress mcastaddr)					离开广播组
+	
+DatagramPacket
+	数据报包。包含要发送的数据及其长度、远程主机的IP地址和端口号
+	理论上最大2^16-1,去除IP协议头的20个字节还有UDP协议头的8个字节，所以一个包最大传输大小为65507个字节
+	
+	---API---
+	DatagramPacket(byte[] buf, int length)
+	DatagramPacket(byte[] buf, int offset, int length)
+	
+	byte[] getData()										返回数据缓冲区。接收到或将要发送的数据从缓冲区的偏移量offset开始，持续length长度
+	int	getLength()
+	synchronized int getOffset()
+	int	getPort()
+	InetAddress	getAddress()
+	SocketAddress getSocketAddress()
+	void setAddress(InetAddress iaddr)
+	synchronized void setData(byte[] buf)					为此包设置数据缓冲区
+	synchronized void setData(byte[] buf, int offset, int length)
+	synchronized void setLength(int length)
+	void setPort(int iport)
+	void setSocketAddress(SocketAddress address)
+	
+	

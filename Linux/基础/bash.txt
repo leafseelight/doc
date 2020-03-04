@@ -1,0 +1,100 @@
+变量
+	显示变量
+	echo $variable
+	eg:echo ${HOME}、 echo $HOME、echo $PATH、 echo ${PATH}   【直接${PATH}也可以显示】【必须带$】
+
+	设置变量
+	eg：myname=Jiaobu
+	    等号两边不能直接接空格，变量名称只能是数字或字母，必须以字母开头，变量值如果包含空格则需要使用单引号或者双引号将变量整体包起来，
+	    双引号内的特殊字符（如$）可以保持原本的特性，单引号内的特殊字符会被视为一般字符（纯文本），
+	    可以用转义符号"\"将特殊符号[Enter]、$、\、空格符、!等变为一般字符，
+	    如果在一串命令中需要使用到其他命令的结果，可以使用反单引号``或者$()将命令括起来  version=$(uname -r) ：取得内核版本并赋给version
+
+	    增加变量内容：PATH="$PATH":/home/bin  PATH=$PATH:/home/bin  PATH=${PATH}:/home/bin【累加】
+	    环境变量：export PATH ：使变量成为环境变量
+	    父进程设置的变量是无法在子进程中使用的 除非定义成环境变量  【直接bash命令可以进入子进程】
+
+	    通常大写字符默认为系统变量，自行设置的变量可以使用小写字符
+
+	取消变量
+	unset 变量名     eg：unset myname
+
+环境变量
+	查看环境变量及说明
+	env或者export
+	set 【查看所有变量和环境变量】
+
+	设置环境变量
+	export 变量名称
+
+
+	$:本身也是一个变量，代表目前这个Shell的线程号PID（Process ID）   echo $$ ：查看PID
+	?:本身也是一个变量，是上一个执行的命令所回传的值     echo $? ：回传0  【回传值如果不是0则表示上一个命令是错误的】
+
+语系变量
+	查看所有语系
+	local
+
+
+	source 配置文件名  ：将配置文件的内容读进目前的shell环境中 一般用于修改配置文件之后【不需要注销再操作】
+
+
+grep用法
+	grep [-A] [-B] [--color=auto] {搜索字符串} filename
+	   -A:后接数字，表示后面几行也显示出来
+	   -B：后接数字，表示前面几行也显示出来
+	   --color=auto：表示关键字显色
+	   -n：显示行号
+	   -v：反向选择（not 条件）
+	   -i：忽略大小写
+	   
+	   【可以指定搜寻的文件，也可以结合管道命令搜寻上一个命令返回结果中的内容】
+	   【可以结合正则进行匹配】
+
+	   eg： dmesg | grep -n -A3 -B4 --color=auto 'eth'  搜索内核信息中的带eth的行，包括前四后三行，带行号、颜色
+		grep -n 't[ae]st' regular.txt   ：搜索文件中的test和tast
+	        grep -n '[^g]oo' regular.txt    ：搜索文件中的oo但是不包括goo
+	        grep -n '[^[:lower:]]oo' regular.txt ：搜索文件中的oo但是oo前不能是小写英文字母
+		grep -n '^[a-z]' regular.txt  ：列出行首是小写字母的   
+		grep -n '\.$' regular.txt     ：列出行尾是符号.的   【.需要转义，注意windows和linux的换行符】
+		grep -n '^$' regular.txt      ：列出空白行(行首到行尾之间没有内容)
+		grep -n 'g..d' regular.txt    ：列出g开头d结尾且中间有两位的
+		grep -n 'o*' regular.txt      ：会把所有内容搜索出来，因为*也可以匹配0个
+		grep -n 'o\{2\}' regular.txt  ：列出带oo的
+		grep -n 'o\{2,3\}' regular.txt ：列出带oo或者ooo的
+		grep -n 'o\{2,\}' regular.txt  ：列出带oo或者ooo或者oooo.....
+		grep -n 'g(la|oo)d' regular.txt ：列出带glad或者good
+
+
+	   【正则中的特殊符号】
+		[:alnum:]  表示0-9A-Za-z   【中括号表示其中只有一个字符】
+		[:alpha:]  表示A-Za-z
+		[:digit:]  表示0-9
+		[:lower:]  表示a-z
+		[:upper:]  表示A-Z
+		[^]        表示非，反向选择
+		^          表示定位在行首【匹配的行行首必须是^后面的内容】
+		$          表示定位在行尾
+		*          代表重复前一个0到无穷多次，为组合形态  【不是通配符 bash中的*是通配符】
+		.          代表绝对有一个任意字符
+		{}         限定范围  【需要对大括号进行转义，因为在shell中{}有特殊含义】
+		-          代表两个字符间的所有字符，不同语系的编码表不同，两个字符间的数据也不同
+		\          转义
+	
+	   【扩展符号 grep默认不支持 需要grep -E命令或者egrep命令】
+		|          表示或
+	 	+          重复一个或一个以上
+	        ?          零个或一个
+	        ()         组
+		()+        重复组
+	
+	    【其他的不是特殊字符，比如!不是】
+		
+
+	
+
+	
+
+
+	    
+		

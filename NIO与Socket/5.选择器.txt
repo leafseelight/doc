@@ -1,0 +1,139 @@
+I/O多路复用
+	使用一个线程来操作多个通道。减少了线程数量，就减少了线程之间的切换，节省CPU资源	
+选择器
+	将通道注册进选择器中，可以使用一个线程来对多个通道中的已就绪通道进行选择，然后进行数据处理。
+	
+----------------------------------------------------------------------------------------------------------------------------------------	
+可选择通道
+SelectableChannel extends AbstractInterruptibleChannel implements Channel
+	注册后，在注销之前一直是注册状态。
+	只能通过SelectionKey的cancel()方法显式注销，这会在下一次选择器select()的时候注销通道。如果通道关闭，会隐式注销。如果选择器关闭，也会注销通道。
+	线程安全的
+	新注册的SelectableChannel是阻塞的，在注册到选择器之前，必须将该通道设置为非阻塞模式，否则会抛出IllegalBlockingModeException。
+	
+	---SelectableChannel API---
+	SelectionKey register(Selector sel, int ops)				将SelectableChannel通道注册到选择器上，并返回一个选择键。ops表示选择键可用的操作集
+	abstract SelectionKey register(Selector sel, int ops, Object att)
+	abstract boolean isRegistered()
+	abstract boolean isBlocking()								是否是阻塞的
+	abstract SelectableChannel configureBlocking(boolean block)	配置是否阻塞
+	abstract int validOps()										返回一个操作集，标识此通道所支持的操作
+	
+	
+AbstractSelectableChannel extends SelectableChannel	
+	可选择通道的基本实现类
+	
+ServerSocketChannel extends AbstractSelectableChannel implements NetworkChannel	
+	面向流的侦听套接字的可选择通道
+	
+	static ServerSocketChannel open()							创建ServerSocketChannel,此时是未绑定的，可以获取socket然后进行绑定bind()
+	abstract SocketChannel accept()								接受连接 如果尚未绑定，会抛出NotYetException
+																	在阻塞模式下是阻塞的；在非阻塞模式下在没有客户端连接时会返回null
+	abstract ServerSocket socket()								获取ServerSocket
+	ServerSocketChannel	bind(SocketAddress local)				将通道的套接字绑定到本地地址并侦听连接
+	abstract ServerSocketChannel bind(SocketAddress local, int backlog)
+	boolean	isOpen()
+	void close()
+	Object blockingLock()										获得阻塞锁对象
+	Set<SocketOption<?>> supportedOptions()						获得SocketOptions列表
+	abstract <T> ServerSocketChannel setOption(SocketOption<T> name, T value)
+	<T> T getOption(SocketOption<T> name)
+	abstract SocketAddress getLocalAddress()
+	SelectionKey keyFor(Selector sel)							获取通道向给定的选择器注册的SelectionKey
+	SelectorProvider provider()									返回创建此通道的SelectorProvider
+	
+SocketChannel extends AbstractSelectableChannel implements ByteChannel, ScatteringByteChannel, GatheringByteChannel, NetworkChannel	
+
+	static SocketChannel open()									打开一个选择器
+	static SocketChannel open(SocketAddress remote)				打开一个选择器(自动执行了connect方法)
+	abstract <T> SocketChannel setOption(SocketOption<T> name, T value)
+	abstract boolean connect(SocketAddress remote)				连接到远程通道的socket
+																	如果通道呈阻塞模式，则立即发起连接；如果呈非阻塞模式，则在稍后的某个时间才发起连接
+	abstract boolean finishConnect()							验证连接是否完成	
+	abstract boolean isConnected()
+	abstract boolean isConnectionPending()						判断此通道上是否正在进行连接操作
+-------------------------------------------------------------------------------------------------------------------------------------------------
+Selector选择器	【多路复用器】
+	线程安全的
+	相同的通道可以注册到不同的选择器，返回的选择键不同。
+	相同的通道重复注册到同一个选择器，返回的选择键相同。
+	---Selector API---
+	static Selector	open()						打开一个选择器
+	abstract int select()						选择。检测每个键的通道是否已经至少为该键的相关操作集所标识的一个操作准备就绪。在selectedKeys()之前调用。【阻塞方法】
+	abstract int select(long timeout)
+	abstract Set<SelectionKey> selectedKeys()	返回已就绪的选择键集合
+	abstract boolean isOpen()
+	abstract SelectorProvider provider()
+	abstract Set<SelectionKey> keys()			返回选择器的键集。不可直接修改键集，会抛出UnsupportedOperationException。仅在取消某个键并注销其通道后才能移除该键
+	abstract Selector wakeup()					使尚未返回的第一个选择操作立即返回
+	
+-------------------------------------------------------------------------------------------------------------------------------------------------
+SelectionKey选择键	
+	非线程安全的
+	---SelectionKey API---
+	static int OP_ACCEPT		用于套接字接受操作的操作集位			16
+	static int OP_CONNECT		用于套接字连接操作的操作集位			8
+	static int OP_READ			用于读取操作的操作集位					1
+	static int OP_WRITE			用于写入操作的操作集位					4
+	
+	boolean	isAcceptable()		选择键关联的通道是否可用【是否可接受连接】
+	boolean	isReadable()		选择键关联的通道是否可读
+	boolean	isWritable()		选择键关联的通道是否可写
+	boolean	isConnectable()		选择键关联的通道是否可连接【是否可连接到服务端】
+	abstract boolean isValid()	判断此键是否有效
+	abstract void cancel()		取消注册 会把选择键放到取消键集中，在下一次select()方法选择操作期间注销该键的通道，并移除该键
+	abstract SelectableChannel channel()	返回选择键关联的通道
+	abstract boolean isValid()
+	Object attach(Object ob)	关联/附加一个对象到当前选择键
+	Object attachment()			返回此选择键附加的对象
+	abstract int readyOps()		返回对应通道已准备好的操作的集合
+	abstract Selector selector()	返回关联的选择器
+	abstract int interestOps()	获取此键的interest集合
+	abstract SelectionKey interestOps(int ops)	将此键的interest集合设置为给定值
+	
+--------------------------------------------------------------------------------------------------------------------------------------------------
+SelectorProvider选择器提供者
+	---SelectorProvider API---
+	static SelectorProvider	provider()			获取选择器提供者。是jvm返回的系统级的默认提供者
+	abstract AbstractSelector openSelector()
+	abstract DatagramChannel openDatagramChannel()
+	abstract DatagramChannel openDatagramChannel(ProtocolFamily family)
+	abstract Pipe openPipe()
+	abstract ServerSocketChannel openServerSocketChannel()
+	abstract SocketChannel openSocketChannel()
+	Channel	inheritedChannel()
+	
+	
+####################################################################################################################################################################################
+DatagramChannel extends AbstractSelectableChannel implements ByteChannel, ScatteringByteChannel, GatheringByteChannel, MulticastChannel
+	面向DatagramSocket的可选择通道
+	static DatagramChannel open()								创建DatagramChannel，新创建的DatagramChannel已打开，未连接
+	static DatagramChannel open(ProtocolFamily family)
+	abstract DatagramChannel bind(SocketAddress local)			绑定
+	abstract DatagramChannel connect(SocketAddress remote)		连接此通道的套接字
+	abstract boolean isConnected()
+	abstract DatagramChannel disconnect()
+	abstract int send(ByteBuffer src, SocketAddress target)		发送数据，不需要连接
+	abstract SocketAddress receive(ByteBuffer dst)				接收数据，不需要连接
+	abstract DatagramSocket	socket()							获取关联的DatagramSocket对象
+	MembershipKey join(InetAddress group, NetworkInterface interf)	加入到组播地址(实现自MulticastChannel接口)
+	MembershipKey join(InetAddress group, NetworkInterface interf, InetAddress source)
+	
+--------------------------------
+enum StandardProtocolFamily extends Enum<StandardProtocolFamily> implements ProtocolFamily	
+	协议家族
+	INET INET6
+	
+	
+####################################################################################################################################################################################
+Pipe.SinkChannel extends AbstractSelectableChannel implements WritableByteChannel, GatheringByteChannel
+	表示Pipe的可写入结尾的通道
+Pipe.SourceChannel extends AbstractSelectableChannel implements ReadableByteChannel, ScatteringByteChannel
+	表示Pipe的可读取结尾的通道
+
+Pipe管道
+	单向管道传输的通道对
+	管道由一对通道组成：一个可写入的sink通道和一个可读的source通道。
+	static Pipe	open()
+	abstract Pipe.SinkChannel sink()
+	abstract Pipe.SourceChannel	source()

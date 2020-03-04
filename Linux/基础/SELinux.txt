@@ -1,0 +1,71 @@
+Security Enhanced Linux  安全强化的Linux
+
+	SELinux是在进行程序、文件等权限设置依据的一个内核模块，也是能够控制网络服务是否能访问系统的一道关卡
+
+	传统的文件权限与账号关系：DAC（自主访问控制）
+		依据进程所有者与文件资源的rwx权限来决定有无访问的能力，各种权限设置对root无效（隐患）
+	以策略规则制定特定程序读取特定文件：MAC（强制访问控制）
+		控制的主体是进程，而不是用户。这也是SELinux的运行模式。
+
+MAC
+	主体：管理的进程
+	目标：主体进程能否访问的资源，一般是文件系统
+	策略：由于进程与文件数量庞大，指定不同的服务开放某些资源的访问与否。
+		targeted：针对网络服务限制较多。针对本机限制较少（默认）
+		strict：完整的SELinux限制
+	安全上下文：主体与目标的安全上下文必须一致才能访问（即最终还是会与文件的rwx权限有关）
+		    安全上下文放置在文件的inode内
+
+		    ls -Z  ：查看安全上下文（前提是启用了SELinux）
+	身份标识：
+		root      表示root账号拥有该数据
+		system_u  表示系统程序拥有该数据
+		user_u    表示一般用户拥有该数据
+	角色：
+		object_r  表示数据属于文件或目录等文件资源
+		system_r  表示数据属于进程或者代表一般用户
+
+	类型：【重要】
+		type      在文件资源(Object)类型上面称为类型
+		domain	  在主体程序(Subject)中称为域
+
+
+SELinux支持三种模式
+	enforcing 强制模式，代表SELinux正在运行中，且已经正确开始限制domain/type的访问了
+	permissive 许可模式，代表SELinux正在运行中，不过仅会有警告信息并不会实际限制domain/type的访问，用作SELinux调试用
+	disabled 关闭，SELinux并没有实际运行
+
+	getenforce：查看当前SELinux模式
+	setenforce：设置SELinux模式（前提是已经启动了SELinux）
+		setenforce [0|1]  ：0表示切换成许可模式，1表示切换成强制模式 
+	sestatus [-vb] ：查看SELinux策略
+
+	启动/关闭SELinux
+		/etc/selinux/config中编辑SELINUX的值（模式）
+                此外，/boot/grub/menu.list中  selinux=0代表会忽略上面设置的值，如要启用还需删除这句
+		重启
+		
+	重设安全上下文
+		chcon [-R] [-t type] [-u user] [-r role] {文件}
+		chcon [-R] --reference={范例文件} {文件}
+	还原默认的安全上下文
+		restorecon [-Rv] {文件或目录}	
+	
+	启用troubleshoot
+		chkconfig --list setroubleshoot  查看troubleshoot是否开机启动   【开机启动命令是通用的】
+		chkconfig setroubleshoot on 设置troubleshoot开机启动
+
+	查看错误码：sealert -l {错误码}
+		    audit2why < /var/log/audit/audit/log  查询错误信息的回报（显示到界面上，需要启动audit）
+
+	seinfo [-Atrub]：策略查询
+	sesearch [-a] [-s 主体类型] [-t 目标类型] [-b 布尔值]：查看策略详细的规则
+	getsebool [-a] [布尔值条款] ：查看布尔值
+	setsebool [-P] 布尔值=[0|1] ：设置布尔值
+
+	semanage {login|user|port|interface|fcontext|translation} -l ：查看默认上下文
+	semanage fcontext -{a|d|m} [-frst] file_spec ：增删改上下文 
+	
+				
+		
+

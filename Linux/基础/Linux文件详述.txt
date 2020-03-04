@@ -1,0 +1,25 @@
+/var
+	/log
+		/cron       例行性工作调度crontab
+		/dmesg      开机时的内核监测信息
+		/lastlog    所有账号最后一次登录信息
+		/maillog    邮件往来信息（sendmail和dovecot产生的信息）
+		/mail/*     ..
+		/messages   系统错误信息
+		/secure     系统、所有软件账号密码信息（login、gdm、su、sudo、ssh、telnet等）
+		/wtmp       正确登录的账户信息
+		/faillog    错误登录的账户信息
+		/httpd/*    httpd服务的日志信息
+		/news/*     news新闻组服务的日志信息    
+		/samba/*    samba服务的日志信息
+		/spooler	新闻组的严重错误信息
+		/boot.log	开机时应显示到屏幕的信息
+		
+/etc
+	/syslog.conf            syslogd的配置文件
+	/sysconfig/syslog       syslogd的配置文件
+	/cron.daily
+		/logrotate  	    记录每天要进行的日志轮替行为
+	/logrotate.conf			logrotate配置文件(主要的参数文件，会加载./logrotate/logrotate.d/下可能存在的详细设置)
+	/logrotate.d/			logrotate配置文件（主要用于不同日志单独写在一个配置文件中，便于管理）
+	

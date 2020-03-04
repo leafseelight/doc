@@ -1,0 +1,66 @@
+HTTP是高层协议，web开发领域中开发效率较高，但是运行效率不高，底层是socket实现的。
+Socket不是协议，是计算机之间通信的技术。
+
+IP
+	Internet Protocol 互联网协议
+	IPv4 由4组8位的二进制数组成，每组的8位二进制数也可以用10进制数表示。总数是2^32。每组的范围0~255(2^8-1)
+	IPv6 由8组16位的二进制数组成，每组的16位二进制数可以用4个十六进制数表示。总数是2^128
+
+
+网络接口
+NetworkInterface类
+	表示一个由名称和分配给此接口的IP地址列表组成的网络接口
+	
+	网络传输中是以数据包为基本传输单位，每个数据包中包含的最大字节数由MTU指定
+	MTU:Maximum Transmission Unit最大传输单元。以太网卡默认是1500个字节
+	
+	虚拟接口：软件模拟的，不是代表硬件网络设备，可以没有父接口
+	虚拟子接口：软件模拟的，不是代表硬件网络设备, 可以有父接口。虚拟子接口属于虚拟接口
+	
+	硬件地址MAC(Media Access Control)：网卡设备的唯一id，48位十六进制
+	
+	---NetworkInterface API---
+	static Enumeration<NetworkInterface> getNetworkInterfaces()		获取机器上的所有网络接口集合
+	Enumeration<NetworkInterface> getSubInterfaces()				获取该网络接口的所有子接口 【子接口是物理网络设备虚拟出来的接口，windows不支持，linux支持】
+	
+	String getName()												取得网络设备在操作系统中的名称，如eth0，lo
+	String getDisplayName()											取得网络设备在操作系统中的显示名称，比较详细
+	int	getIndex()													获取网络接口的索引，索引值是不连续的
+	boolean	isUp()													是否已经开启并正常工作 （网线拔掉后，类似eth0接口就不会正常工作）
+	boolean	isLoopback()											是否为localhost回调/回环接口。回环接口是虚拟的，保证即使没有真正的网卡，本地使用也能正常工作。
+																								  【localhost只是域名，需要解析为127.0.0.1才能进行数据传输与通信】
+	boolean	isPointToPoint()										是否是点对点的设备 【点对点一般就是拨号或专线方式建立连接】
+	boolean	supportsMulticast()										是否支持多播
+	int	getMTU()													返回MTU大小，表示每个数据包的最大字节数。-1表示该网络接口被禁用
+	boolean	isVirtual()												是否是子接口/虚拟子接口
+	NetworkInterface getParent()									获取父接口
+	byte[] getHardwareAddress()										获得网卡的硬件地址/物理地址		
+	Enumeration<InetAddress> getInetAddresses()						获取绑定到此网络接口的InetAddress列表，即获得IP地址
+	List<InterfaceAddress> getInterfaceAddresses()					获取网络接口的InterfaceAddress列表
+	
+	网络地址InetAddress
+		两个子类Inet4Address Inet6Address
+	---InetAddress	API---
+	String getCanonicalHostName()									获取此IP地址的全限定域名【FQDN：Full Qualified Domain Name。主机名加上全路径】
+	String getHostName()											获取此IP地址的主机名
+	String getHostAddress()											返回IP地址字符串
+	byte[] getAddress()												返回此InetAddress对象的原始IP地址
+	static InetAddress getLocalHost()								返回本地主机的IP地址信息，如果有多个，则返回第一个
+	static InetAddress getLoopbackAddress()							返回回环/回调的IP地址信息 
+	static InetAddress getByName(String host)						确定host所代表的IP地址信息，参数host可以是计算机名、IP地址、域名
+	static InetAddress[] getAllByName(String host)					根据主机名获得所有IP地址
+	static InetAddress getByAddress(byte[] addr)					根据给定原始ip获取
+	static InetAddress getByAddress(String host, byte[] addr)	
+
+	网络接口地址InterfaceAddress
+	---InterfaceAddress API---
+	InetAddress	getAddress()										获取此网络接口地址的IP地址信息
+	InetAddress	getBroadcast()										获取此网络接口地址的广播地址的IP地址信息【IPv4网络具有广播地址】
+	short getNetworkPrefixLength()									获取此网络接口地址的网络前缀长度【网络前缀长度在IPv4网络中也叫子网掩码】
+	
+	每个NetworkInterface有多个InterfaceAddress对象，每个InterfaceAddress只有一个InetAddress对象。
+	
+	单播：大多是点对点方式传输数据，如打开网页、发送邮件、两人网络聊天等
+	广播：一对多的方式传输数据，对网络中的所有计算机发送数据。
+	多播：也称组播，也是一对多的网络，但是可以进行分组，只对某一组进行传输数据。
+			多播IP地址就是D类IP地址，即224.0.0.0~239.255.255.255之间的IP地址
