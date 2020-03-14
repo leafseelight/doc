@@ -1,0 +1,29 @@
+同步器
+AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer
+	构建锁及其他同步组件的基础框架。它使用了一个int类型的成员变量表示同步状态，通过内置的FIFO队列来完成资源获取线程的排队工作。
+	内部类Node
+		Node.CANCELLED = 1			
+		Node.SIGNAL = -1
+		Node.CONDITION = -2
+		Node.PROPAGATE = -3
+	
+	--- 可重写的方法 ---
+	protected boolean tryAcquire(int arg)			独占式获取同步状态
+	protected boolean tryRelease(int arg)			独占式释放同步状态
+	protected int tryAcquireShared(int arg)			共享式获取同步状态
+	protected boolean tryReleaseShared(int arg)		共享式获取同步状态
+	protected boolean isHeldExclusively()			此同步器是否在独占模式被占用
+		
+	---
+	protected final int getState()						获取同步状态
+	protected final void setState(int newState)
+	protected final boolean compareAndSetState(int expect, int update)
+	
+	void acquire(int arg)
+	void acquireInterruptibly(int arg)
+	void acquireShared(int arg)
+	void acquireSharedInterruptibly(int arg)
+	boolean	tryAcquireNanos(int arg, long nanosTimeout)
+	boolean	tryAcquireSharedNanos(int arg, long nanosTimeout)
+	boolean	release(int arg)
+	boolean	releaseShared(int arg)

@@ -1,0 +1,29 @@
+ThreadLocal
+	线程本地变量。
+	线程私有的map，随着线程的销毁而销毁。如果没有引用，也会随着gc而回收。
+	map的实现是ThreadLocal的静态内部类ThreadLocalMap，map的key是ThreadLocal<T>类型的
+	
+	最终是保存在一个Entry数组中，这个Entry继承了WeakReference【弱引用：gc时会回收】
+	为什么这么设计？
+		避免value无法回收造成内存泄漏。
+		ThreadLocal.ThreadLocalMap.Entry extends WeakReference<ThreadLocal<?>>
+		Entry弱引用了ThreadLocal和对应的value，Entry的回收不影响ThreadLocal，只要ThreadLocal还被其他对象强引用就不会被回收。
+		但是如果ThreadLocal被回收了，value就没有意义，value就必须也被回收。但是Entry对value的引用不是弱引用，所以Entry不被回收，value就不会被回收。
+	
+ThreadLocal<T> extends Object	
+	T get()
+	protected T	initialValue()			按返回线程局部变量的初始值，都是null，可以在子类重写该方法
+	void set(T value)
+	void remove()
+	
+InheritableThreadLocal<T> extends ThreadLocal<T>	
+	可继承线程本地变量。
+	protected T	childValue(T parentValue)
+	
+	创建新线程的线程是被创建的新线程的父线程，默认情况下，子线程是不继承父线程的线程本地变量的。
+	但是Thread中维护了两个本地变量，一个是可继承的，另一个是不可继承的。
+	
+	可继承的线程本地变量存在问题：父子线程的值不同步，因为只是最开始创建子线程的时候进行了复制，后面各种变化都是独立的。
+	解决办法：
+		子线程获取到父线程之后，再去获取父线程的可继承线程本地变量
+		子线程可以通过childValue方法直接操作父线程的本地变量值，同时也会使子线程本身具有最新的值，但是只是在创建子线程的时候发生一次。

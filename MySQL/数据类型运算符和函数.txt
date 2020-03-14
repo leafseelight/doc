@@ -1,0 +1,40 @@
+int(11)
+	11表示显示宽度，可以配合zerofill使用，zerofill需要在字段上开启，开启同时会默认为UNSIGNED无符号的，当数值宽度不够时，使用0填充，如果实际值超出了宽度，就显示实际值。
+	实际数据长度超过宽度限制的话，不会对数据本身有影响，也不影响占用的空间大小。空间之和数据类型有关，与显示长度无关。
+	
+	
+定点数
+		decimal，内部以字符串形式存储，比浮点数更精确，适用于存货币等需要高精度的数据
+		decimal(M,D) 默认10,0  【mysql会在长度超出时进行四舍五入保存(具体看SQL Mode)】
+					 M：精度，表示最大位数(小数+整数)；
+					 D：标度，表示最大小数位数
+浮点数
+		浮点数如果不写精度和标度，会按实际精度显示，有精度和标度，会自动四舍五入后插入
+		单精度float
+		双精度double
+		
+时间戳
+		TIMESTAMP：与时区有关。插入时会转换为本地时区后存放，读取时也会转换为本地时区后显示。
+				   范围较小，只到2038年
+				   一个表中如果有多个TIMESTAMP类型的字段，只能给第一个TIMESTAMP类型的字段设默认值CURRENT_TIMESTAMP
+				   
+字符串
+		char固定长度字符串。如果实际长度小于定义的值，则后面补空格存储，查询的时候会删除尾部空格。
+		varchar可变长度字符串，更节省空间。占用空间为实际字符串的字节数加上表示长度的字节数
+		
+	
+NULL不能用=、<>比较，用IS NULL或IS NOT NULL	
+
+
+任何字符串与NULL使用concat函数拼接后都是NULL
+ROUND(x,y)：将x四舍五入，保留y位小数
+
+NOW()					当前日期和时间
+UNIX_TIMESTAMP(date)	返回unix时间戳 10位秒数值
+DATE_ADD(date, INTERVAL expr type)
+DATE_FORMAT(date,fmt)
+
+IFNULL(value1,value2)	如果value不为空，返回value1，否则返回value2
+
+CASE WHEN [value1] THEN [result1]... ELSE [default] END
+CASE [expr] WHEN [value1] THEN [result1]... ELSE [default] END

@@ -1,0 +1,67 @@
+SQL
+	Structure Query Language 结构化查询语言
+	
+	分类
+		DDL(Data Defnition Language) 数据定义语言，主要是定义结构的，如create、drop、insert。
+		DML(Data Management Language) 数据操纵语言，主要是insert、delete、update、select。
+		DCL(Data Control Language) 数据控制语句，主要是设置权限的如grant(授予权限)、revoke(收回权限)。
+		
+	自带的四个数据库
+		information_schema：存储数据库对象信息。如用户表信息、列信息、权限信息、字符集信息、分区信息等。
+		cluster：存储系统的集群信息。
+		mysql：存储系统的用户权限信息。
+		test：测试数据库。
+
+		
+查询		
+	表连接
+		内连接inner join（两种写法）
+			内连接显示多表都满足条件的记录
+			select * from t1, t2 where xx;
+			select * from t1 inner join t2 on xx;
+		外连接outer join
+			左连接：包含左表所有记录，右表中符合条件的显示，不符合条件的显示NULL
+			右连接：~
+		交叉连接cross join	
+			返回左表中的所有行，左表中的每一行与右表中的所有行组合。也叫笛卡尔积
+			select * from t1, t2 where xx;				#如果没有where条件或者where条件没有形成关连关系，则是隐式的交叉连接
+			select * from t1 cross join t2 where xx;	#cross join不能与on一起使用
+		全连接full join	
+			mysql不支持，用union代替
+		
+	顺序	
+		from  on  join  where  group by  having  select  distinct  union  order by  limit
+		
+	子查询
+		in、 not in、 = != exists、 not exists
+		一般来说建议用关联查询，但是要避免出现笛卡尔积
+		
+	合并
+		被合并的结果集的字段数必须一致
+		union all	不去重，直接合并结果集
+		union       去重
+			
+		
+
+=================================================================================================================================================================
+mysql支持update多表，delete多表
+distinct只针对一个字段滤重
+group by表示要聚合的字段，一般会结合聚合函数使用，如果group by后没有使用聚合函数，每个组随机返回一条数据(有点滤重的效果)
+with rollup表示对聚合后的数据进行汇总，会多一行结果
+having是聚合后再过滤，where是聚合前过滤，尽量用where
+limit比order by还靠后，排序完之后取出对应起始偏移量指定条数的数据。limit是mysql支持的
+on在join前，所以建议使用on，这样join之后生成的笛卡尔积表的数据量会小点 【join操作会生成临时表，on就是生成的临时表的条件，where是临时表生成之后进行过滤】
+
+on与where的问题
+	在外连接中，不管on什么条件，主表都会全部查出来。如果把where的主表中非关联条件移到on中，则数据会不一致(往往就是没有起到过滤效果)
+	内连接中，满足on条件的才会被查出，最后where过滤条件。
+	所以连接条件必须放on，on一般也只写连接条件，主表的非连接条件一定要用where，被关联表的非连接条件可以写on里，也可以写where里
+	
+	没有on的一定是笛卡尔积，有on可能产生笛卡尔积(当on的条件中的字段有非唯一字段时)
+	
+	
+==================================================================================================================================================================
+SQL mode
+	ANSI						默认，警告
+	STRICT_TRANS_TABLES    		严格模式 不允许插入超过字段长度的值，直接报错
+	TRADITIONAL					严格模式，报错，只要出现错误就会立即回滚

@@ -1,0 +1,40 @@
+定时器Timer
+	设置计划任务，即设置指定时间开始执行某个任务
+	内部封装了一个TimerThread 继承自Thread，表示在这个线程执行任务。这个线程不是守护线程，这个线程会一直运行，run()方法中进行了无限循环。
+	内部还封装了一个任务队列。
+	
+	如果执行任务的时间早于当前时间，会立即执行任务。
+	任务的实际执行时间会和设定的执行时间由出入，在一个Timer中的多个任务会按照顺序执行，前一个任务执行完才能执行后一个任务，导致后一个任务的实际执行时间晚于设定时间。
+	
+	当任务队列中有多个任务时，会按顺序从队列头开始执行任务，队列中任务执行完一遍之后，会把最后一个任务放入队列头，进行下一次的任务执行。
+
+	Timer()																创建一个新的定时器就会创建一个启动一个新的线程
+	Timer(boolean isDaemon)
+	Timer(String name)
+	Timer(String name, boolean isDaemon)
+	
+	void cancel()														终止此定时器，会清空任务队列的全部任务，正在执行的任务继续执行，待执行的任务会被丢弃，销毁TimerThread
+																		注意有时候任务并没有停止，因为cancal()方法需要竞争queue锁，如果没有竞争到，就导致任务执行。
+																		
+	void schedule(TimerTask task, Date time)							在指定时间执行一次任务
+	void schedule(TimerTask task, Date firstTime, long period)			在指定时间执行第一次任务，之后按照period时间间隔无限执行
+	void schedule(TimerTask task, long delay)							以当前时间作为参考时间，延迟delay时间后执行一次任务
+	void schedule(TimerTask task, long delay, long period)
+	void scheduleAtFixedRate(TimerTask task, Date firstTime, long period)  以固定比率执行。具有追赶特性
+	void scheduleAtFixedRate(TimerTask task, long delay, long period)
+	
+TimerTask
+	抽象类。通常需要继承TimerTask并实现run()方法来定义任务内容
+	
+	boolean	cancel()													将自身从任务队列中清除，即把任务状态state改成CANCELLED
+	abstract void run()
+	
+追赶特性
+	会追加执行之前没有执行的任务，比如设定时间早于当前时间，则从设定时间到开始时间这段过程中理应执行的任务会一次性追加执行完。
+	
+如果不延时，下一次的任务开始时间是上一次任务开始时间加上period时间；
+如果任务延时，下一次任务的执行时间参考上一次任务的结束时间	
+	
+	
+在Spring中，fixedRate 任务两次执行时间间隔是任务的开始点，而 fixedDelay 的间隔是前次任务的结束与下次任务的开始
+	

@@ -1,0 +1,112 @@
+Thread extends Object implements Runnable
+	注意：Thread本身实现了Runnable
+	
+	Thread()
+	Thread(Runnable target)
+	Thread(String name)
+	Thread(Runnable target, String name)
+	
+	static Thread currentThread()							获得当前线程
+	void run()												立即执行run方法，不启动新的线程
+	void start()											启动新的线程来执行run方法，执行的时机不确定
+	long getId()											获取线程id 唯一标识
+	void setName(String name)								设置线程名称
+	String getName()
+	boolean	isAlive()										判断当前线程是否存活 线程已启动尚未终止就时活动状态
+	static void	sleep(long millis)							当前线程休眠指定毫秒时间
+	static void	sleep(long millis, int nanos)   			当前线程休眠指定毫秒+纳秒时间
+	
+	StackTraceElement[]	getStackTrace()						返回栈跟踪元素数组。数字中第一个元素表示栈顶。【栈跟踪元素封装了类名、方法名、文件名、行号】
+	static void	dumpStack()									将当前线程的栈追踪信息输出至标准错误流
+	static Map<Thread,StackTraceElement[]> getAllStackTraces()  返回所有活动线程的栈追踪信息的一个映射
+	static void	yield()										放弃cpu执行权 可能刚刚放弃又会立马获得执行权
+	static native boolean holdsLock(Object obj)				当前线程在指定的对象上保持锁定时，才返回true
+	Thread.State getState()									返回线程状态
+	ThreadGroup	getThreadGroup()							返回所属线程组
+	static int activeCount()								返回当前线程的线程组中活动线程的数量
+	static void	setDefaultUncaughtExceptionHandler(Thread.UncaughtExceptionHandler eh)		设置指定线程类的所有线程的默认异常处理器
+	void setUncaughtExceptionHandler(Thread.UncaughtExceptionHandler eh)					设置当前线程的默认异常处理器
+	
+停止线程
+	void interrupt()										中断线程
+		interrupt方法不是立即停止线程，而是在当前线程中做了一个停止的标记。
+		
+	static boolean interrupted()							判断当前线程是否已中断 currentThread() 同时也会清除中断状态
+															所以在使用interrupted()判断已中断之后一般需要再重新抛出InterruptedException，否则线程其实会继续执行。
+															理论上使用interrupted()判断已中断之后直接return也能实现停止，但是不推荐。
+	boolean	isInterrupted()									判断线程是否已中断 不会清除中断状态
+	
+	如果在sleep状态调用interrupt()或调用interrupt()标记线程状态为中断之后再执行sleep()，都会抛出InterruptedException，且会清空线程的状态值(？后一种不确定是否清空)
+	
+	-----------------------
+	stop() suspend() resume() 方法都已经废弃
+	
+	void stop()						暴力停止线程，强行终止。不安全，因为线程正在运行时被停止就不知道运行在哪里被停止的。一些清理性工作无法正确执行，如释放资源。
+									或者造成数据不完整，或者导致锁无法释放等问题。
+									调用该方法会抛出java.lang.ThreadDeath异常，但是一般不需要显式捕获。
+									stop会销毁线程对象，如果想继续运行线程成，只能重新start()启动线程。
+	void suspend()					暂停线程 线程对象不会销毁							
+	void resume()					恢复线程	
+										暂停和恢复这种方式的问题与stop类似，都有数据不完整，锁无法释放等问题
+										想要实现暂停与恢复，使用wait() notify() notifyAll()
+										
+线程的优先级
+	1-10
+	static int	MIN_PRIORITY    1
+	static int	NORM_PRIORITY   默认5
+	static int	MAX_PRIORITY    10
+	
+	线程的优先级具有继承性，即新创建的线程的优先级是创建它的线程的优先级。
+	优先级高不代表一定会先于优先级低的执行，只是相对会先执行。因为优先级具有随机性，不确定性。
+	
+	void setPriority(int newPriority)
+	int	getPriority()
+	
+守护线程
+	用户线程是非守护线程。
+	当进程中没有非守护线程了，守护线程也会自动销毁(随着jvm一同结束工作)。
+	典型的守护线程是垃圾回收线程
+	
+	boolean	isDaemon()
+	void setDaemon(boolean on)				参数为true时表示设置为守护线程，必须在start之前设置
+	
+	
+###############################################################################################################################################################################
+线程的状态
+	Enum Thread.State
+	
+	NEW,			已创建尚未启动
+    RUNNABLE,		已启动，包含了Ready和Running。         start()
+    BLOCKED,		阻塞。等待锁.    【同步方法和同步代码块阻塞是这个状态，Lock阻塞是waiting，因为Lock底层使用了park()】
+    WAITING,		无限期等待。                           wait() join() LockSupport.park()
+    TIMED_WAITING,  有限等待，具有自动唤醒功能             wait(timeout) sleep(timeout) join(timeout) LockSupport.parkNanos()
+    TERMINATED;		终止
+										
+										
+	注意：同步I/O，java线程依然是RUNNABLE状态，操作系统线程状态是休眠！！！		
+
+###############################################################################################################################################################################
+LockSupport	
+										
+	
+################################################################################################################################################################################
+ThreadGroup
+	线程组，把线程归到一个组。可以批量的管理组。
+	新创建的线程组默认会归到当前线程对象所属的线程组中。
+	主线程的线程组是main main线程组的父线程组是system，也就是根线程组
+	
+	int	activeCount()						返回此线程组及子线程组中所有活动线程数
+	int	activeGroupCount()					返回此线程组及子线程组中所有活动线程组数
+	String getName()						返回线程组名称
+	ThreadGroup	getParent()
+	void interrupt()						中断线程组中所有线程
+	void uncaughtException(Thread t, Throwable e)	当线程抛出了异常没有catch且没有默认的异常处理时，jvm会调用线程组的异常处理方法
+	
+Thread.UncaughtExceptionHandler接口
+		void uncaughtException(Thread t, Throwable e)
+	
+
+------------------------------------------------------
+其他
+		SimpleDateFormat不是线程安全的，在多线程环境下使用，可以每次使用都重新new一个，或者将它放到ThreadLocal变量中
+		

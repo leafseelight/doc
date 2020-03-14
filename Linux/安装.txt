@@ -86,6 +86,7 @@ rabbitmq-plugins enable rabbitmq_management
 
 #开启远程访问
 firewall-cmd --permanent --zone=public --add-port=15672/tcp --permanent
+firewall-cmd --permanent --zone=public --add-port=5672/tcp --permanent
 
 
 【elasticsearch】

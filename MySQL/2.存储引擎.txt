@@ -1,0 +1,27 @@
+存储引擎用来存储和索引数据
+新建表的时候通过ENGINE关键字设置 默认InnoDB，也可以Alter Table xx Engine = innodb;修改
+
+MyISAM
+	不支持事务、外键。
+	表锁
+	适用于以新增和查询为主的场景。查询速度快。
+	.frm 数据表定义
+	.MYD 数据文件
+	.MYI 索引文件
+	支持Btree索引，不支持Hash索引
+
+InnoDB
+	支持事务、外键
+	行锁
+	.frm	数据表定义
+	.ibd	数据和索引
+	支持Btree索引，不支持Hash索引
+	
+MEMORY
+	表锁
+	数据存放在内存，表结构还是在.frm文件。服务关闭，内存中的数据就会丢失。
+	可以指定索引类型是Hash索引或Btree索引
+	
+MERGE
+	作用是对多个MyISAM表进行操作
+	

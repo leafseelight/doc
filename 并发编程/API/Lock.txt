@@ -1,0 +1,46 @@
+Lock
+	void lock()					获取锁
+	void unlock()				释放锁
+	boolean	tryLock()			轮询锁，不阻塞，直接返回结果
+	boolean	tryLock(long time, TimeUnit unit)
+	void lockInterruptibly()	【可中断锁】中断了一个正在等待锁的线程，这个线程会抛出InterruptedException并中断线程，而lock()以及synchronized在等待锁的期间都是不可中断的。
+	Condition newCondition()	返回一个绑定在当前锁上的条件
+	
+Condition	
+	线程对象注册在Condition中，可以选择性的进行线程通知。
+	
+	void await()									使当前线程等待，直到接到通知或被中断。与wait()方法作用一样，同样需要先获得锁。底层是Unsafe的park()方法
+	boolean	await(long time, TimeUnit unit)			设置等待超时时间，具有自动唤醒功能
+	long awaitNanos(long nanosTimeout)
+	boolean	awaitUntil(Date deadline)
+	void awaitUninterruptibly()						等待的过程中不允许被中断，这个等待是指调用了await wait导致的等待，不是获取锁的时候的阻塞。
+	
+	void signal()									唤醒。和notify()方法一样
+	void signalAll()	
+	
+ReentrantLock implements Lock
+	可以实现公平锁，默认是非公平锁。【公平锁就是按照请求锁的顺序来获取锁】
+	
+	ReentrantLock()								创建锁，默认非公平锁
+	ReentrantLock(boolean fair)					为true时表示公平锁
+	
+	int	getHoldCount()							查询当前线程保持此锁定的个数，即调用lock()方法的次数。重入计数。调用unlock()会使计数减一
+	int	getQueueLength()						返回正在等待获取此锁的线程估计数
+	int	getWaitQueueLength(Condition condition) 返回等待此锁的给定的condition的线程估计数
+	boolean	hasQueuedThread(Thread thread)		查询指定的线程是否正在等待获取此锁，即判断指定线程是否在等待队列中
+	boolean	hasQueuedThreads()					是否有线程在等待此锁
+	boolean	hasWaiters(Condition condition)		是否有线程正在等待此锁相关的condition条件，即是否有线程执行了此condition的await()
+	boolean	isFair()							是否是公平锁
+	boolean	isHeldByCurrentThread()				锁是否由当前线程持有
+	boolean	isLocked()							锁是否有任意线程保持且没有被释放
+	
+ReentrantReadWriteLock implements ReadWriteLock
+	读写锁，提高效率 
+	两个锁，对应两个静态内部类ReentrantReadWriteLock.ReadLock和ReentrantReadWriteLock.WriteLock，都实现了Lock接口
+		共享锁（读锁）
+		排他锁（写锁）
+	
+	读锁之间不互斥，读锁与写锁互斥，写锁之间互斥。	
+		
+	ReentrantReadWriteLock.ReadLock	readLock()					获取读锁
+	ReentrantReadWriteLock.WriteLock writeLock()				获取写锁

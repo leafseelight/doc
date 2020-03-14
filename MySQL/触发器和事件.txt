@@ -1,0 +1,25 @@
+事件Event
+	主要是执行一些定时任务。如定期收集统计信息，定期清理历史数据等
+	
+触发器Tragger
+	触发器是针对增删改等操作进行事件触发，只能创建在永久表上，不能对临时表创建触发器。
+	触发器只支持行级触发，不支持语句级触发
+	
+	激活时间
+		 INSTEAD OF 替代触发器，即不会执行原操作，而是替代执行触发器定义的操作
+		 BEFORE
+		 AFTER
+	
+	
+	insert into .. on duplicate key update也是一种触发器
+	
+	before insert
+	after insert
+	before update 
+	after update 
+	
+	注意
+		对于innodb这种支持事务的存储引擎，如果before触发器执行失败，则不会执行sql；
+		如果sql执行失败，则不会执行after触发器；如果after触发器执行失败，则会回滚sql。
+		
+		对于不支持事务的存储引擎，每一步执行失败都不会继续执行下面的操作。

@@ -1,0 +1,44 @@
+redo log
+    重做日志，是物理日志
+	innodb保证事务更新的一致性和持久性，作为异常宕机使用(数据从磁盘读取到内存中进行了修改之后意外宕机未将更新写入到磁盘)
+	WAL：write ahead log
+	读入数据，加锁，执行操作，先将修改结果更新到内存，然后在redo log记录，并标记状态为prepare
+	更新操作提交之后，日志状态也变成commit，然后写到操作系统的文件缓冲中，释放锁，随后日志在某个时机刷新到磁盘文件
+
+	
+	大小是固定的 采用循环写的方式，满了就刷新到file(os buffer)。所以无法用于数据回滚和恢复
+	
+	LSN：Log Number Sequence 日志序列号
+	
+undo log
+	回滚日志，主要是做回滚操作的。是逻辑日志
+	undo是每次修改之前记录的。
+
+
+
+bin log	
+	默认关闭
+	mysql服务层提供的。通过追加的方式写入。一般用于备份数据，主从复制。是逻辑日志。名字如localhost-bin.00001
+	事务提交完成后一次写入
+	日志记录方式
+		1）记录执行的sql 包括ddl dml					statement		有可能会出错
+		2）记录行的内容，包括更新前和更新后的			row				日志量大 update100万条数据会产生100万个日志
+		3）混合模式（默认）								mixed			这个模式主要还是statement的 特殊情况会使用row
+		
+	mysqlbinlog工具读取日志
+
+
+错误日志
+	主要记录了启动停止以及运行中的错误日志 名字如localhost.localdomain.err
+
+查询日志	
+	默认关闭
+	记录了客户端的所有语句
+	可以保存在文件或者表(general_log表)中，默认输出到文件,名字如localhost.log
+
+慢查询日志	
+	记录了所有执行时间超过long_query_time参数并且扫描记录不小于min_examined_row_limit的所有sql语句的日志
+	超时时间默认10s
+	管理语句和不使用索引的查询语句不会记录到慢查询日志
+	名字如localhost-slow.log,也可以设置输出到表
+	mysqldumpslow工具可以更加方便的查看慢查询日志
