@@ -1,5 +1,0 @@
-Sync extends AbstractQueuedSynchronizer
-
-NonfairSync extends Sync
-
-FairSync extends Sync

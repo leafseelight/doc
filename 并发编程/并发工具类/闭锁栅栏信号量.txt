@@ -1,0 +1,47 @@
+CountDownLatch extends Object
+	计数闭锁
+	允许一个或多个线程等待其他线程完成工作。
+	类似join()的功能
+	
+	CountDownLatch(int count)						初始化 表示需要等待的线程数或者一个线程内的多个步骤数
+	void	await()									使当前线程等待直到count为0
+	boolean	await(long timeout, TimeUnit unit)
+	void	countDown()								每次调用 计数器会自减
+	long	getCount()
+	
+	
+CyclicBarrier extends Object	
+	可循环的同步屏障
+	让一组线程到达一个屏障(同步点)时被阻塞，直到最后一个线程到达屏障时，屏障开门，所有被屏障拦截的线程才会继续执行。
+	每个线程调用await()方法告诉屏障我已经到达了屏障，然后当前线程被阻塞
+	
+	CyclicBarrier(int parties)						初始化，参数表示屏障拦截的线程数量
+	int	await()
+	int	await(long timeout, TimeUnit unit)
+	int	getNumberWaiting()
+	int	getParties()
+	boolean	isBroken()								阻塞的线程是否被中断
+	void reset()									重置为初始状态
+	
+	CyclicBarrier与CountDownLatch的区别
+		CountDownLatch计数器只能用一次，CyclicBarrier计数器可以重置后继续使用
+		
+		
+Semaphore		
+	信号量 
+	控制同时访问特定资源的线程数量。可以用作流量控制，资源链接数控制。
+	
+	Semaphore(int permits)							参数是许可证数的意思 表示允许并发执行的线程数
+	Semaphore(int permits, boolean fair)			可以实现公平竞争
+	void	acquire()								获取一个许可证 获取不到就阻塞
+	void	acquire(int permits)					获取指定数量的许可证
+	void	release()								释放/归还许可证
+	void	release(int permits)
+	
+Exchanger
+	交换器
+	进行线程间的数据交换。提供一个同步点，两个线程都到达同步点时，都要调用exchange方法，就可以交换数据。
+	
+	Exchanger()
+	V	exchange(V x)
+	V	exchange(V x, long timeout, TimeUnit unit)

@@ -1,0 +1,53 @@
+线程安全的队列
+	实现方式
+		阻塞算法：出队入队用一个锁或两个锁控制
+		非阻塞算法：自旋CAS
+
+ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<E>
+	基于链接节点的无界线程安全队列。
+	先进先出，添加一个元素的时候会添加到队列的尾部，获取一个元素时，会返回队列头部的元素。采用了CAS
+	元素封装在节点Node中，每个节点包含节点元素item和指向下一个节点next的引用组成。默认head节点存储的元素为空，tail节点等于head节点。
+	
+	入队
+		将入队节点设置成当前队列尾节点的下一个节点
+		更新tail节点，如果tail节点的next节点不为空，则将入队节点设置成tail节点；否则将入队节点设置成tail的next节点。【tail节点不总是尾节点】
+		
+	出队
+		首先获取头节点的元素，然后判断头节点元素是否为空，如果为空则表示另外一个线程已经进行了一次出队操作将该节点的元素取走，
+		不为空则使用CAS的方式将头节点的引用设置为null。如果CAS成功，则直接返回头节点的元素，如果不成功，表示另一个线程已经进行了一次出队操作并更新了head节点，需要重新获取头节点。
+		
+		
+	相比单纯的循环CAS(即保证tail节点永远是尾节点)，减少了CAS的次数，入队效率更高。	
+	
+	
+阻塞队列BlockingQueue
+	支持阻塞的插入和移除方法。常用于生产者消费者的场景。
+	
+	---API---
+	boolean	add(E e)									队列满了add会抛出异常
+	boolean	remove(Object o)							队列为空会抛出异常
+	
+	boolean	offer(E e)									返回插入元素是否成功，满了插入不会抛出异常
+	boolean	offer(E e, long timeout, TimeUnit unit)		队列满了会阻塞一定时间，如果超时了仍为插入成功就返回失败
+	E poll(long timeout, TimeUnit unit)
+	
+	void put(E e)										对于有界队列，队列满了put会阻塞
+	E take()											队列为空会阻塞
+	
+	---------------------------------------------
+	ArrayBlockingQueue
+		用数组实现的有界阻塞队列 FIFO。可以实现公平非公平的访问队列。
+	LinkedBlockingQueue
+		用链表实现的有界阻塞队列 FIFO
+	PriorityBlockingQueue
+		支持优先级的无界阻塞队列 默认采取自然顺序升序排序
+	DelayQueue
+		支持延时获取元素的无界阻塞队列。实现了Delayed接口。可用于缓存有效期、定时任务等场景。
+	SynchronousQueue
+		不存储元素的阻塞队列。每个put操作必须等地一个take操作，否则不能继续添加元素。
+		类似一个通道，连接读写的两端。
+	LinkedTransferQueue
+		链表实现的无界阻塞TransferQueue队列
+		如果有消费者，可以直接把生产者生产的元素传给消费者
+	LinkedBlockingDeque
+		链表实现的双向阻塞队列。可以两端都插入移除元素。适用于工作窃取/密取的模式中。

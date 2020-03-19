@@ -1,5 +1,6 @@
 LockSupport
 	线程阻塞工具类
+	blocker表示当前线程正在等待的对象，为的是线程dump时能获取到详细的信息
 	
 	public static void park(Object blocker); 							// 暂停当前线程
 	public static void parkNanos(Object blocker, long nanos); 			// 暂停当前线程，不过有超时时间的限制

@@ -1,0 +1,39 @@
+java7提供的用于并行执行任务的框架。
+	把大任务切分为多个字任务并行执行，最终汇总每个小任务的结果形成最终大任务的结果。
+	
+工作窃取
+	work steal
+	减少线程间的竞争，将子任务放到不同的队列里，并为每个队列创建一个线程来执行队列里的任务。
+	但是，有的队列里的任务会先执行完，有的队列里还有很多任务。这时，会有线程没有任务执行，浪费资源。
+	让这些空闲线程去执行其他队列里的任务就是工作窃取。
+	为了减少窃取任务线程和被窃取任务的线程在队列中获取任务上的竞争，采取双端队列，窃取线程从尾部获取任务。
+	
+	fork/join框架就是实现这个需求的框架
+	
+	调用fork方法时，会把当前任务放到一个队列里，在唤醒一个工作线程(ForkJoinWorkerThread)来执行任务(异步执行)
+	
+		
+		
+ForkJoinTask extends Future
+
+	ForkJoinTask<V>	fork()								执行子任务
+	V join()											任务完成后获取结果
+	V get()												获取任务执行结果	阻塞方法
+	V get(long timeout, TimeUnit unit)
+	boolean	isDone()									判断任务是否完成
+	boolean	isCompletedNormally()						判断任务是否正常完成
+	boolean	isCompletedAbnormally()
+	Throwable getException()							获取任务执行过程中遇到的异常
+	
+	子类
+		RecursiveAction 用于没有返回结果的任务
+			protected abstract void	compute()			必须重写的计算方法，即任务如何完成的逻辑
+			
+			
+		RecursiveTask	用于有返回结果的任务
+			protected abstract V compute()
+		
+ForkJoinPool		
+	<T> ForkJoinTask<T>	submit(ForkJoinTask<T> task)
+	
+ForkJoinWorkerThread extends Thread	

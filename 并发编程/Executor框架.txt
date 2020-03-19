@@ -1,0 +1,84 @@
+Executor框架
+	提供了任务的执行机制
+	
+	组成部分
+		任务。即实现Runnable或Callable的接口
+		任务的执行。核心接口Executor，ExecutorService
+		异步计算的结果。包括接口Future及其实现FutureTask。通过Future.get()等待任务结果
+		
+	
+
+
+
+
+
+Runnable
+	可运行
+	void	run()				不会返回结果
+
+Callable
+	可调用
+	V	call()					会返回结果
+
+Executor
+	void	execute(Runnable command)
+
+ExecutorService extends Executor
+	扩展了Executor
+	Future<?>	submit(Runnable task)
+	<T> Future<T>	submit(Runnable task, T result)
+	<T> Future<T>	submit(Callable<T> task)
+	void	shutdown()
+	List<Runnable>	shutdownNow()
+	boolean	isShutdown()							调用了关闭就是true
+	boolean	isTerminated()							最终是否终止
+	
+AbstractExecutorService implements ExecutorService	
+	抽象父类
+	
+ThreadPoolExecutor extends AbstractExecutorService	
+	线程池执行器。是线程池的核心类
+	有构造，详见线程池
+	一般通过Executors创建
+	
+	
+	
+ScheduledThreadPoolExecutor extends ThreadPoolExecutor implements ScheduledExecutorService	
+	定时的线程池执行器
+	类似Timer 但是Timer只有一个任务线程。
+
+
+Executors
+	工具类
+	static Callable<Object>	callable(Runnable task)											将Runnable对象封装为Callable对象
+	static <T> Callable<T>	callable(Runnable task, T result)
+	static ExecutorService	newFixedThreadPool(int nThreads)								创建固定线程数的线程池，工作队列是无界的LinkedBlockingQueue，适用于负载重的场景 【固定即corePoolSize和maximumPoolSize相等】
+	static ExecutorService	newFixedThreadPool(int nThreads, ThreadFactory threadFactory)
+	static ExecutorService	newCachedThreadPool()											创建可缓冲的线程池，工作队列是无界的SynchronousQueue，适用于负载低，任务小的场景
+	static ExecutorService	newCachedThreadPool(ThreadFactory threadFactory)
+	static ExecutorService	newSingleThreadExecutor()										创建使用单个线程的线程池，无界队列
+	static ExecutorService	newSingleThreadExecutor(ThreadFactory threadFactory)
+	static ScheduledExecutorService	newScheduledThreadPool(int corePoolSize)				创建定时的线程池，无界延迟队列DelayQueue
+	static ScheduledExecutorService	newScheduledThreadPool(int corePoolSize, ThreadFactory threadFactory)
+	static ScheduledExecutorService	newSingleThreadScheduledExecutor()						创建定时的单个线程的线程池
+	static ScheduledExecutorService	newSingleThreadScheduledExecutor(ThreadFactory threadFactory)
+	
+Future
+	表示异步计算的结果
+	boolean	cancel(boolean mayInterruptIfRunning)		取消任务执行
+	V	get()
+	V	get(long timeout, TimeUnit unit)
+	boolean	isCancelled()
+	boolean	isDone()
+	
+FutureTask<V> extends Object implements RunnableFuture<V>	
+	FutureTask(Callable<V> callable)
+	FutureTask(Runnable runnable, V result)
+	void	run()
+	可以给Executor执行，也可以由调用线程直接执行(FutureTask.run())
+	它的实现也基于AQS
+	
+	三种状态
+		未启动
+		已启动
+		已完成 包括正常结束，取消，异常

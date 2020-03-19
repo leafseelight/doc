@@ -1,0 +1,39 @@
+java.util.concurrent.atomic
+Atomic包
+	基本上都是使用Unsafe实现的包装类
+	总共13个原子操作类？
+	Unsafe只提供了compareAndSwapInt、compareAndSwapLong、compareAndSwapObject
+	其他基本类型的一般要转成整型再操作
+	
+原子更新基本类型
+	AtomicBoolean
+	AtomicInteger 
+	AtomicLong
+	
+	---AtomicInteger API---
+	(AtomicInteger extends Number)
+	
+	int	addAndGet(int delta)						原子方式加上某个值，返回相加后的结果				
+	boolean	compareAndSet(int expect, int update)	如果输入的值等于预期值，则以原子方式赋新值  调用了Unsafe.compareAndSwapInt(this,offset,expect,update)
+	int	get()										获取当前值
+	int	getAndSet(int newValue)						以原子方式设置值，返回旧值
+	int	getAndIncrement()							原子自增1，返回自增前的值
+	void set(int newValue)							设置新值
+	void lazySet(int newValue)						延迟设置值，最终会设置这个值
+	
+	
+原子更新数组
+	AtomicIntegerArray
+	AtomicLongArray
+	AtomicReferenceArray
+
+原子更新引用
+	AtomicReference<V>								原子更新引用类型
+	AtomicReferenceFieldUpdater<T,V>				原子更新引用类型里的字段
+	AtomicMarkableReference<V>						原子更新带标记位的引用类型
+
+原子更新属性	
+	AtomicIntegerFieldUpdater<T>
+	AtomicLongFieldUpdater<T>
+	AtomicReferenceFieldUpdater<T,V>
+	AtomicStampedReference<V>						带版本号，解决ABA问题

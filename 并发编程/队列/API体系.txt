@@ -1,0 +1,24 @@
+Collection<E>
+	List<E>
+	Set<E>
+	SortedSet<E>
+	...
+	Queue<E>
+		主要子接口
+		BlockingQueue<E>			阻塞队列【重要】
+		Deque<E>					双端队列
+		BlockingDeque<E>			阻塞双端队列
+		TransferQueue<E>			可以直接传输的队列
+		
+		主要实现类
+		AbstractQueue抽象父类       大部分实现都是用锁+睡眠唤醒机制实现的阻塞的队列
+			ArrayBlockingQueue
+			DelayQueue
+			LinkedBlockingDeque
+			LinkedBlockingQueue
+			LinkedTransferQueue
+			PriorityBlockingQueue
+			PriorityQueue
+			SynchronousQueue
+			
+			ConcurrentLinkedQueue	非阻塞的 底层用了CAS

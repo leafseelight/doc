@@ -1,17 +1,12 @@
 同步器
 AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer
-	构建锁及其他同步组件的基础框架。它使用了一个int类型的成员变量表示同步状态，通过内置的FIFO队列来完成资源获取线程的排队工作。
-	内部类Node
-		Node.CANCELLED = 1			
-		Node.SIGNAL = -1
-		Node.CONDITION = -2
-		Node.PROPAGATE = -3
+	构建锁及其他同步组件的基础框架。它使用了一个int类型的成员变量表示同步状态，通过内置的FIFO同步队列来完成资源获取线程的排队工作。
 	
 	--- 可重写的方法 ---
 	protected boolean tryAcquire(int arg)			独占式获取同步状态
 	protected boolean tryRelease(int arg)			独占式释放同步状态
 	protected int tryAcquireShared(int arg)			共享式获取同步状态
-	protected boolean tryReleaseShared(int arg)		共享式获取同步状态
+	protected boolean tryReleaseShared(int arg)		共享式释放同步状态
 	protected boolean isHeldExclusively()			此同步器是否在独占模式被占用
 		
 	---
@@ -27,3 +22,32 @@ AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer
 	boolean	tryAcquireSharedNanos(int arg, long nanosTimeout)
 	boolean	release(int arg)
 	boolean	releaseShared(int arg)
+	
+	
+	获取同步状态，如果获取失败，则生成Node节点，加入到同步队列尾部(自旋+CAS)，如果前驱节点为头节点，
+	获取同步状态，获取成功后，将当前节点设为头节点，否则线程进入等待状态(等待线程中断[如果支持中断的话]或前驱节点被释放)
+	
+	总结：
+		在独占式中
+		获取(会调用到自定义的tryAcquire())同步状态时，同步器维护一个同步队列，获取状态失败的线程都会加入到队列(FIFO)中并在队列中进行自旋；
+		移出队列(或停止自旋)的条件是前驱节点为头节点且成功获取了同步状态。
+		释放同步状态时，同步器调用tryRelease()方法释放，然后唤醒头节点的后继节点。
+		
+		
+	在Condition的实现上，aqs中内置的ConditionObject就是Condition实现类。
+	每个Condition绑定一个FIFO的等待队列
+	Condition的await()方法会使当前线程进入等待队列并释放锁，线程状态变为等待状态。当从await()返回时，当前线程一定是获取了相关的锁
+	
+	
+	说白了 同步器拥有一个同步队列和多个等待队列。同步队列排队获取锁，等待队列排队等notify通知。
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		

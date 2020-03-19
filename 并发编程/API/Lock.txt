@@ -6,18 +6,6 @@ Lock
 	void lockInterruptibly()	【可中断锁】中断了一个正在等待锁的线程，这个线程会抛出InterruptedException并中断线程，而lock()以及synchronized在等待锁的期间都是不可中断的。
 	Condition newCondition()	返回一个绑定在当前锁上的条件
 	
-Condition	
-	线程对象注册在Condition中，可以选择性的进行线程通知。
-	
-	void await()									使当前线程等待，直到接到通知或被中断。与wait()方法作用一样，同样需要先获得锁。底层是Unsafe的park()方法
-	boolean	await(long time, TimeUnit unit)			设置等待超时时间，具有自动唤醒功能
-	long awaitNanos(long nanosTimeout)
-	boolean	awaitUntil(Date deadline)
-	void awaitUninterruptibly()						等待的过程中不允许被中断，这个等待是指调用了await wait导致的等待，不是获取锁的时候的阻塞。
-	
-	void signal()									唤醒。和notify()方法一样
-	void signalAll()	
-	
 ReentrantLock implements Lock
 	可以实现公平锁，默认是非公平锁。【公平锁就是按照请求锁的顺序来获取锁】
 	
@@ -44,3 +32,26 @@ ReentrantReadWriteLock implements ReadWriteLock
 		
 	ReentrantReadWriteLock.ReadLock	readLock()					获取读锁
 	ReentrantReadWriteLock.WriteLock writeLock()				获取写锁
+	
+	支持公平锁。默认非公平。
+	可重入
+	不支持锁升级，支持降级
+	
+	锁降级
+		在持有写锁的过程中，获取读锁，然后释放写锁。
+	
+	
+#############################################################################################################################################################################
+Condition	
+	线程对象注册在Condition中，可以选择性的进行线程通知。
+	
+	void await()									使当前线程等待，直到接到通知或被中断。与wait()方法作用一样，同样需要先获得锁。底层是Unsafe的park()方法
+	boolean	await(long time, TimeUnit unit)			设置等待超时时间，具有自动唤醒功能
+	long awaitNanos(long nanosTimeout)
+	boolean	awaitUntil(Date deadline)
+	void awaitUninterruptibly()						等待的过程中不允许被中断，这个等待是指调用了await wait导致的等待，不是获取锁的时候的阻塞。
+	
+	void signal()									唤醒。和notify()方法一样
+	void signalAll()	
+	
+AbstractQueuedSynchronizer.ConditionObject implement Condition	

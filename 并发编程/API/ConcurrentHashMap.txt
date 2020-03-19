@@ -1,0 +1,36 @@
+ConcurrentHashMap是线程安全高效的HashMap
+
+	HashMap线程不安全，put操作可能会引起死循环(因为并发时会导致Entry链表形成环形数据结构，next节点永远不为空，就会产生死循环)。
+	HashTable效率低，put时需要获取锁，不仅其他线程无法put，get也不行
+	
+	ConcurrentHashMap
+		分段锁，每把锁控制锁容器中的一部分数据，多线程访问不同数据段的数据时，就不会存在锁竞争，从而提高并发访问效率。
+		
+
+【1.7】		
+ConcurrentHashMap<K, V> extends AbstractMap<K, V> implements ConcurrentMap<K, V>
+
+    ---ConcurrentHashMap API ---
+	ConcurrentHashMap()																	构造。默认初始大小16，加载因子默认0.75
+	ConcurrentHashMap(int initialCapacity)													
+	ConcurrentHashMap(int initialCapacity, float loadFactor)
+	ConcurrentHashMap(int initialCapacity, float loadFactor, int concurrencyLevel)
+	ConcurrentHashMap(Map<? extends K,? extends V> m)
+	
+	get
+		先经过一次再散列(变种的散列，因为普通的散列值的冲突非常严重)，使用这个散列值定位到Segment，再通过散列算法定位到元素。
+		get操作不需要加锁，除非读到的值是空才会加锁重读。就是许多共享变量都定义成volatile类型的，如表示段大小的count字段和存储值的HashEntry的value字段。
+		对于get，并不需要操作count和value，所以就不需要加锁。
+		
+	put
+		首先定位到Segment，获取锁，然后在Segment里进行插入操作。
+		插入操作需要两个步骤，第一步判断是否需要对这个Segment的HashEntry数组进行扩容，即判断数组大小是否超过阈值(threshold)，超过则扩容
+		【注意是在插入之后判断然后扩容的，而且只是针对某个segment进行扩容，扩容就是两倍】
+		【threshold=capacity*loadFactor】
+		第二步再定位添加元素的位置，将其放到HashEntry数组里。
+		
+	size
+		统计所有的segment大小并求和，但是直接求和是不准确的，因为在求和的过程中会有某些segment中HashEntry数组中进行了操作
+		累加的时候先尝试两次通过不锁住Segment的方式来统计各个段的大小，统计的过程中，如果count发生变化(额外的变量modCount表示变化)，再采用加锁的方式统计（这时就需要锁住所有段的put、remove、clean等操作）。
+		
+【1.8】		

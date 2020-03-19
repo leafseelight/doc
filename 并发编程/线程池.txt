@@ -1,0 +1,50 @@
+实现原理
+	1.判断核心线程池里的线程是否都在执行任务，如果不是，则创建一个新的工作线程来执行任务,否则走下一个流程
+	2.判断工作队列是否已满，如果没有满，则将任务存储在工作队列里，否则走下一步
+	3.判断线程池的线程是否都处在工作状态，如果没有，则创建一个工作线程来执行任务；否则交给饱和策略来处理这个任务。
+	
+	线程池
+		corePoolSize
+		maximumPoolSize
+		线程池第一次判断的是corePoolSize，第二次是maximumPoolSize，中间用BlockingQueue作为缓冲，目的是减少获取全局锁的次数(获取线程池中的线程，创建新线程都需要全局锁)
+		
+	饱和策略
+		ThreadPoolExecutor.AbortPolicy          默认。直接抛出异常
+		ThreadPoolExecutor.CallerRunsPolicy		只用调用者所在线程来执行任务
+		ThreadPoolExecutor.DiscardOldestPolicy  丢弃队列里最近的一个任务，并执行当前任务
+		ThreadPoolExecutor.DiscardPolicy		不处理，丢弃掉
+		
+ThreadPoolExecutor		
+	ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue)
+	ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler)
+	ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory)
+	ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler)
+	
+	corePoolSize：线程池的基本大小。线程默认不是一开始就全部创建的，而是任务请求时创建线程并执行，如果线程数已经达到基本大小，就不再创建
+	workQueue：工作队列，用于保存等待执行的阻塞队列，可以选择基于数组的有界阻塞队列、基于链表的有界阻塞队列、不存储元素的阻塞队列或有优先级的无界阻塞队列。
+	maximumPoolSize：线程池最大数量。如果队列满了，已创建的线程数少于最大线程池，则会继续创建线程。
+	threadFactory：设置创建线程的工厂，可以对线程进行一些预先的设置。
+	handler：饱和策略。
+	keepAliveTime：线程活动保持时间。工作线程空闲后，保持存活的时间。
+	unit：线程活动保持时间的时间单位。
+	
+	
+	void	execute(Runnable command)			提交任务 无返回值
+	Future<?>	submit(Runnable task)			提交任务 有返回值
+	void	shutdown()							关闭线程池，中断所有线程
+	List<Runnable>	shutdownNow()				关闭线程池 中断没有在执行任务的线程。
+	
+	关闭线程池的原理是遍历工作线程，逐个调用线程的interrupt方法来中断线程。无法响应中断的任务可能无法终止。
+	
+	
+合理配置线程池
+	CPU密集型尽可能配置小的线程数，如Ncpu + 1；I/O密集型要尽可能多的线程数，如2*Ncpu。
+	混合型的任务，如果可以拆分的话，可以考虑拆分。
+	Runtime.getRuntime().availableProcessors()来获取CPU个数
+	建议使用有界队列。有界队列能提早发现问题。
+	如果任务执行一直在走饱和策略，要检查队列里为何长时间塞满了任务。
+	线程池最好要有监控。
+	
+扩展
+	异步线程池
+		将任务存到数据库，然后多个线程池共用一个任务库。(需要加锁)
