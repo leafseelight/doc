@@ -38,7 +38,7 @@ ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<E>
 	ArrayBlockingQueue
 		用数组实现的有界阻塞队列 FIFO。可以实现公平非公平的访问队列。
 	LinkedBlockingQueue
-		用链表实现的有界阻塞队列 FIFO
+		用链表实现的无界阻塞队列 FIFO
 	PriorityBlockingQueue
 		支持优先级的无界阻塞队列 默认采取自然顺序升序排序
 	DelayQueue
