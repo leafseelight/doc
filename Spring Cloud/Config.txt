@@ -1,0 +1,73 @@
+分布式配置中心
+	对微服务基础设施和服务应用提供集中的外部配置管理支持，并且提供动态刷新配置的功能
+	
+	服务端也叫分布式配置中心，是一个独立微服务应用，用来连接配置仓库并未客户端提供获取配置信息，加密/解密信息等接口
+	就是通过git clone命令将配置复制了一份在本地存储，然后读取这些内容并返回给服务应用进行加载
+	
+	客户端是体系中其他服务或基础设施，通过指定的配置中心来获取配置内容。
+	
+	默认的配置仓库是Git 也支持SVN和本地文件系统。推荐使用代码仓库，可以进行版本控制，且配置内容可以进行分布式存储。
+	
+	
+基本注解
+	@EnableConfigServer		应用主类   启动一个Config服务端
+	
+	@RefreshScope			类/方法	   设置一个Bean是可刷新的 即Bean中通过@Value引入的属性值可以动态变化，也可以通过Environment获取配置值(配置文件的值本质上就是会封装在Environment中)
+	
+基本配置
+spring.application.name				应用名 对应配置文件名 即{application}部分 客户端使用该配置是配置在bootstrap.properties文件中
+
+spring
+	cloud
+		config
+			server
+				git					配置Git仓库
+					uri				仓库位置
+					searchPaths		搜索路径
+					username		访问git仓库的用户名
+					password		访问git仓库的密码
+					basedir			指定缓存目录 如果不显式指定 会使用随机名称的临时目录，可能会有问题
+				health
+					repositories
+						check
+							name		健康检查仓库的名称
+							label		健康检查仓库的分支名
+							profiles	健康检查的profile
+					enabled				是否启用健康检查	
+				overrides			
+					<key>=<value>		属性覆盖 这种定义配置的方式不会被spring cloud config的客户端修改，可以作为共同属性或者默认属性
+			profile					对应配置文件规则中的{profile}部分						客户端使用该配置是配置在bootstrap.properties文件中
+			label					对应配置文件规则中的{label}部分		label:git分支名		客户端使用该配置是配置在bootstrap.properties文件中
+			uri						配置中心config-server的地址								客户端使用该配置是配置在bootstrap.properties文件中
+			username				客户端指定用户名的方式访问config-server （config-server服务结合了spring security进行了安全保护，就需要客户端配置对应的用户名密码才能访问到）
+			password				客户端指定密码的方式访问config-server
+			discovery
+				enabled				结合服务发现
+				serviceId			指定config server注册的服务名
+			failFast				快速失败 客户端启动时提前加载config server的内容 不用等到客户端大量初始化工作都做完才加载配置中心的数据
+			retry
+				multipilier			初始重试间隔时间 默认1000ms
+				initial-interval	下一间隔的乘数 默认1.1
+				max-interval		最大间隔时间 默认2000ms
+				max-attempts		最大重试次数 默认6次
+			
+			
+其他
+	服务端默认会对git代码仓库进行健康检查 而检查的仓库默认为app-config，需要创建一个这个名字的空仓库或指定健康检查的仓库
+	
+	spring cloud config 使用{cipher}前缀来标注配置的值是一个加密值，当客户端加载配置时，服务端会自动进行解密。这个功能需要替换默认JRE中的JCE功能
+	
+	
+思考
+	硬绑定了spring配置文件的定义规则和代码仓库中分支(非必须)的概念，不够通用
+	
+	代码仓库服务的响应性问题 由于会缓存在config-server的服务端 就不会有响应性的问题
+	配置不是实时的 在分布式配置中心可以忍受
+	
+	客户端如果引入了actuactor，可通过/refresh端点实现动态刷新配置 即调用该接口
+	代码仓库如git提供了Hook功能 可以设置在git提交变化时主动给客户端发送/refresh请求
+	大规模服务的情况下手动调用刷新接口或维护一个刷新清单定时调用并不友好，可以通过消息总线的方式进行通知
+	
+	spring配置文件中大部分框架提供的配置只能在启动服务实例时生效，动态配置往往只能针对自定义配置，如果非得通过动态刷新配置的方式来替换组件，可能需要结合动态语言如Groovy来实现
+	
+	

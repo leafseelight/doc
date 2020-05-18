@@ -1,0 +1,108 @@
+服务治理框架
+	服务治理的两个基本功能：服务注册和服务发现
+	服务治理框架 AP要比CP好 服务治理对可用性的要求要高于一致性
+	强一致的CP类型的服务治理框架注册服务时间更长，因为数据需要所有节点都同步成功才算完成，注册中心集群中节点异常，在重新选举期间也会导致整个服务不可用，
+	而且发生网络分区后，消费者应该允许能继续调用同一个分区下的可用服务实例。
+	
+Eureka是Java编写的，基于HTTP和TCP，使用Json传输数据，Eureka服务端作为注册中心，Eureka客户端处理服务的注册与发现。
+基本理念是AP
+	
+注册中心一般要高可用，eureka服务端需要集群部署，一般是一个网络分区内部署一台作为注册中心，
+当集群中出现分片故障时，eureka就转入自我保护模式，允许继续提供服务注册和发现功能，故障分片恢复运行时，会将其他分片的状态再次同步回来。
+【不同区域的注册中心以异步模式相互复制各自的状态  AP】
+【注册中心维护服务名到服务实例的映射关系，客户端通过服务名就能够调用服务也是服务治理框架要提供的基本功能】
+
+Eureka客户端在启动时向注册中心注册自身提供的服务并周期性的发送心跳来更新服务租约，
+同时也能从服务端查询注册的服务列表并缓存到本地并周期性的刷新服务列表，
+周期性的操作都是定时任务去执行的，默认也是心跳的方式主动去获取，(可以有事件方式被动获取/更新？)
+【本地会缓存服务列表，就算注册中心挂了，只要服务没挂，消费者依旧可以使用服务 AP】
+
+
+Region与Zone
+	一个Region对应多个Zone，每个客户端都需要注册到一个Zone中，以便服务调用时可以优先选择同一个Zone下的服务
+	一个client只属于一个Region，Region类似于其他注册中心的数据中心概念？【Eureka没有多数据中心】
+
+
+基础架构
+	注册中心
+		服务同步
+			注册中心会将注册到自身的服务同步到其他注册中心 异步(就是注册中心把服务请求注册的rest请求也转发到其他注册中心上)
+			
+		失效剔除
+			注册中心会创建一个定时任务定时(默认60s)剔除没有续约(默认是服务超时90s)的服务
+
+		自我保护
+			注册中心会统计服务在15分钟内心跳失败的比例是否低于85%,如果满足则会将服务实例注册信息进行保护，让这些实例不会过期
+			但是保护期间服务实例如果出现问题，消费者可能获取到不存在/异常的服务实例,【客户端必须要有容错机制，如请求重试、断路器】
+			【自我保护机制也是Eureka作为AP的重要特征】
+			
+		健康检查
+			默认未启用healthcheck功能 (Consul默认是启用的)
+			注册中心主动维护一个心跳来检测服务的可用性，需要服务应用启用actuator模块的支持
+			默认调用actuator提供的/health 
+			/health 提供健康信息 【相比于服务续约功能来说，健康检查更加全面，可以检查服务配置的其他中间件是否可用，而服务续约的心跳只是表示服务能够发起请求】
+			此外/info 提供服务实例信息 用于Eureka可视化控制台的展示
+			
+			
+	服务提供者
+		服务注册
+			启动时发送rest请求将自身注册到注册中心，注册成功的服务会被注册中心标记为UP
+			
+		服务续约
+			服务提供者在注册完之后会维护一个心跳(定时发送rest请求)告诉注册中心自己存活，否则一定时长后会被剔除服务
+			
+		服务下线
+			应用正常关闭或者重启时会发送一个rest请求给注册中心，告知这个服务下线。注册中心将该服务标记为DOWN并将该下线事件传播出去。
+	
+	服务消费者
+		获取服务
+			定时发送一个rest请求获取/更新服务列表，默认30s更新一次
+			本地会进行缓存，即时注册中心挂掉也能继续使用服务
+			
+		服务调用	
+			结合Ribbon可以以负载均衡的方式进行服务调用，默认策略是线性轮询
+			默认也是先访问同一个Zone下的服务实例，如果没有的话才回去访问其他Zone下的实例 
+
+
+
+
+基本注解
+	@EnableEurekaServer     应用主类 表示启动一个eureka服务端作为注册中心
+	@EnableEurekaClient		应用主类 表示启用eureka客户端，可以使用更通用的@EnableDiscoveryClient代替
+	@EnableDiscoveryClient	应用主类 表示启用服务发现的功能 eureka下会创建EurekaDiscoveryClient实例
+	@LoadBalanced			用在RestTemplate实例上 表示开始客户端负载均衡
+	
+主要类
+	DiscoveryClient	服务发现客户端 用于服务注册 服务续约 服务获取
+	InstanceInfo	服务实例信息的包装类，包含instanceId、服务名称、ip、port等元数据信息
+		instanceId在spring cloud eureka默认为${spring.cloud.client.hostname}:${spring.application.name}:${spring.application.instance_id:${server.port}}
+				  这种方式避免了原生eureka同一个服务不能注册在同一个主机上的问题。注意${key:default}的语法含义。
+
+
+主要配置：
+
+spring.application.name会作为服务名
+
+erureka
+	server
+		enable-self-preservation	是否启用自我保护机制
+
+	client
+		enabled						启用eureka客户端
+		region						指定所属region 默认"default"
+		availability-zones			指定可用Zone
+		register-with-eureka		是否注册自身
+		fetch-registry				是否获取服务列表
+		registry-fetch-interval-seconds  刷新服务列表的间隔时间
+		serviceUrl
+			defaultZone				注册中心地址(注册中心集群时，相互注册；服务提供者可以注册到一个或多个注册中心上)
+	istance
+		instanceId					实例id 
+		prefer-ip-address			服务以ip的形式注册，默认是主机名
+		lease-renewal-interval-in-seconds	  续约任务的调用间隔时间 默认30s
+		lease-expiration-duration-in-seconds  服务时效时间 默认90s
+		metadataMap
+			<key>=<value>			自定义实例的元数据信息 【key为zone时，ribbon会使用它实现其区域亲和策略】
+		homePageUrl					应用主页url	
+		statusPageUrlPath			服务info信息的地址	
+		healthCheckUrlPath			服务health信息的地址	健康检查用 如果配置了应用上下文management.context-path的话则需要对应的增加路径

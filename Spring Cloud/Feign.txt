@@ -1,0 +1,84 @@
+申明式的服务调用
+	整合了Ribbon和Hystrix 并提供了申明式的客户端定义方式
+	在Feign的基础上扩展了对Spring MVC的注解支持
+	
+	
+常用注解：
+	@EnableFeignClients     应用主类   开启Spring Cloud Feign的注解支持
+	@FeignClient			接口	   指定服务名来绑定服务，服务名不区分大小写?
+		name/value属性                 指定服务名
+		url属性						   指定地址
+		configuration属性			   指定FeignClient的配置类
+		fallback属性				   指定对应的服务降级类
+	
+	服务绑定：
+	@RequestMapping 		方法       接口中的方法再使用Spring MVC的注解来绑定具体的服务接口
+	@GetMapping 
+	@PostMapping	
+	
+	参数绑定：
+	@RequestParam			方法参数   设置方法参数作为请求的参数
+	@RequestHeader			方法参数   设置方法参数作为请求头
+	@RequestBody			方法参数   设置方法参数，以json方式传参
+	@PathVariable			方法参数   设置路径参数
+									   
+	【不同于Spring MVC会使用参数名作为@RequestParam注解value属性的默认值，请求参数名和方法参数名一致时Spring MVC可以省略@RequestParam注解】
+	【Feign传普通参数必须使用@RequestParam，且Feign使用@RequestParam必须指定value属性值】
+	【如果方法参数不使用@RequestParam，则默认会使用@RequestBody】
+		为什么这么设计？默认情况下反射无法正确获取方法参数名，而是类似arg0这种，因为编译后的字节码中没有保存方法局部变量信息LocalVariableTable。
+						javac -g编译：生成所有调试信息，包括{lines,vars,source}，即行号，局部变量表，源码关联信息。只是字节码中包含了相关信息，普通的反射依旧无法获取，需要字节码代理框架处理。
+						javac -parameters编译，-parameters参数表示生成元数据以用于方法参数的反射(java8支持)
+		类似Mybatis的Mapper接口中的方法参数，在多于一个时就必须使用@Param注解指定value的方式来绑定参数
+		那Spring MVC为何可以在省略@RequestParam注解的情况下也能正确绑定参数？
+			通过ParameterNameDiscoverer获取参数名 底层实际用了字节码代理框架ASM，ASM不依赖编译参数，但就算是这种方式依旧无法获得接口的方法参数名，只能获取类的方法参数名。
+		那么为什么接口方法的参数名ASM也获取不到？
+			接口方法不是实际方法，会被实现类实现，实现方法是可以覆盖接口方法定义的参数名的。
+			准确来说，是接口中的非default方法 非static方法，以及抽象类的抽象方法的参数名通过ASM也获取不到
+			根本还是抽象方法没有方法体，也就没有局部变量表。
+		javac -parameters编译后可以获取接口方法参数名
+			因为javac -parameters编译后字节码文件中生成了MethodParameters属性，而不是LocalVariableTable属性
+			
+			
+	【同一个方法中最多只能用一个@RequestBody，@RequestBody没有value属性】
+	【使用了@RequestBody就会用POST方式发送请求，哪怕申明的是GET方式】
+	feign复杂对象传参的问题
+		Bean可用@RequestBody
+		List<Bean>可用@RequestBody
+		List<简单类型>可用@RequestParam
+		传Map类型的参数可以用@RequestParam且不指定value属性？
+		
+		
+继承特性
+	由于feign封装调用服务的代码类似服务实例的controller接口申明，可以将其单独抽取出形成一个独立项目，作为基础API项目，方便了接口的定义和依赖的共享。
+	但是这种方式一定要严格遵守面向对象的开闭原则，因为服务方修改了接口定义还得修改公共依赖，而修改了公共依赖会直接导致客户端项目构建失败。
+	
+压缩
+
+日志
+	feign在构建feignclient时会为每一个feignclient都创建一个feign.Logger的实例，用于记录日志
+	日志级别NONE,BASIC,HEADERS,FULL
+	需要自定义Logger，同时配置logging.level.<feignClient全路径>=DEBUG
+	
+配置
+ribbon相关的配置可以与ribbon配置方式相同
+
+spring
+	main
+		allow-bean-definition-overriding	允许bean定义覆盖 (不同的接口上的@FeignClient，默认name/value属性不能重复，此配置为true时可以) 【建议不要允许】
+
+feign
+	client
+		config
+			default					此处default可以为服务名，default是全局配置
+				connectTimeout		连接超时
+				readTimeout			读超时
+	hystrix
+		enabled						是否启用Hystrix支持  或者使用hystrix.command.default.execution.timeout.enabled
+	compression
+		request
+			enabled					对请求进行压缩 GZIP
+			mime-types				对指定mime类型的请求进行压缩
+			min-request-size		对超过指定大小的请求进行压缩
+		response
+			enabled					对响应进行压缩 GZIP
+	

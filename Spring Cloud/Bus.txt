@@ -1,0 +1,29 @@
+消息总线
+
+	消息代理Message Broker是一种消息验证、传输、路由的架构模式，使得应用程序可以解耦通信过程。
+	
+	常见开源消息代理中间件：
+		ActiveMQ
+		Kafka
+		RabbitMQ
+		RocketMQ
+		
+SpringBoot集成RabbitMQ
+		引入spring-boot-starter-amqp的依赖
+		配置rabbitmq基本的连接信息
+			spring.rabbitmq.host
+			spring.rabbitmq.port
+			spring.rabbitmq.username
+			spring.rabbitmq.password
+		@Bean的方式创建队列Queue的实例，指定队列名称等。创建交换机、并将交换机和队列进行绑定等。
+		生产者注入AmqpTemplate 使用模板提供的方法生产消息。可以将AmqpTemplate再次封装形成工具类
+		消费者使用@RabbitListener注解在类上，并设置注解queue属性的值，表示该类对某个队列的监听，并用@RabbitHandler注解来指定对消息的处理方法		
+	
+	
+Spring Cloud Bus
+	引入spring-cloud-starter-bus-amqp和actuactor后，服务实例会连接到消息总线上，
+	这个时候只要对一个服务发起/bus/refresh请求，所有连接到消息总线上的服务都会收到更新请求
+	
+	可以请求/bus/refresh?destination={实例名} 来指定刷新某个实例，(注意实例名的默认规则)，支持匹配。实际还是发送到所有服务实例，但是接受到之后自行判断是否需要处理。
+	
+	结合配置中心使用时，将配置中心连接到消息总线，然后对配置中心请求/bus/refresh 实现对其他服务实例的配置更新。这样能避免在特定服务实例上进行配置刷新，造成该节点在集群中与其他节点不对等。

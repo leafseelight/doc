@@ -1,0 +1,87 @@
+客户端负载均衡工具
+	基于HTTP和TCP，在spring cloud中将面向服务的REST模板请求转成客户端负载均衡的服务调用
+	基本功能：服务列表的维护(可利用eureka等服务治理框架代替维护)、服务调用(对RestTemplate或HttpClient、OkHttpClient等的包装，扩展数据解析转换功能，增加重试机制)、负载均衡(按照一定策略)
+	
+	区分
+		服务端负载均衡
+			硬件层面：F5
+			软件层面：nginx (nginx的负载均衡策略有：轮询(默认)、权重、ip_hash、url_hash、fair(响应时间短的优先)) 
+					  HAProxy LVS等
+					  
+	【负载均衡常见策略】
+		轮询(线性轮询)
+		加权轮询
+		随机
+		加权随机
+		ip哈希
+		url哈希
+		最小连接数法
+		最短响应
+		流量负载
+		
+		
+负载均衡首先需要维护一个服务列表，可以直接利用服务治理框架提供的功能
+ribbon可以结合服务治理框架使用 当然也可以独立使用，自行维护服务列表
+
+【基本原理】
+	被@LoadBalance修饰的RestTemplate在实例化的时候，会被添加一个LoadBalanceInterceptor的拦截器，
+	在RestTemplate发起调用时，会执行拦截器的拦截方法，拦截器中会使用LoadBalanceClient来进行实际的调用操作。
+	LoadBalanceClient定义了基本的功能：获取并选择服务实例，重新构造请求地址(服务名作为host到实际地址的转换)，包装请求参数并执行请求解析响应值
+
+
+核心类
+	LoadBalanceClient （负载均衡客户端，ribbon下的默认实现RibbonLoadBalanceClient）
+		ServiceInstance choose(String serviceId);
+		<T> T execute(String serviceId, LoadBalanceRequest<T> request);
+		URI reconstructURI(ServiceInstance instance, URI original);
+		
+	ILoadBalancer	(负载均衡器，ribbon下的默认实现为ZoneAwareLoadBalancer，即优先选择同一个Zone下的服务)
+		负载均衡器的基础功能包括维护UP DOWN ALL类型的服务实例，获取服务实例的状态统计信息(指定负载均衡策略的重要依据)
+	
+	ServiceInstance/Server (服务实例定义，ribbon下的默认实现是RibbonServer)
+	
+	ServerList (服务列表)
+		ServerListUpdater提供基础的获取服务列表的功能(默认定时获取，支持事件监听驱动更新的方式)，
+		ServerListFilter，提供过滤功能，eureka和ribbon下默认ZonePreferenceServerListFilter，“区域感知”，优先获取同一个Zone下的服务列表
+		
+	IPing (检查服务实例是否正常服务，默认线性遍历列表执行ping逻辑。不是复用利用类似eureka客户端向注册中心获取服务列表更新的功能？)	
+		
+	IRule (负载均衡处理规则，默认实现为RoundRobinRule，即线性轮询)	
+		RandomRule			 				随机
+		RoundRobinRule  	 				线性轮询
+		RetryRule		 	 				带重试的线性轮询
+		WeightedResponseTimeRule			以响应时间作为权重
+		ClientConfigEnabledRoundRobinRule	自定义线性轮询(即先按照自定义规则过滤，再对过滤后的结果进行线性轮询)
+		ZoneAvoidanceRule					先按照对Zone设置的相关规则过滤 再轮询
+		
+
+配置
+ribbon.<key>=<value>						全局自定义配置，如指定某个功能的实现类或者如key为listOfServers表示指定服务列表
+<clientName>.ribbon.<key>=<value>			指定客户端的自定义配置，clientName一般就是使用服务名
+
+ribbon	
+	eureka
+		enabled								禁用eureka对ribbon服务实例的维护实现
+	MaxAutoRetries							同一台实例最大重试次数，不包括首次调用
+	MaxAutoRetriesNextServer				重试负载均衡其他的实例最大重试次数，不包括首次server
+	ReadTimeout								超时时间
+	OkToRetryOnAllOperations				是否对所有请求重试  spring.cloud.loadbalancer.retry.enabled这种方式能否开启重试?
+		
+【重试机制】
+	由于网络故障或延迟等原因，服务调用不是必然成功的，尤其AP型服务治理框架，可能调用的服务本身就已经挂掉了(eureka的保护机制)。
+	为了增强容错性，客户端可以加入重试机制。
+	
+	ribbon可以使用Spring Retry提供的重试机制
+	ribbon下的实际重试次数会与允许更换实例数有关，总请求次数：（MaxAutoRetries+1）*（MaxAutoRetriesNextServer+1）
+	
+	在spring cloud中可使用spring.cloud.loadbalancer.retry.enabled参数设置是否开启重试
+	重试机制在配合断路器的使用时，要将ribbon超时进行重试的时间设置的小于断路器的超时时间
+	
+	默认情况下,GET方式请求无论是连接异常还是读取异常,都会进行重试，非GET方式请求,只有连接异常时,才会进行重试。 ？？
+	
+	重试机制本身的实现
+		需要考虑重试次数 重试间隔。多次重试的重试间隔一般要按数量级递增，而不是固定间隔时间重试，以防出现活锁。
+		实现多次重试可以使用消息队列来实现，将重试请求消息路由到不同的延迟队列中，或者串联多个队列，每个级别投递不成功的消息路由到下一级队列。
+		
+	服务方在提供接口服务时，需要保证接口的幂等性。	
+	
