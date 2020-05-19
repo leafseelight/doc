@@ -27,3 +27,51 @@ Spring Cloud Bus
 	可以请求/bus/refresh?destination={实例名} 来指定刷新某个实例，(注意实例名的默认规则)，支持匹配。实际还是发送到所有服务实例，但是接受到之后自行判断是否需要处理。
 	
 	结合配置中心使用时，将配置中心连接到消息总线，然后对配置中心请求/bus/refresh 实现对其他服务实例的配置更新。这样能避免在特定服务实例上进行配置刷新，造成该节点在集群中与其他节点不对等。
+	
+	如果使用kafka，则引入spring-cloud-starter-bus-kafka依赖。
+	
+	spring-cloud-starter-bus-amqp依赖了spring-cloud-starter-stream-rabbit
+	spring-cloud-starter-bus-kafka依赖了spring-cloud-starter-stream-kafka
+	
+	spring-cloud-starter-stream通过绑定器Binder屏蔽了不同的消息代理之间的差异，spring cloud bus则是进一层封装 提供消息总线的功能
+	
+配置
+	spring
+		cloud
+			bus
+				trace
+					enabled			开启跟踪事件 通过/trace 获取事件的跟踪信息
+				destination			设置消息总线使用的队列(queue)或主题(topic)名称，默认springcloudBus
+				enabled				设置是否要连接到消息总线上 默认true
+	
+原理
+	spring cloud bus使用了Spring的事件驱动模型
+	RemoteApplicationEvent事件定义了基本的事件id 消息来源service 消息目的service
+	实现类RefreshRemoteApplicationEvent事件类用于远程刷新应用的配置信息
+	实现类AckRemoteApplicationEvent用于告知某个事件已被接收 并定义了ackId ack消息目的service 和原始事件
+	实现类EnvironmentChangeApplicationEvent用于动态更新消息总线上每个节点的Spring环境属性，它定义了一个map来保存配置，接收消息的节点就根据该map来覆盖本地配置
+	
+	直接继承ApplicationLintener可以申明一个监听器
+	EnvironmentChangeListener就是处理EnvironmentChangeApplicationEvent事件的 遍历map信息然后设置到Environment
+	可以在一个方法上使用@EventListener可以自动的将函数注册为一个ApplicationLintener的实现
+	
+	在事件发布与监听上使用了spring cloud stream相关api，
+		MessageChannel   消息通道
+		@StreamListener
+	
+	
+【事件驱动模型】
+	事件
+		Spring中定义的顶级事件的抽象类 ApplicationEvent，继承自jdk的EventObject
+		事件的基本属性：事件源、时间戳
+	事件监听者
+		Spring中定义的事件的监听者 ApplicationLintener，继承自jdk的EventListener
+		void onApplicationEvent(E e)   参数限定为ApplicationEvent类型，即每一个ApplicationLintener都是针对某个ApplicationEvent的监听和处理者
+	事件发布者
+		Spring中定义了ApplicationEventPublisher和ApplicationEventMulticaster来发布事件
+		ApplicationEventPublisher
+			void publishEvent(ApplicationEvent event)
+			void publishEvent(Object event)
+		ApplicationEventMulticaster中则定义了将事件多播给多个ApplicationLintener的方法
+		
+		【事件发布的简单实现SimpleApplicationEventMulticaster就是遍历所有的事件监听器 找到对应的监听器 然后调用监听器的onApplicationEvent()方法】
