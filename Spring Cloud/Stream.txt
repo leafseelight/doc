@@ -1,0 +1,11 @@
+MessageChannel
+	消息通道 默认提供input nullChannel errorChannel
+	需要自己定义channel
+	
+Sink     输入
+Source   输出
+Processor  输入+输出
+或者自定义接口来申明输入输出的渠道
+
+@EnableBinding(Sink.class) 开启了sink的绑定 
+	

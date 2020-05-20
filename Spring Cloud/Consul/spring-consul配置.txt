@@ -1,0 +1,74 @@
+spring:
+	cloud:
+		consul:												#ConsulProperties
+			scheme: 										#配置consul agent的方案 http或https
+			host: localhost									#配置consul地址
+			port: 8500 										#配置consul端口
+			enabled: true									#启用consul
+			
+		discovery:											#ConsulDiscoveryProperties
+			acl-token:										#${consul.token:${CONSUL_TOKEN:${spring.cloud.consul.token:${SPRING_CLOUD_CONSUL_TOKEN:}}}}
+			
+			enabled: true									#启用服务发现 
+			register: true									#启用服务注册 
+			deregister: true								#服务停止时取消注册 
+			
+			prefer-ip-address: false						#表示注册时使用IP而不是hostname 
+			ip-address:										#prefer-ip-address为true时必须指定ip
+			prefer-agent-address: false
+			
+			datacenters:									#数据中心 默认dc1  保存实例id以供服务查询的地方。 可以为不同的服务指定不同的数据中心
+			
+			scheme: http									#服务使用的方案
+			hostname:										#访问服务时需要的hostname
+			
+			instance-id:									#服务注册标识 唯一 默认${spring.application.name}:comma,separated,profiles:${server.port}
+			instance-zone:
+			instance-group:		
+			service-name:									#服务名称 默认${spring.application.name}
+			tags:											#注册服务时使用的标签 用于同名服务可以用标签区分 consul暂不支持metadata tags代替这个功能
+			server-list-query-tags:							#在数据中心的搜素标签
+			default-query-tag:								#如果server-list-query-tags不存在 默认的搜索标签
+			default-zone-metadata-name:	zone				#默认的zone
+			
+			failFast: true									#快速失败 注册失败直接抛异常
+			
+			register-health-check: true						#启用健康检查 如果检查失败 该服务实例会被标记为critical
+			health-check-url:								#健康检查地址
+			health-check-path:	/actuator/health			#健康检查路径 Spring Boot Actuator的默认端点。 如果修改了上下文路径或servlet路径或管理端点路径则需要修改
+			health-check-headers:							#健康检查调用添加头部信息
+			health-check-interval: 10s						#健康检查频率
+			health-check-timeout:							#健康检查超时时间
+			health-check-critical-timeout:					#健康检查失败多长时间后，取消注册。大于health-check-timeout
+			health-check-tls-skip-verify:					#健康检查跳过证书验证
+			query-passing: false							#添加'passing'参数到 /v1/health/service/serviceName false会拉取已经挂掉的服务 true只会拉取所有通过健康检查的服务
+			
+			heartbeat:
+				enabled: false								#启用心跳检测
+				interval-ratio:
+				ttl-unit: s
+				ttl-value: 30
+			
+			catalog-services-watch-delay: 1000				#监控间隔时间
+			catalog-services-watch-timeout: 2				#监控超时时间
+			
+			management-port:								#注册到的管理服务的端口  如果启用了管理服务 则会除了注册应用服务注册 还会注册管理服务
+			management-suffix: managment					#注册的管理服务使用的前缀
+			management-tags:								#注册管理服务使用的标签
+			
+			lifecycle:										#ConsulDiscoveryProperties.Lifecycle
+				enabled:									#启用生命周期
+			
+			order: 0										#服务发现客户端的顺序
+			
+		tls:												#ConsulProperties.TLSConfig
+			certificate-path:								#证书路径
+			certificate-password:							#证书密码
+			key-store-path:									#秘钥路径
+			key-store-password:								#秘钥密码
+			key-store-instance-type:						#秘钥类型
+
+		retry:												#RetryProperties
+			initial-interval: 1000							#初始重试间隔 1000ms
+			max-interval: 2000								#最大重试间隔 2000ms 用于补偿
+			max-attempts: 6									#最大重试次数

@@ -1,0 +1,97 @@
+8300 集群内数据读写复制端口
+8301 单数据中心内部节点通信端口
+8302 跨数据中心通信端口
+8500 HTTP API
+8600 DNS
+
+【命令】
+consul version  查看版本
+consul info     查看节点信息
+consul members  查看集群成员
+consul agent    启动
+consul leave    离开集群(本机操作)
+consul force-leave 节点Id    强制别的节点离开集群
+
+
+【consul agent 启动参数】
+-client        客户端模式 http dns 默认127.0.0.1
+-server        服务端模式 服务端RPC端口
+
+-config-file   指定配置文件位置
+-config-dir    指定配置文件所在文件夹 会加载改目录下所有配置文件
+-config-format 指定配置文件格式 不配置会自动识别
+-datacenter/-dc    设置数据中心名称 默认dc1 一个数据中心的所有节点必须在同一个LAN内  -dc端名称可能在有些版本不能用
+
+-data-dir      状态数据存储文件夹
+
+-dns-port      自定义dns端口 默认是8600
+-http-port     HTTP API端口 默认8500
+-dev           开发模式 即内存服务器模式 不进行持久化
+
+-ui                    内置web ui界面
+-non-voting-server     服务节点不参与选举
+-disable-host-node-id 不使用host信息生成node id
+-enable-script-checks 是否允许使用脚本进行健康检查 默认false
+-encrypt              consul网络通讯加密key
+
+#-log-file      日志记录文件 默认Consul-时间戳.log
+-log-level     日志级别 默认INFO
+#-log-rotate-bytes    日志文件生成大小阈值
+#-log-rotate-rotation 日志文件生成时间阈值
+-syslog              配置日志输出到系统日志
+
+-join           需要加入的其他节点地址
+-retry-join     会进行加入重试
+-retry-interval 重试间隔 默认30s   【这里的重试不是服务调用的失败重试】
+-retry-max      重试次数 默认0表示无限次数重试
+-rejoin         节点重新加入集群 【挂掉的机器再次加入集群要使用rejoin 否则可能会导致节点间的通信问题】
+
+-node           节点名称 默认主机名 同一个数据中心下的节点名称不能重复
+-node-id        节点id
+-pid-file       存储pid的位置 用于主动发送信号 如停止节点 重启配置
+
+-protocol       使用的协议 consul -v查看协议版本
+-raft-protocol  使用的raft协议版本 默认是3
+
+-bootstrap        此模式下 节点选举自己为leader 一个数据中心只能有一个此模式启动的节点 不建议使用这个模式
+-bootstrap-expect 设置一个数据中心需要的服务节点数 设置的节点数必须与实际的服务节点数匹配 必须配合-server使用
+
+
+
+三台机器搭建server集群demo：
+	#启动第一台
+	# 会报leader err错误 三台都启动成功之后会自动选举出leader
+	consul agent -server=true -bootstrap-expect=3 -data-dir=/tmp/consul -node=consul1 -bind=xx.xx.xx.xx（本机Ip） -ui -client=0.0.0.0
+	
+	#启动第二台并加入第一个datacenter
+	consul agent -server=true -bootstrap-expect=3 -data-dir=/tmp/consul -node=consul2 -bind=xx.xx.xx.xx（本机Ip） -ui -client=0.0.0.0
+	consul join xx.xx.xx.xx(consul server 的地址)
+	或者 consul agent -server=true -bootstrap-expect=3 -data-dir=/tmp/consul -node=consul2 -bind=xx.xx.xx.xx（本机Ip） -ui -client=0.0.0.0 -join=xx.xx.xx.xx(consul server 的地址)
+	
+	#启动第三台并加入第一个datacenter 同上
+	
+说明：	
+在3 server节点集群里，Leader退出，其余两个会再协商选出一个新Leader，但一旦再退出一个节点，集群就不会再有Leader了。而双server节点的集群，只要有一个退出，则不会再出现leader， 
+当然，如果是单节点bootstrap的集群( -bootstrap-expect 1 )，集群只有一个server节点，那这个server节点自然当选Leader。2server的集群中，当离开的节点重新加入集群时，依然不会选举server
+3server的节点集群中 两个节点挂掉 不会重新选举leader 服务依旧可用 但是控制台的信息好像不准确了(控制台中的节点信息依然是3个健康节点,members命令看到的信息是2个节点fail)
+
+#下挂client 此时可以只对外暴露client 服务直接向client注册
+#consul agent -data-dir=/tmp/consul -node=client -bind=xx.xx.xx.xx（本机ip） -join xx.xx.xx.xx（集群serverip） -client 0.0.0.0（对外暴露端的ip）
+
+
+其他命令
+	consul operator raft list-peers   查看节点信息(挂掉的节点依然会看到)
+	consul operator raft remove-peer -id=192.168.1.235:8300  移除节点
+	
+	consul kv put key value            设置键值对(节点间共享数据)
+	consul kv get key
+
+	
+其他：
+	基于consul的K/V存储 可以实现分布式锁或分布式信号量
+	agent(client或server)挂掉 则注册在该节点上服务也就不可用(虽然注册的信息也会同步到其他节点) 不同于zk
+							  注册在该节点的服务的健康检查也不会由别的节点接管
+							  
+							  
+#consul-template第三方工具
+	监控consul的服务状态 动态修改nginx的配置文件 可实现动态的负载均衡 
