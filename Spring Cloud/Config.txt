@@ -57,6 +57,8 @@ spring
 	
 	spring cloud config 使用{cipher}前缀来标注配置的值是一个加密值，当客户端加载配置时，服务端会自动进行解密。这个功能需要替换默认JRE中的JCE功能
 	
+	bootstrap.properties加载早于xx-spring.xml，最后加载application.properties
+	
 	
 思考
 	硬绑定了spring配置文件的定义规则和代码仓库中分支(非必须)的概念，不够通用
