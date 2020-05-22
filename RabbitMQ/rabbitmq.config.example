@@ -1,0 +1,511 @@
+%% -*- mode: erlang -*-
+%% ----------------------------------------------------------------------------
+%% RabbitMQ 配置示例
+%% ----------------------------------------------------------------------------
+[
+ {rabbit,
+  [%%
+   %% 网络
+   %% ====================
+   %%
+
+   %% 默认会监听所有网络的5672端口
+   %% {tcp_listeners, [5672]},
+
+   %% 可以指定监听一组ip port，比如监听IPv4和IPv6的本机回环地址
+   %% {tcp_listeners, [{"127.0.0.1", 5672},
+   %%                  {"::1",       5672}]},
+
+   %% ssl_listeners的配置方式和tcp_listeners类似
+   %% {ssl_listeners, [5671]},
+
+   %% 用于监听tcp/ssl连接的Erlang进程数
+   %% {num_tcp_acceptors, 10},
+   %% {num_ssl_acceptors, 1},
+
+   %% 最大的AMQP握手时间(ms),AMQP握手在建立tcp连接和ssl握手之后
+   %% {handshake_timeout, 10000},
+
+   %% 日志等级(目前只记录连接日志)，可选'debug', 'info', 'warning', 'error', 'none'  默认info级别
+   %% {log_levels, [{connection, info}, {channel, info}]},
+
+   %% 设置接受连接时允许反向DNS查找，在rabbitmqctl和管理插件中将显示主机名而不是ip
+   %% {reverse_dns_lookups, true},
+
+   %%
+   %% 安全
+   %% ==============
+   %%
+
+   %% 默认的用户guest只允许通过localhost访问rabbitmq服务
+   %% {loopback_users, [<<"guest">>]},
+
+   %% 放开下面的注释可以允许guest用户从任何主机进行访问
+   %% {loopback_users, []},
+
+   %% 配置ssl验证信息 ca证书 用户证书 证书秘钥 要求用户提供证书 是否强制用户证书
+   %% {ssl_options, [{cacertfile,           "/path/to/testca/cacert.pem"},
+   %%                {certfile,             "/path/to/server/cert.pem"},
+   %%                {keyfile,              "/path/to/server/key.pem"},
+   %%                {verify,               verify_peer},
+   %%                {fail_if_no_peer_cert, false}]},
+
+   %% 认证机制，选择可用的SASL机制，默认为PLAIN和AMQPLAIN
+   %% {auth_mechanisms, ['PLAIN', 'AMQPLAIN']},
+   %% 选择认证数据库 默认是基于mnesia的内置的数据库
+   %% {auth_backends, [rabbit_auth_backend_internal]},
+
+   %% 支持rabbitmq_auth_mechanism_ssl和abbitmq_auth_backend_ldap插件，
+   %% 对于使用外部插件来做认证时，需要指定认证机制为EXTERNAL
+   %% rabbitmq_auth_mechanism_ssl插件允许使用用户ssl证书来进行用户认证
+   %% {auth_mechanisms, ['EXTERNAL']},
+   %% rabbitmq_auth_backend_ldap插件允许消息代理使用外部的LDAP服务来执行认证授权
+   %% 启用rabbitmq_auth_backend_ldap
+   %% {auth_backends, [rabbit_auth_backend_ldap]},
+
+   %% 使用CN而不是DN作为ssl证书的用户名
+   %% 适用于rabbitmq_auth_mechanism_ssl插件和STOMP ssl_cert_login配置
+   %% {ssl_cert_login_from, common_name},
+
+   %% SSL握手超时时间(ms)
+   %% {ssl_handshake_timeout, 5000},
+
+   %% 指定对密码进行hash的模块 只影响新创建的用户 对已存在用户重新计算密码hash值则需要更新其密码
+   %% {password_hashing_module, rabbit_password_hashing_sha256},
+
+   %% 指定passphrase口令
+   %% {config_entry_decoder, [{passphrase, <<"mypassphrase">>}]}
+   %% 指定passphrase口令从外部文件获取
+   %% {config_entry_decoder, [{passphrase, {file, "/path/to/passphrase/file"}}]}
+   %% 设置消息代理启动时交互方式输入口令
+   %% {config_entry_decoder, [{passphrase, prompt}]}
+   
+   %% 改变加密设置
+   %% {config_entry_decoder, [{cipher,     aes_cbc256},
+   %%                         {hash,       sha512},
+   %%                         {iterations, 1000}]}
+
+   %%
+   %% 默认用户/虚拟主机
+   %% ====================
+   %%
+
+   %% 消息代理初次启动时会创建一个虚拟主机和一个用户
+   %% 下面的配置表示创建的虚拟主机是"/", 用户是"guest", 密码是"guest", 默认权限是".*", ".*", ".*"
+   %% {default_vhost,       <<"/">>},
+   %% {default_user,        <<"guest">>},
+   %% {default_pass,        <<"guest">>},
+   %% {default_permissions, [<<".*">>, <<".*">>, <<".*">>]},
+
+   %% 默认用户的标签
+   %% {default_user_tags, [administrator]},
+
+   %%
+   %% 额外的网络和协议配置
+   %% =====================================================
+   %%
+
+   %% 设置默认的AMQP心跳延迟(s) 【心跳机制：客户端通过反馈服务端发起的心跳告知服务端自己存活，连续两次心跳失败服务端会断开客户端连接】
+   %% {heartbeat, 60},
+
+   %% 设置最大允许的AMQP协议帧大小(byte) AMQP协议定义了数据按帧的方式传输
+   %% {frame_max, 131072},
+
+   %% 设置连接tune之前接受的最大的协议帧大小
+   %% {initial_frame_max, 4096},
+
+   %% 设置每个连接允许的最大channel数 0表示不限制
+   %% {channel_max, 128},
+
+   %% 设置socket参数
+   %% {tcp_listen_options, [{backlog,       128},
+   %%                       {nodelay,       true},
+   %%                       {exit_on_close, false}]},
+
+   %%
+   %% 资源限制和流控制
+   %% ==============================
+   %%
+
+   %% 基于内存的流控制阈值 即物理内存的40%，达到40%erlang虚拟机会进行GC，最大能达到80%
+   %% {vm_memory_high_watermark, 0.4},
+
+   %% 可选的 可以设置节点使用的内存限制
+   %% {vm_memory_high_watermark, {absolute, 1073741824}},
+   %% {vm_memory_high_watermark, {absolute, "1024M"}},
+   %% 支持的单位后缀：
+   %% k, kiB: kibibytes (2^10 bytes)
+   %% M, MiB: mebibytes (2^20)
+   %% G, GiB: gibibytes (2^30)
+   %% kB: kilobytes (10^3)
+   %% MB: megabytes (10^6)
+   %% GB: gigabytes (10^9)
+
+   %% 在broker达到最高水位阻塞发布者之前,它会尝试将队列内容分页输出到磁盘上来释放内存. 
+   %% 持久化和瞬时消息都会分页输出 (已经在磁盘上的持久化消息会被赶出内存).
+   %% 建议不要设置超过0.9
+   %% {vm_memory_high_watermark_paging_ratio, 0.5},
+
+   %% 内存监控间隔ms
+   %% {memory_monitor_interval, 2500},
+
+   %% 剩余磁盘空间限制 50M  会触发一个报警
+   %% {disk_free_limit, 50000000},
+   %% {disk_free_limit, "50MB"},
+
+   %% 可选的 可以设置对总的可用内存的限制 建议不要低于0.1，即10%
+   %% {disk_free_limit, {mem_relative, 2.0}},
+
+   %%
+   %% 其他/高级配置
+   %% =====================
+   %%
+
+   %% 为客户端连接时设置自定义属性
+   %% {server_properties, []},
+
+   %% 如何响应集群分片 默认不处理
+   %% {cluster_partition_handling, ignore},
+
+   %% 设置集群节点
+   %% {cluster_nodes, {['rabbit@my.host.com'], disc}},
+
+   %% 发送长连接消息给其他集群成员的间隔时间
+   %% 不是net_ticktime
+   %% keepalive messages丢失不会被认为节点下线
+   %% {cluster_keepalive_interval, 10000},
+
+   %% 设置内部统计信息
+   %% {collect_statistics, none},
+
+   %% 设置统计时间间隔
+   %% {collect_statistics_interval, 5000},
+
+   %% 是否启用erlang的即时编译
+   %% {hipe_compile, true},
+
+   %% 等待Mnesia表的超时时间
+   %% {mnesia_table_loading_timeout, 30000},
+
+   %% 消息大小低于该值会直接内嵌在队列索引中
+   %% {queue_index_embed_msgs_below, 4096}
+
+  ]},
+
+ %% ----------------------------------------------------------------------------
+ %% 高级Erlang网络/集群配置
+ %% ----------------------------------------------------------------------------
+ {kernel,
+  [
+   %% 设置net_kernel tick 时间
+   %% {net_ticktime, 60}
+  ]},
+
+ %% ----------------------------------------------------------------------------
+ %% 管理插件
+ %% ----------------------------------------------------------------------------
+
+ {rabbitmq_management,
+  [
+   %% 从json文件中预加载schema定义
+   %% {load_definitions, "/path/to/schema.json"},
+
+   %% 记录所有访问管理插件HTTP API的信息到指定文件
+   %% {http_log_dir, "/path/to/access.log"},
+
+   %% 改变插件监听的ip 端口 设置ssl等
+   %% {listener, [{port,     12345},
+   %%             {ip,       "127.0.0.1"},
+   %%             {ssl,      true},
+   %%             {ssl_opts, [{cacertfile, "/path/to/cacert.pem"},
+   %%                         {certfile,   "/path/to/cert.pem"},
+   %%                         {keyfile,    "/path/to/key.pem"}]}]},
+
+   %% 消息速率
+   %% {rates_mode, basic},
+
+   %% 配置保留的聚合数据(如消息速率和队列长度)
+   %% {sample_retention_policies,
+   %%  [{global,   [{60, 5}, {3600, 60}, {86400, 1200}]},
+   %%   {basic,    [{60, 5}, {3600, 60}]},
+   %%   {detailed, [{10, 5}]}]}
+  ]},
+
+ %% ----------------------------------------------------------------------------
+ %% Shovel插件
+ %% ----------------------------------------------------------------------------
+
+ {rabbitmq_shovel,
+  [{shovels,
+    [%% A named shovel worker.
+     %% {my_first_shovel,
+     %%  [
+
+     %% List the source broker(s) from which to consume.
+     %%
+     %%   {sources,
+     %%    [%% URI(s) and pre-declarations for all source broker(s).
+     %%     {brokers, ["amqp://user:password@host.domain/my_vhost"]},
+     %%     {declarations, []}
+     %%    ]},
+
+     %% List the destination broker(s) to publish to.
+     %%   {destinations,
+     %%    [%% A singular version of the 'brokers' element.
+     %%     {broker, "amqp://"},
+     %%     {declarations, []}
+     %%    ]},
+
+     %% Name of the queue to shovel messages from.
+     %%
+     %% {queue, <<"your-queue-name-goes-here">>},
+
+     %% Optional prefetch count.
+     %%
+     %% {prefetch_count, 10},
+
+     %% when to acknowledge messages:
+     %% - no_ack: never (auto)
+     %% - on_publish: after each message is republished
+     %% - on_confirm: when the destination broker confirms receipt
+     %%
+     %% {ack_mode, on_confirm},
+
+     %% Overwrite fields of the outbound basic.publish.
+     %%
+     %% {publish_fields, [{exchange,    <<"my_exchange">>},
+     %%                   {routing_key, <<"from_shovel">>}]},
+
+     %% Static list of basic.properties to set on re-publication.
+     %%
+     %% {publish_properties, [{delivery_mode, 2}]},
+
+     %% The number of seconds to wait before attempting to
+     %% reconnect in the event of a connection failure.
+     %%
+     %% {reconnect_delay, 2.5}
+
+     %% ]} %% End of my_first_shovel
+    ]}
+   %% Rather than specifying some values per-shovel, you can specify
+   %% them for all shovels here.
+   %%
+   %% {defaults, [{prefetch_count,     0},
+   %%             {ack_mode,           on_confirm},
+   %%             {publish_fields,     []},
+   %%             {publish_properties, [{delivery_mode, 2}]},
+   %%             {reconnect_delay,    2.5}]}
+  ]},
+
+ %% ----------------------------------------------------------------------------
+ %% Stomp适配器
+ %% ----------------------------------------------------------------------------
+
+ {rabbitmq_stomp,
+  [%% Network Configuration - the format is generally the same as for the broker
+
+   %% Listen only on localhost (ipv4 & ipv6) on a specific port.
+   %% {tcp_listeners, [{"127.0.0.1", 61613},
+   %%                  {"::1",       61613}]},
+
+   %% Listen for SSL connections on a specific port.
+   %% {ssl_listeners, [61614]},
+
+   %% Number of Erlang processes that will accept connections for the TCP
+   %% and SSL listeners.
+   %%
+   %% {num_tcp_acceptors, 10},
+   %% {num_ssl_acceptors, 1},
+
+   %% Additional SSL options
+
+   %% Extract a name from the client's certificate when using SSL.
+   %%
+   %% {ssl_cert_login, true},
+
+   %% Set a default user name and password. This is used as the default login
+   %% whenever a CONNECT frame omits the login and passcode headers.
+   %%
+   %% Please note that setting this will allow clients to connect without
+   %% authenticating!
+   %%
+   %% {default_user, [{login,    "guest"},
+   %%                 {passcode, "guest"}]},
+
+   %% If a default user is configured, or you have configured use SSL client
+   %% certificate based authentication, you can choose to allow clients to
+   %% omit the CONNECT frame entirely. If set to true, the client is
+   %% automatically connected as the default user or user supplied in the
+   %% SSL certificate whenever the first frame sent on a session is not a
+   %% CONNECT frame.
+   %%
+   %% {implicit_connect, true}
+  ]},
+
+ %% ----------------------------------------------------------------------------
+ %% MQTT适配器
+ %% ----------------------------------------------------------------------------
+
+ {rabbitmq_mqtt,
+  [%% Set the default user name and password. Will be used as the default login
+   %% if a connecting client provides no other login details.
+   %%
+   %% Please note that setting this will allow clients to connect without
+   %% authenticating!
+   %%
+   %% {default_user, <<"guest">>},
+   %% {default_pass, <<"guest">>},
+
+   %% Enable anonymous access. If this is set to false, clients MUST provide
+   %% login information in order to connect. See the default_user/default_pass
+   %% configuration elements for managing logins without authentication.
+   %%
+   %% {allow_anonymous, true},
+
+   %% If you have multiple chosts, specify the one to which the
+   %% adapter connects.
+   %%
+   %% {vhost, <<"/">>},
+
+   %% Specify the exchange to which messages from MQTT clients are published.
+   %%
+   %% {exchange, <<"amq.topic">>},
+
+   %% Specify TTL (time to live) to control the lifetime of non-clean sessions.
+   %%
+   %% {subscription_ttl, 1800000},
+
+   %% Set the prefetch count (governing the maximum number of unacknowledged
+   %% messages that will be delivered).
+   %%
+   %% {prefetch, 10},
+
+   %% TCP/SSL Configuration (as per the broker configuration).
+   %%
+   %% {tcp_listeners, [1883]},
+   %% {ssl_listeners, []},
+
+   %% Number of Erlang processes that will accept connections for the TCP
+   %% and SSL listeners.
+   %%
+   %% {num_tcp_acceptors, 10},
+   %% {num_ssl_acceptors, 1},
+
+   %% TCP/Socket options (as per the broker configuration).
+   %%
+   %% {tcp_listen_options, [{backlog,   128},
+   %%                       {nodelay,   true}]}
+  ]},
+
+ %% ----------------------------------------------------------------------------
+ %% AMQP 1.0 支持
+ %% ----------------------------------------------------------------------------
+
+ {rabbitmq_amqp1_0,
+  [%% Connections that are not authenticated with SASL will connect as this
+   %% account. See the README for more information.
+   %%
+   %% Please note that setting this will allow clients to connect without
+   %% authenticating!
+   %%
+   %% {default_user, "guest"},
+
+   %% Enable protocol strict mode. See the README for more information.
+   %%
+   %% {protocol_strict_mode, false}
+  ]},
+
+ %% ----------------------------------------------------------------------------
+ %% LDAP插件
+ %% ----------------------------------------------------------------------------
+
+ {rabbitmq_auth_backend_ldap,
+  [%%
+   %% Connecting to the LDAP server(s)
+   %% ================================
+   %%
+
+   %% Specify servers to bind to. You *must* set this in order for the plugin
+   %% to work properly.
+   %%
+   %% {servers, ["your-server-name-goes-here"]},
+
+   %% Connect to the LDAP server using SSL
+   %%
+   %% {use_ssl, false},
+
+   %% Specify the LDAP port to connect to
+   %%
+   %% {port, 389},
+
+   %% LDAP connection timeout, in milliseconds or 'infinity'
+   %%
+   %% {timeout, infinity},
+
+   %% Enable logging of LDAP queries.
+   %% One of
+   %%   - false (no logging is performed)
+   %%   - true (verbose logging of the logic used by the plugin)
+   %%   - network (as true, but additionally logs LDAP network traffic)
+   %%
+   %% Defaults to false.
+   %%
+   %% {log, false},
+
+   %%
+   %% Authentication
+   %% ==============
+   %%
+
+   %% Pattern to convert the username given through AMQP to a DN before
+   %% binding
+   %%
+   %% {user_dn_pattern, "cn=${username},ou=People,dc=example,dc=com"},
+
+   %% Alternatively, you can convert a username to a Distinguished
+   %% Name via an LDAP lookup after binding. See the documentation for
+   %% full details.
+
+   %% When converting a username to a dn via a lookup, set these to
+   %% the name of the attribute that represents the user name, and the
+   %% base DN for the lookup query.
+   %%
+   %% {dn_lookup_attribute,   "userPrincipalName"},
+   %% {dn_lookup_base,        "DC=gopivotal,DC=com"},
+
+   %% Controls how to bind for authorisation queries and also to
+   %% retrieve the details of users logging in without presenting a
+   %% password (e.g., SASL EXTERNAL).
+   %% One of
+   %%  - as_user (to bind as the authenticated user - requires a password)
+   %%  - anon    (to bind anonymously)
+   %%  - {UserDN, Password} (to bind with a specified user name and password)
+   %%
+   %% Defaults to 'as_user'.
+   %%
+   %% {other_bind, as_user},
+
+   %%
+   %% Authorisation
+   %% =============
+   %%
+
+   %% The LDAP plugin can perform a variety of queries against your
+   %% LDAP server to determine questions of authorisation. See
+   %% http://www.rabbitmq.com/ldap.html#authorisation for more
+   %% information.
+
+   %% Set the query to use when determining vhost access
+   %%
+   %% {vhost_access_query, {in_group,
+   %%                       "ou=${vhost}-users,ou=vhosts,dc=example,dc=com"}},
+
+   %% Set the query to use when determining resource (e.g., queue) access
+   %%
+   %% {resource_access_query, {constant, true}},
+
+   %% Set queries to determine which tags a user has
+   %%
+   %% {tag_queries, []}
+  ]}
+].

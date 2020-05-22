@@ -1,0 +1,8 @@
+#获取所有服务实例
+ip:8500//v1/agent/services
+
+#获取所有失效服务实例
+ip:8500/v1/health/state/critical
+
+#删除服务实例 根据实例id删除
+ip:8500/v1/agent/service/deregister/{id}
