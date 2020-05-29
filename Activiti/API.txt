@@ -1,0 +1,42 @@
+流程引擎配置
+ProcessEngineConfiguration 基础父类
+
+	// 默认配置h2数据库 历史记录登记audit
+
+	// 创建默认的流程引擎配置 默认配置文件activiti.cfg.xml 默认bean的名字processEngineConfiguration
+	static ProcessEngineConfiguration createProcessEngineConfigurationFromResourceDefault()
+	static ProcessEngineConfiguration createProcessEngineConfigurationFromResource(String resource)
+	static ProcessEngineConfiguration createProcessEngineConfigurationFromResource(String resource, String beanName)
+	static ProcessEngineConfiguration createProcessEngineConfigurationFromInputStream(InputStream inputStream)
+	static ProcessEngineConfiguration createProcessEngineConfigurationFromInputStream(InputStream inputStream, String beanName)
+	
+	// 创建单机版的流程引擎 空实现
+	static ProcessEngineConfiguration createStandaloneProcessEngineConfiguration()
+	// 创建单机版的基于内存的流程引擎 
+	static ProcessEngineConfiguration createStandaloneInMemProcessEngineConfiguration()
+	
+	// 获取流程引擎 子类实现
+	abstract ProcessEngine buildProcessEngine()
+	
+	abstract RepositoryService getRepositoryService()
+	
+	abstract RuntimeService getRuntimeService()
+	
+	abstract TaskService getTaskService()
+	
+	abstract HistoryService getHistoryService()
+	
+	abstract ManagementService getManagementService()
+	
+	
+	
+ProcessEngineConfigurationImpl extends ProcessEngineConfiguration
+
+StandaloneProcessEngineConfiguration extends ProcessEngineConfigurationImpl
+
+StandaloneInMemProcessEngineConfiguration extends StandaloneProcessEngineConfiguration	
+
+JtaProcessEngineConfiguration extends ProcessEngineConfigurationImpl
+
+集成Spring的流程引擎配置 实现了ApplicationContextAware 
+SpringProcessEngineConfiguration extends ProcessEngineConfigurationImpl implements ApplicationContextAware

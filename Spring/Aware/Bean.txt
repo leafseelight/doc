@@ -1,0 +1,27 @@
+InitializingBean 初始化bean接口
+	void afterPropertiesSet() throws Exception
+	
+	任意bean在初始化之后会调用afterPropertiesSet()
+	由于bean在初始化过程中的一些属性可能无法获取到并注入，可以用于在bean实例化之后设置某些属性值
+	或者可以用于在bean初始化之后做一些校验，校验bean是否初始化正确
+	
+	如果bean设置了init-method属性，afterPropertiesSet也会先于init-method指定的方法执行
+	init-method方式是通过反射调用的方法 相对来说消除了对spring的依赖
+	如果调用afterPropertiesSet失败，也不会调用init-method
+	
+	
+FactoryBean<T> 工厂bean，用于生成某个bean的实例
+	// 获取bean实例 如果是单例，会被放到Spring容器的单例缓冲池中
+	// getObject()中可以自定义bean的创建，一般不用再进行同步，因为BeanFactory在调用FactoryBean时就是同步的，且BeanFactory创建的bean默认是单例的
+	// 即FactoryBean的getObject方法在BeanFactory中定义为单例的时候只会调用一次
+	// 但是如果设置了lazy-init=true，bean只会在使用时进行初始化，此时多个线程并发调用getObject()可能会创建出多个实例
+	T getObject() throws Exception
+	// 获取bean的类型
+	Class<?> getObjectType()
+	// 是否是单例 主要是框架内部使用 如果是单例，会被放到Spring容器的单例缓冲池中
+	default boolean isSingleton() { return true; }
+	
+	说明：如果是xml配置方式 <bean>的class属性配置的是FactoryBean时，通过getBean方法返回的不是FactoryBean本身，而是通过FactoryBean的getObject()返回的bean
+		  如果需要返回FactoryBean本身，则需要getBean("&beanName"), 在bean名称前加上&
+		  
+		  spring默认会为FactoryBean创建两个bean 一个是其本身 一个是getObject()中创建的bean

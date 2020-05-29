@@ -1,0 +1,2 @@
+ImportBeanDefinitionRegistrar
+	void registerBeanDefinitions(AnnotationMetadata var1, BeanDefinitionRegistry var2);

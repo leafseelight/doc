@@ -1,0 +1,10 @@
+ApplicationContextAware 应用上下文感知
+	void setApplicationContext(ApplicationContext var1) throws BeansException
+	任意类可以通过实现应用上下文感知接口并实现set方法来给类内部的ApplicationContext赋值，框架自动注入
+	
+	
+EnvironmentAware 环境感知
+	void setEnvironment(Environment var1)
+	
+ResourceLoaderAware 资源加载器感知
+	void setResourceLoader(ResourceLoader var1)
