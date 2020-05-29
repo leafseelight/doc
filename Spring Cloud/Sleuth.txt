@@ -1,0 +1,53 @@
+分布式服务跟踪
+	核心就是利用TraceId标识一个请求链路，用SpanId标识请求在某个工作单元中对应的id
+	每个Span还包括开始时间和结束时间，以此来统计请求在这个服务经过的时间
+	相关信息会存到请求的Header中
+	相关信息最终会在日志中打印，也可以被收集起来做分析和监控：如预警延迟过长的请求链路、查询请求链路的调用明细
+	
+	Sleuth会对Stream的绑定器传递的请求、通过Zuul代理的请求和RestTemplate发起的请求构建跟踪机制
+	
+	头信息
+		X-B3-TraceId：一条请求链路Trace的唯一标识 必须的值
+		X-B3-SpanId：一个工作单元Span的唯一标识 必须的值
+		X-B3-ParentSpanId：当前工作单元的上一个工作单元的SpanId，Root Span(顶级工作单元，请求链的第一个工作单元)的ParentSpanId为空
+		X-B3-Sampled：是否被抽样输出的标志 1表示需要被输出 0表示不需要被输出
+		X-Span-Name：工作单元的名称
+		
+抽样收集策略
+	跟踪日志信息往往很多，并且收集这些信息也会造成一定的性能影响
+	Sampler接口抽象了收集策略 默认的isSampled方法表示是否收集
+	【不收集只是表示跟踪信息不会输出到后续的分析系统如Zipkin，不是不跟踪了】
+	
+	默认实现为PercentangeBasedSampler，以请求百分比的形式收集跟踪信息
+	可以自己实现一个AlwaysSampler的Bean（isSampled直接返回true）来覆盖默认的PercentangeBasedSampler，这样可以收集全部的信息，开发环境可用。
+	更实用的可以实现一个TagSampler 判断Span中包含对应的Tag才收集
+	
+与日志收集器的整合
+	Logstash，ELK适用于存储和搜索海量的日志数据，并且有可视化操作界面
+	Zipkin，适合分析请求链路的延迟，做延迟监控，有可视化界面
+	
+	
+常见配置
+	spring
+		sleuth
+			sampler
+				percentange		收集百分比 默认0.1即10%
+		zipkin
+			base-url			指定zipkin server的地址
+			storage
+				type			指定zipkin的存储类型 可以是mysql
+				
+Zipkin
+	基本组件
+		Collector	收集器组件，处理从外部系统发送过来的跟踪信息，并转成Zipkin内部处理的Span格式，以支持后续的存储、分析、访问功能
+		Storage		存储组件，默认存储在内存，可以修改存储策略，比如存储到数据库、es、cassandra
+		RestfulAPI  API组件，对外提供访问接口，可以给WebUI提供数据信息，或者提供给外部的自实现的监控系统
+		Web UI		UI组件 提供可视化界面 查询和分析跟踪信息
+		
+	与Sleuth整合
+		搭建独立的Zipkin Server 
+			引入zipkin-server依赖和zipkin-autoconfigure-ui依赖，如果要支持消息中间件的收集还需要引入spring-cloud-sleuth-zipkin-stream依赖
+			主启动类加@EnableZipkinServer注解来启动Zipkin Server
+		改造普通服务使用Zipkin服务
+			引入spring-cloud-sleuth-zipkin依赖，如果要支持消息中间件的收集还需要引入spring-cloud-sleuth-stream依赖
+			配置spring.zipkin.base-url指定Zipkin Server的地址 默认为localhost:9411

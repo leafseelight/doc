@@ -1,11 +1,117 @@
-MessageChannel
-	æ¶ˆæ¯é€šé“ é»˜è®¤æä¾›input nullChannel errorChannel
-	éœ€è¦è‡ªå·±å®šä¹‰channel
+ÏûÏ¢Çı¶¯µÄÎ¢·şÎñ
 	
-Sink     è¾“å…¥
-Source   è¾“å‡º
-Processor  è¾“å…¥+è¾“å‡º
-æˆ–è€…è‡ªå®šä¹‰æ¥å£æ¥ç”³æ˜è¾“å…¥è¾“å‡ºçš„æ¸ é“
+StreamÍ¨¹ıÊ¹ÓÃSpring IntegrationÀ´Á¬½Ó´úÀíÏûÏ¢ÖĞ¼ä¼şÒÔÊµÏÖÏûÏ¢ÊÂ¼şÇı¶¯£¬²¢ÒıÈëÁË·¢²¼-¶©ÔÄ¡¢Ïû·Ñ×éºÍ·ÖÇøÈı¸ö¸ÅÄî¡£
+Ö§³ÖRabbitMQºÍKafkaµÄ×Ô¶¯ÅäÖÃ¡£¿Í»§¶ËÖ»ĞèÉêÃ÷°ó¶¨¹ØÏµ£¬È»ºóÍ¨¹ıchannelÀ´²Ù×÷ÏûÏ¢µÄ·¢ËÍ»òÕß½ÓÊÕ¡£
 
-@EnableBinding(Sink.class) å¼€å¯äº†sinkçš„ç»‘å®š 
+»ù±¾×¢½â
+	@EnableBinding		Àà/½Ó¿Ú  Ö¸¶¨Ò»¸ö»ò¶à¸ö¶¨ÒåÁË@Input»ò@Output×¢½âµÄ½Ó¿Ú£¬ÒÔ´ËÊµÏÖ¶ÔÏûÏ¢Í¨µÀChannelµÄ°ó¶¨.±»Ö¸¶¨µÄÀà»á±»´´½¨¶ÔÓ¦µÄbeanÊµÀı
+								 °üº¬ÁË@Configuration£¬Òò´Ë±»×¢½âµÄÀà»á³ÉÎªSpringµÄÅäÖÃÀà
+								 ÆävalueÊôĞÔ±íÊ¾Òª´´½¨µÄÏûÏ¢Í¨µÀµÄ°ó¶¨£¬Õâ¸ö°ó¶¨»á±»´´½¨¶ÔÓ¦µÄbeanµÄÊµÀı
+								 
+	@Input				·½·¨	 ¶¨ÒåÏûÏ¢Í¨µÀ ÊôĞÔÖµ»á±»×÷ÎªbeanµÄÃû×Ö
+	@Output				·½·¨	 ¶¨ÒåÏûÏ¢Í¨µÀ ÊôĞÔÖµ»á±»×÷ÎªbeanµÄÃû×Ö
+		
+	@StreamListener		·½·¨     ½«±»ĞŞÊÎµÄ·½·¨×¢²áÎªÏûÏ¢ÖĞ¼ä¼şÉÏÊı¾İÁ÷µÄÊÂ¼ş¼àÌıÆ÷£¬ÊôĞÔÖµ±íÊ¾¼àÌıµÄÏûÏ¢Í¨µÀÃû¡£Ïàµ±ÓÚÖ¸¶¨Ä³¸ö·½·¨ÎªÏû·ÑÕß´¦Àí·½·¨¡£
+								 Ïà±ÈÔ­ÉúµÄ@ServiceActivator Ìá¹©ÁËÏûÏ¢×ª»»µÄ¹¦ÄÜ
+								 
+	@SendTo				·½·¨     Ïû·Ñ·½·¨ÉÏÌí¼Ó ±íÊ¾½«Ïû·ÑµÄ½á¹ûÒÔÏû·ÑµÄ·½Ê½·¢ËÍµ½Ö¸¶¨Í¨µÀÖĞ£¬¿ÉÒÔÓÃ×÷ÏûÏ¢·´À¡(±ÈÈçÔÙ·¢»ØÔ­Êä³öÍ¨µÀ)
+	
+ºËĞÄÀà
+	Sink	¶ÔÊäÈëÏûÏ¢Í¨µÀ°ó¶¨µÄÄ¬ÈÏÊµÏÖ 
+		SubscribableChannel input(); ¸Ã·½·¨Í¨¹ı@Input×¢½â°ó¶¨ÁËÒ»¸öÃûÎªinputµÄÍ¨µÀ
+
+	Source  ¶ÔÊä³öÏûÏ¢Í¨µÀ°ó¶¨µÄÄ¬ÈÏÊµÏÖ
+		MessageChannel output(); ¸Ã·½·¨Í¨¹ı@Output×¢½â°ó¶¨ÁËÒ»¸öÃûÎªoutputµÄÍ¨µÀ
+	
+	Processor  ¼Ì³ĞÁËSinkºÍSource£¬¼´Í¬Ê±¶¨ÒåÁËÒ»¸öÊäÈëÍ¨µÀºÍÒ»¸öÊä³öÍ¨µÀ
+	
+	MessageChannel  ÏûÏ¢Í¨µÀµÄ³éÏó±íÊ¾ ¶¨ÒåÁËÏòÏûÏ¢Í¨µÀ·¢ËÍÏûÏ¢µÄ·½·¨¡£
+					Ö±½Ó×¢ÈëMessageChannel£¬Ê¹ÓÃÆäsend()·½·¨¾Í¿ÉÒÔ·¢ËÍÏûÏ¢¡£
+					ÎªÊ²Ã´»¹ÒªÊ¹ÓÃ@Output£¿
+						Çø·Ö¶à¸öMessageChannel @Output×¢½âµÄÊôĞÔÖµ»á×÷ÎªMessageChannelÊµÀıµÄbeanµÄÃû×Ö
+						Èç¹ûÖ±½Ó×¢Èë¼Ó@QualifierµÄ·½Ê½Ò²¿ÉĞĞ µ«ÊÇ¿ÉÎ¬»¤ĞÔ À©Õ¹ĞÔ²î
+						
+	SubscribableChannel ¼Ì³ĞÁËMessageChannel£¬¶¨ÒåÁËÎ¬»¤ÏûÏ¢Í¨µÀ¶©ÔÄÕßµÄ·½·¨
+	
+	
+³£ÓÃÅäÖÃ
+	spring
+		cloud
+			stream
+				bingdings
+					input				Í¨µÀÃû ×Ô¶¨Òå  <channelName>
+						destination		Í¨µÀ¶ÔÓ¦µÄÖ÷ÌâÃû
+						group			Ö¸¶¨×éÃû
+						content-type	Ö¸¶¨ÊäÈëµÄÏûÏ¢ÀàĞÍ ²ÉÓÃÁËMIME Type  @StreamListener»á¸ù¾İÀàĞÍÑ¡Ôñ¶ÔÓ¦µÄ×ª»»Æ÷×Ô¶¯½øĞĞ×ª»»
+						consumer
+							partitioned	Îªtrue±íÊ¾¿ªÆôÏû·ÑÕß·ÖÇø¹¦ÄÜ
+						binder			Ö¸¶¨µ±Ç°°ó¶¨¹ØÏµÊ¹ÓÃµÄ°ó¶¨Æ÷	²»Ö¸¶¨ÔòÊ¹ÓÃÄ¬ÈÏ°ó¶¨Æ÷ Ä¬ÈÏ°ó¶¨Æ÷ÓÉ×Ô¶¯ÅäÖÃÀà´´½¨»òÕßÍ¨¹ıdefaultBinderÖ¸¶¨
+					output
+						destination
+						producer
+							partitionKeyExpression	Ö¸¶¨·ÖÇø¼üµÄ±í´ïÊ½¹æÔò
+							partitionCount			Ö¸¶¨ÏûÏ¢·ÖÇøµÄÊıÁ¿
+							
+				instanceCount			Ö¸¶¨µ±Ç°Ïû·ÑÕßµÄ×ÜÊµÀıÊıÁ¿						(Ê¹ÓÃ·ÖÇø»òkafkaÊ±ÅäÖÃ)
+				instanceIndex			µ±Ç°ÊµÀıµÄË÷ÒıºÅ ´Ó0¿ªÊ¼  Ã¿¸öÊµÀıÉèÖÃ²»Í¬µÄÖµ  (Ê¹ÓÃ·ÖÇø»òkafkaÊ±ÅäÖÃ)
+				dynamicDestinations		¶¯Ì¬°ó¶¨µÄÄ¿±êÁĞ±í Ä¬ÈÏÎª¿Õ
+						
+				defaultBinder			ÉêÃ÷Ä¬ÈÏµÄ°ó¶¨Æ÷ ´æÔÚ¶à¸ö°ó¶¨Æ÷Ê±¿ÉÒÔÖ¸¶¨Ò»¸öÄ¬ÈÏµÄ		
+						
+				binders					Ö¸¶¨°ó¶¨Æ÷ ¿ÉÒÔÅäÖÃ¶à¸öÏûÏ¢ÖĞ¼ä¼şÊµÀı Ã¿¸öÊµÀı¶ÔÓ¦Ò»¸ö°ó¶¨Æ÷
+					<binderName>		°ó¶¨Æ÷Ãû³Æ
+						type			ÀàĞÍ Èçrabbit
+						envorinment		»·¾³
+							spring
+								rabbitmq
+									host
+									port
+									username
+									password
+									virtual-host
+						inheritEnvironment	µ±Ç°°ó¶¨Æ÷ÊÇ·ñ¼Ì³ĞÓ¦ÓÃ³ÌĞò×ÔÉíµÄ»·¾³ÅäÖÃ Ä¬ÈÏtrue
+						defaultCandidate	µ±Ç°°ó¶¨Æ÷ÊÇ·ñÊÇÄ¬ÈÏ°ó¶¨Æ÷µÄºòÑ¡Ïî
+	
+	
+°ó¶¨Æ÷Binder
+	°ó¶¨Æ÷¸ôÀëÁËÓ¦ÓÃ³ÌĞòºÍÏûÏ¢ÖĞ¼ä¼şµÄ¾ßÌåÊµÏÖÏ¸½Ú£¬ÔÚ¸ü»»ÏûÏ¢ÖĞ¼ä¼ş²úÆ·Ê±Ö»ĞèÒª¸ü¸Ä¶ÔÓ¦µÄ°ó¶¨Æ÷£¬ÎŞĞèĞŞ¸Ä³ÌĞòÒµÎñ´úÂë¡£
+	Binder<T, C extends ConsumerProperties, P extends ProductProperties>
+	Binding<T> bindConsumer(String name, String group, T inboundBindTarget, C consumerProperties)
+	Binding<T> bindProducer(String name, T outboundBindTarget, ProducerProperties)
+	
+	°ó¶¨ÀàĞÍTÄ¿Ç°Ö»ÓĞMessageChannel£¬Ê¹ÓÃ·ºĞÍ±íÊ¾Î´À´¿ÉÀ©Õ¹
+	Ê¹ÓÃÁËSPI»úÖÆÊµÏÖÁË°ó¶¨Æ÷µÄ¿É²å°Î£¬¶ÔÓ¦META-INF/spring.binders,ÆäÖĞ¶¨ÒåÁËµ±Ç°°ó¶¨Æ÷ÒªÊ¹ÓÃµÄ×Ô¶¯ÅäÖÃÀà
+	Èç¹ûclasspathÏÂ´æÔÚ¶à¸ö°ó¶¨Æ÷
+	
+	
+·¢²¼-¶©ÔÄ
+	StreamÊ¹ÓÃÁË·¢²¼-¶©ÔÄÄ£Ê½£¬µ±ÏûÏ¢±»Í¶µİµ½ÏûÏ¢ÖĞ¼ä¼şÖ®ºó£¬»áÍ¨¹ı¹²ÏíµÄTopicÖ÷Ìâ½øĞĞ¹ã²¥£¬¶©ÔÄ¸ÃÖ÷ÌâµÄÏû·ÑÕß½ÓÊÕµ½ÏûÏ¢²¢½øĞĞ´¦Àí¡£
+	TopicÊÇStream³éÏó³öµÄ¸ÅÄî£¬¶ÔÓ¦RabbitMQµÄ½»»»»úºÍKafkaÖĞµÄTopic
+	Í¨µÀ»á°ó¶¨µ½TopicÉÏ£¬Í¨µÀµÄ¸ÅÄîÓëRabbitMQ±¾ÉíµÄÍ¨µÀChannelµÄ¸ÅÄîÊÇÒ»ÖÂµÄ
+	
+Ïû·Ñ×é
+	ÓÃÀ´½â¾öÖØ¸´Ïû·ÑµÄÎÊÌâ
+	Í¬Ò»¸ö×éÄÚÖ»»áÓĞÒ»¸öÏû·ÑÕßÊµÀı»áÏû·ÑÄ³Ò»ÌõÏûÏ¢¡£¡¾Ä¬ÈÏ¶à¸öÏû·ÑÕßÒÔÂÖÑ¯µÄ·½Ê½Ïû·Ñ¡¿
+	StreamÄ¬ÈÏ»áÉè¶¨Ò»¸öÏû·Ñ×é£¬Ò²¾ÍÊÇËµÃ»ÓĞÖ¸¶¨Ïû·Ñ×éµÄÓ¦ÓÃÊµÀı¶¼»á¶ÔÏûÏ¢½øĞĞÏû·Ñ¡£
+	
+ÏûÏ¢·ÖÇø
+	ÓÃÀ´½â¾öĞèÒª½«Ò»²¿·ÖÏûÏ¢¹Ì¶¨ÔÚÒ»¸öÏû·ÑÕßÉÏ´¦ÀíµÄÇé¿ö
+	µ±Éú²úÕß½«ÏûÏ¢Êı¾İ·¢ËÍ¸ø¶à¸öÏû·ÑÕßÊµÀıÊ±£¬±£Ö¤ÓµÓĞ¹²Í¬ÌØÕ÷µÄÏûÏ¢Êı¾İÊ¼ÖÕÊÇÓÉÒ»¸öÏû·ÑÕßÊµÀı½ÓÊÕºÍ´¦Àí
+	Streamµ¥¶À¹¹½¨ÁË³éÏóÊµÏÖ£¬¶Ô±¾Éí²»¾ß±¸ÏûÏ¢·ÖÇøµÄÏûÏ¢ÖĞ¼ä¼şÒ²Ìá¹©ÁË·ÖÇø¹¦ÄÜÀ©Õ¹
+	
+ÏûÏ¢×ª»»
+	Ê¹ÓÃMIMEÀàĞÍ£¬±íÊ¾Í·ĞÅÏ¢contentType¡£Stream×Ô´øÒ»²¿·ÖÏûÏ¢×ª»»Æ÷¶ÔÌØ¶¨ÏûÏ¢ÀàĞÍ½øĞĞ×ª»»
+	
+	
+ÆäËû
+	Spring IntegrationÔ­ÉúÖ§³Ö
+		@StreamListener¶ÔÓ¦Spring IntegrationÖĞµÄÔ­Éú×¢½âÊÇ@ServiceActivator£¬¸Ã×¢½âÊ¹ÓÃinputChannelÊôĞÔÀ´Ö¸¶¨°ó¶¨µÄÊäÈëÍ¨µÀÃû£¬±»×¢½âµÄ·½·¨ÊµÏÖÏû·ÑÂß¼­
+		@InboundChannelAdapter×¢½âµÄÊôĞÔÖµ±íÊ¾°ó¶¨µÄÊä³öÍ¨µÀÃû£¬pollerÊôĞÔ¿ÉÒÔÖ¸¶¨ÏòÏûÏ¢Í¨µÀ·¢ËÍÏûÏ¢µÄ²ßÂÔ£¬±»×¢½âµÄ·½·¨ÊµÏÖÉú²úÂß¼­¡£
+		@Transformer×¢½â¶ÔÖ¸¶¨Í¨µÀµÄÏûÏ¢½øĞĞ×ª»»
+		
+	StreamÓëRxJava½áºÏ
+		ÒıÈëspring-cloud-stream-rxjavaÒÀÀµ
+		@EnableRxJavaProcessor  Àà  ±êÊ¶µ±Ç°ÀàÖĞ´æÔÚÒ»¸öRxJavaProcessorÊµÏÖµÄbean
+									@EnableRxJavaProcessor×¢½â×ÔÉí¾Í½áºÏÁË@EnableBinding({Processor.class})
+	
 	
