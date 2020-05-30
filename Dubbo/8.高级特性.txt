@@ -1,0 +1,51 @@
+服务分组和版本
+	支持同一个服务有多个分组和多个版本实现，用于服务强隔离、服务多版本实现
+	<dubbo:service version="" group=""> 服务提供者在暴露服务时指定version属性和group属性
+	<dubbo:reference version="" group="">消费者需要指定对应的version属性和group属性，因为是服务是强隔离的
+	
+参数回调
+	当消费方调用服务提供方时，支持服务提供方能够异步调到当前消费方，用于stub做热数据缓存等
+	支持异步参数回调，服务端回调客户端时，服务端不会重新开启TCP连接，会复用已经建立的从客户端到服务端的TCP连接。
+	<dubbo:service>子标签<dubbo:method name="methodName">的子标签<dubbo:argument index="1" callback="true"> 通过callback属性设置是否为回调方法,index表示方法的第几个参数是回调方法
+	
+隐式参数
+	支持客户端隐式传递参数到服务端
+	dubbo服务提供者启动时，配置元数据会生成URL，一般是不可变的。
+	dubbo支持消费方在RpcContext中通过setAttachment设置隐式参数，服务端getAttachment获取隐式参数
+	
+	
+异步调用
+	客户端异步调用
+		可以并行发起多个请求，但只使用一个线程，用于业务请求非阻塞场景
+		<dubbo:reference async="true">开启
+		实际调用前会将Future设置到当前的RpcContext，然后可以通过Future的阻塞方法get获取返回结果，没有结果前会一直等待，用户线程挂起，有结果或超时后会主动notify唤醒用户线程。
+		必须保存当前异步调用的Future之后再发起其他远程调用，否则Future将会被覆盖，原调用会丢失。
+	服务端异步调用 2.7以上支持	
+	
+泛化调用
+	用于消费端没有API接口的情况，不需要引入jar包，而是直接通过GenericService接口来发起服务调用。框架会自动把POJO对象转为Map，只要参数名能对应上即可。
+	适合网关和跨框架集成等场景
+	
+上下文信息RpcContext
+	上下文中存放的是当前调用过程中所需的环境信息
+	基于ThreadLocal实现
+	
+Telnet操作
+	支持服务端调用、状态检查和跟踪服务调用统计等
+	
+Mock调用
+	用于方法调用失败时，构造Mock测试数据并返回
+	<dubbo:reference mock="true"> 开启mock，启动时会查找service类名拼接Mock后的类，降级时调用
+	<dubbo:reference mock="xxxx"> 直接指定mock的类名
+	<dubbo:reference mock="return null">  指定指定mock时返回空值
+	<dubbo:reference mock="throw"> mock时抛出RpcException
+	<dubbo:reference mock="throw xxException">  mock时抛出指定异常
+	<dubbo:reference mock="force:return fake"> 不发起RPC调用，直接使用mock数据
+	<dubbo:reference mock="force:throw xxException"> 不发起RPC调用，直接抛出异常
+	
+结果缓存
+	加速热门数据的访问速度，提供申明式的缓存。有性能影响和内存开销
+	<dubbo:reference cache="lru">	使用缓存 lru实现
+	dubbo中的lru是基于LinkedHashMap实现的，继承LinkedHashMap并提供钩子方法removeEldestEntry 该方法判断每次向集合中添加元素时是否删除最少访问的元素
+	LRUCache重写了这个方法，集合元素数量达到1000时，就会返回true，删除链表头部节点。
+	链表每次添加数据时都会在尾部添加，更新数据时会把更新的数据更新到尾部，因而链表头部就是最少访问的数据。

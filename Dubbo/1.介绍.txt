@@ -1,0 +1,97 @@
+架构演进方式
+	单体应用
+		JEE
+			分层架构：展示层、业务层、数据层
+			各层组件最终聚合到一起运行在通用的服务器上如JBoss、WebSphere、Tomcat
+			EJB过于复杂臃肿 耦合度高 xml配置多 难以维护
+		
+		垂直应用		
+			MVC
+				展示层更加细分
+				SSH SSM框架组合
+				依旧会打包成war 部署到Tomcat
+			
+	分布式应用	
+		早期SOA
+			to C业务兴起要求突破性能瓶颈。单体应用进行拆分，形成独立对外提供服务的组件。每个服务通过网络协议对外提供服务，协议可以是TCP、HTTP等，通过XML传输数据，后来被JSON代替
+			
+			Web Service
+				使用SOAP协议(即使用HTTP或HTTPS来传输xml数据，所有的Web Service服务都会注册到目录中，每个服务依赖此目录来发现其他存在的服务)
+				Web Service的通信协议笨重。有很原始的注册中心的概念
+			
+			ESB
+				企业服务总线。没有注册中心的概念，消息总线负责服务之间消息的解析、转换、路由、控制服务的可插拔，统一编排业务信息处理流程
+				应用之间可以任意语言实现，也不需要统一的交互协议。
+				缺点很明显：ESB太重了...  而且总线会随着各个服务的变更而经常变更
+		
+		微服务
+			一个应用会拆分成一个个独立、可配置、可运行、可维护的子服务，粒度更小，服务之间往往使用统一的交互协议，易于实现敏捷部署和交付。
+			早期SOA下的服务不一定能独立配置、独立运行，ESB强调业务流程的编排，适合兼容老系统。
+			
+		云原生
+			针对微服务的容量动态规划，服务框架的臃肿等问题， 开始形成服务网格
+			
+		
+Dubbo
+	分布式RPC框架，提供了注册中心机制，解耦了消费方和服务方动态发现的问题，高可用，采用微内核+富插件的设计思想，可扩展性强
+	特性
+		面向接口代理的高性能RPC调用
+		服务自动注册与发现 支持多注册中心，服务实例上下线实时感知(注册中心主动推送给Consumer)
+		运行期流量调度 可配置的路由规则 实现同机房优先(类似eureka区域感知 同区域内优先)
+		智能负载均衡 可配置负载均衡策略
+		高度可扩展 插件化 核心功能都可扩展
+		可视化
+		
+	总体分层
+		业务层
+		RPC层：
+			Config 
+			Proxy      生成代理类，对被调用的接口方法生成代理方法，自动发起远程/本地调用，并返回结果，整个过程对用户透明
+					   Proxy使用不同的Protocal把服务接口封装成Invoker
+			Invoker	   调用器
+			Exporter   用于暴露到注册中心的对象 内部持有Invoker对象 相当于对Invoker进一步包装 
+			Registry   把Exporter注册到注册中心
+			Cluster    集群容错 路由 负载均衡
+			Monitor 
+			
+		Remote层
+			Exchange    封装请求响应模式
+			Transport   封装网络传输层
+			Serialize	序列化数据
+			
+	总体调用过程
+		服务端接口暴露过程：
+			服务提供者在框架启动时，会初始化服务实例，通过Proxy组件调用具体协议(Protocal)，把服务端要暴露的接口封装成Invoker(AbstractProxyInvoker),
+			然后转换成Exporter，这个时候框架会打开服务端口等并记录6服务实例到内存中，最后通过Registry把服务元数据注册到注册中心。
+		消费者调用服务过程：
+			调用者在服务启动时也会生成Proxy，Proxy持有Invoker对象。 调用时触发invoke方法。
+			在invoke调用过程中，需要使用Cluster，Cluster负责容错，如调用失败的重试。
+			Cluster在调用之前会通过Directory获取所有可调用的远程服务Invoker列表，如果配置了路由规则，还会根据路由规则将Invoker列表过滤一遍
+			然后继续通过LoadBalance方法做客户端负载均衡，选择一个最终要调用的Invoker。
+			这个Invoker在调用之前还会经过一个过滤器链，处理上下文、限流、计数等
+			然后使用Client调用(调用前用协议包装 对数据做序列化)
+			
+			服务接收到请求，对数据包进行协议处理、反序列化等
+			然后这个Request会被分配到线程池中进行处理，根据请求查找对应的Exporter
+			在经过Exporter内部的Invoker进行处理(Invoker被一层层过滤器装饰过)
+			
+			
+Demo
+	spring xml配置方式
+		将service申明为spring的bean
+		<dubbo:application name="">    								#申明应用名称		  服务提供方和消费方都需要申明  
+		<dubbo:registry address="zookeeper://127.0.0.1:2181">		#申明注册中心的地址   服务提供方和消费方都需要申明  
+										【address:"ip:port,ip:port" 表示一个zookeeper集群多个节点】
+										【address:"ip:port|ip:port" 表示多个zookeeper集群多个节点】
+		
+		<dubbo:protocal name="dubbo" port="20800">					#使用Dubbo协议并且指定监听端口
+		<dubbo:service interface="" ref="">							#申明要暴露的接口 ref具体引用了某个实例bean			
+		<dubbo:reference id="" check="false" interface="">			#指定要消费的服务 
+		
+	注解方式
+		@Service		dubbo的@Service注解 不是spring的@Service注解。也会将这个类注册为spring的bean
+		@EnableDubbo    scanBasePackages属性指定扫描服务所在的包
+		使用@Bean创建ProviderConfig ApplicationConfig RegistryConfig ProtocalConfig的bean
+		@Reference      消费者通过这个注解注入服务service
+		
+	API方式	

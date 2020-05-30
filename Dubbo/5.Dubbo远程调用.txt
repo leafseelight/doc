@@ -1,0 +1,54 @@
+Dubbo协议
+	协议头/报文头部 16个字节
+		魔数			使用魔术来分割处理粘包解包问题。类似TCP协议中类似的回车、换行、固定长度或者特殊分隔符的思路
+		数据包类型 		是否为双向的RPC调用 0为response 1为request
+		调用方式		0为单向调用 1为双向调用   【双向调用就是有返回值的】
+		事件标识		0表示当前数据包是请求或响应包 1表示是心跳包
+		序列化器编号	2是Hession2Serialization  3是JavaSerialization 6是FastJsonSerialization
+		状态			20：OK  30：CLIENT_TIMEOUT  31:SERVER_TIMEOUT  40:BAD_REQUEST   50:BAD_RESPONSE
+		请求编号        rpc请求的唯一id 用于请求和响应做关联 【解决多线程并发问题下响应值如何关联到原始请求的问题】
+		消息体长度      
+		
+	请求消息体
+		版本号
+		服务接口名
+		服务接口版本
+		方法名
+		参数类型
+		方法参数
+		请求额外参数
+
+		
+编解码器
+	
+	编码器
+		将Dubbo请求对象(Java对象)编码成字节流
+	解码器
+		将字节流解码成对象
+		
+Telnet调用
+	可以在没有客户端的情况下登录到远程服务器，使用invoke指令执行方法获取返回结果
+	Dubbo的Telnet是编解码器的一个实现
+	
+	
+ChannelHandler
+	dubbo大量使用了Handler组成链表，依次处理逻辑，比如编解码、心跳时间戳和方法调用Handler
+	netty每次创建Handler都会经过ChannelPipeline，开销很大，因此dubbo会将多个Handler聚合成一个。
+	
+	5种状态
+		connected			Channel已被创建
+		disconnected        Channel已被断开
+		sent				消息被发送
+		received			消息被接收
+		caught				捕获到异常
+		
+		
+	HeaderExchangeHandler
+		所有方法调用被抽象成Request/Response
+		每次调用都会创建一个请求Request，方法调用则会返回一个Response对象
+		
+	HeartbeatHandler
+		客户端和服务端都会发送心跳报文，来保持TCP长连接状态。
+		内部开启一个线程循环扫描并检测连接是否超时，服务端如果发现超时会主动关闭客户端连接，客户端发现超时则会主动重新创建连接。 默认心跳检测时间是60s
+		
+	NettyServerHandler NettyClientHandler   封装Netty事件	

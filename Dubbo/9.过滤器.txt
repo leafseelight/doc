@@ -1,0 +1,46 @@
+过滤器的作用就是在服务调用前后插入自定义逻辑，多个过滤器会组成过滤器链
+
+使用方式
+	<dubbo:reference filter="xxx,yyy">  消费方调用过程拦截			多个过滤器之间会按照配置的顺序执行，default表示默认过滤器，可以设置-default表示禁用所有默认过滤器
+	<dubbo:consumer filter="xxx,yyy">	消费方拦截所有reference
+	<dubbo:service filter="xxx,yyy">	服务提供方调用过程拦截
+	<dubbo:provider filter="xxx,yyy">	服务提供方拦截所有service
+
+
+过滤器链
+	ProtocalFilterWrapper包装类实现了过滤器链的组装
+	遍历所有的过滤器，然后使用装饰器模式，增强原有的Invoker，组装过滤器链，将Invoker一层一层的包装
+
+	
+除了CompatibleFilter，其他所有的内置过滤器都使用了@Adaptive注解，即默认被激活
+
+常见过滤器
+	AccessLogFilter
+		打印每一次请求的访问日志，服务端使用
+	ActiveLimitFilter
+		限制消费者端对服务端的最大并行调用数，消费端使用
+	ExecutiveLimitFilter
+		限制服务端的最大并行调用数，服务端使用
+	ClassLoaderFilter
+		切换不同线程的类加载器，服务调用完成后会还原回去
+		切换类加载器的作用是，ClassA ClassB如果不是同一个类加载器加载的，相互之间就不能调用，就需要切换类加载器
+		一般就使用上下文类加载器ContextClassLoader来实现违反双亲委派模型来查找Class
+	ContextFilter
+		设置每个请求的调用上下文，服务端使用
+	ConsumerContextFilter
+		设置请求的调用上下文，客户端使用
+	ExceptionFilter
+		用于同一的异常处理，放置出现序列化失败 服务端使用
+		就是捕获非受检异常并包装到RuntimeException中，最终会放入RpcResult中返回
+	TimeoutFilter
+		记录超时信息 服务端使用
+	TokenFilter
+		服务端开启令牌校验
+	TpsLimitFilter
+		服务端限流 令牌桶算法
+	DeprecatedFilter
+		如果调用的方法被标记为deprecated已启用，则消费端会打印error日志信息
+	FutureFilter
+		调用千户出现异常时会触发调用回调方法
+	GenericFilter
+		泛化调用

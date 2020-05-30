@@ -1,0 +1,131 @@
+Dubbo的总体流程和分层是抽象不变的，每一层都提供扩展接口。
+	   业务层API层不需要扩展点 自行处理业务
+
+RPC层
+	Proxy层扩展点
+		@SPI("javassist")						// 默认javaassist，此外还有jdk、stub
+		ProxyFactory 生成代理类，封装了Invoker
+			@Adaptive({Constants.PROXY_KEY})	// 表示根据URL中的proxy参数决定使用哪种字节码生成工具，generic标识是否被泛化调用
+			<T> T getProxy(Invoker<T> invoker) throws RpcException;
+			@Adaptive({Constants.PROXY_KEY})
+			<T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException;
+			@Adaptive({Constants.PROXY_KEY})
+			<T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) throws RpcException;
+		
+	Registry层扩展点
+		@SPI("dubbo")							// 默认dubbo，此外还有zookeeper、redis、multicast实现
+		RegistryFactory 负责创建注册与服务发现客户端
+			@Adaptive({"protocal"})				// 表示可以根据URL中的protocal参数创建不同的注册中心客户端，如果protocal=redis，就会创建基于redis的注册中心客户端
+			Registry getRegistry(URL url);
+			
+	Cluster层扩展点
+		@SPI(FailoverCluster.NAME)				// 容错机制默认failover
+		Cluster	负责容错(重试、快速失败)
+			@Adaptive							// 会根据配置动态调用不同的容错机制
+			<T> Invoker<T> join(Directory<T> directory) throws RpcException;
+			
+		@SPI	
+		RouterFactory	创建不同的Router
+			@Adaptive("protocal")				// 根据不同的protocal自动匹配路由规则，2.7之后支持file script condition等
+			Router getRouter(URL url);
+			
+		@SPI(RandomLoadBalance.NAME)			// 默认使用随机负载均衡策略 支持random roundRobin leastActive consistentHash
+		LoadBalance  		
+			@Adaptive("loadbalance")
+			<T> Invoker<T> select(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException;
+			
+		@SPI
+		ConfigurationFactory 创建配置实例
+			@Adaptive("protocal")				// 根据URL中的proocal配置使用不同的配置对象。默认override，会直接把配置中心中的参数覆盖本地的参数，absent只会新增，不会覆盖本地已存在的配置
+			Configurator getConfigurator(URL url);
+			
+		@SPI
+		Merger<T> 合并器，对并行调用的结果集进行合并。默认提供了map set list byte char short long int float double boolean类型的合并器
+			T merge(T... items);
+			
+Remote层
+	底层，涉及协议、数据交换、网络传输、序列化、线程池，涵盖了远程调用的所有要素
+	
+	Protocal层扩展点
+		@SPI("dubbo")							// 实现有dubbo injvm rmi http hessian rest thrift - redis memcached
+		Protocal	封装了处理Exporter和Invoker的方法
+			int getDefaultPort();
+			@Adaptive
+			<T> Exporter<T> export(Invoker<T> invoker) throws RpcException;    // 把一个服务暴露成远程invocation
+			@Adaptive
+			<T> Invoker<T> refer(Class<T> type, URL url) throws RpcException;  // 引用一个远程服务
+			void destory();
+			
+		@SPI	
+		Filter	过滤器，定义在Invoker调用前后执行自定义的逻辑
+			Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException;
+			default Result onResponse(Result result, Invoker<?> invoker, Invocation invocation) {return result;}
+			
+		@SPI
+		ExportListener 暴露和取消暴露服务时提供回调
+			void exported(Exporter<?> exporter) throws RpcException;
+			void unexported(Exporter<?> exporter);
+		
+		@SPI
+		InvokerListener 服务的引用和销毁引用时提供回调 
+			void referred(Invoker<?> invoker) throws RpcException;
+			void destroyed(Invoker<?> invoker);
+			
+	Exchange层扩展点
+		@SPI(HeaderExchanger.NAME)				
+		Exchanger  封装请求/响应模式，如把同步请求转化为异步请求。是基于Transport层更高层次的封装
+			@Adaptive({Constants.EXCHANGE_KEY})
+			ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException;
+			@Adaptive({Constants.EXCHANGE_KEY})
+			ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException;
+			
+	Transport层扩展点
+		@SPI("netty")							// 实现有mina netty3 netty4 netty grizzly 
+		Transporter		屏蔽通信框架解耦、实现的不同，使用统一的通信接口
+			@Adaptive({Constants.SERVER_KEY, Constants.TRANSPORTER_KEY})			  // 根据URL中的server参数匹配实现类，如果匹配不到则根据transpoter参数匹配。默认netty4
+			Server bind(URL url, ChannelHandler handler) throws RemotingException;    // bind方法会生成一个服务，监听来自客户端的请求
+			@Adaptive({Constants.CLIENT_KEY, Constants.TRANSPORTER_KEY})
+			Client connect(URL url, ChannelHandler handler) throws RemotingException; // 连接到一个服务
+			
+		@SPI(AllDispatcher.NAME)				// 实现有all direct message execution connection
+		Dispatcher	将工作派发到不同的线程池
+			@Adaptive({Constants.DISPATCHER_KEY, "dispatcher", "channel.handler"})
+			ChannelHandler dispatch(ChannelHandler handler, URL url);
+			
+		@SPI									// 实现有transport telnet exchange
+		Codec2	处理数据的编码和解码，半包、粘包问题，是序列化的上层
+			@Adaptive({Constants.CODEC_KEY})
+			void encode(Channel channel, ChannelBuffer buffer, Object message) throws IOException;
+			@Adaptive({Constants.CODEC_KEY})
+			Object decode(Channel channel, ChannelBuffer buffer) throws IOException;
+			
+		@SPI("fixed")	
+		ThreadPool 线程池	
+			@Adaptive({Constants.THREADPOOL_KEY})
+			Executor getExecutor(URL url);
+			默认4种实现
+				fixed：	固定大小的线程池，启动时创建线程，不关闭，一直持有
+				cached：缓存线程池，空闲1分钟自动删除，需要时重建
+				limited：可伸缩的线程池，但池中的线程数只会增长不会收缩。不收缩是为了避免收缩时突然有大流量到来引起性能问题
+				eager：优先创建Worker线程池，在任务数量大于corePoolSize小于maximumPoolSize时优先创建Worker来处理任务；
+						当任务数量大于maximumPoolSize时，将任务放入阻塞队列，阻塞队列充满时抛出RejectedExecutionException
+						
+	Serialize层扩展点
+		@SPI("hessian2")					// 实现有fastjson fst hession2 java compactedjava nativejava kryo protostuff
+		Serialization
+			byte getContentTypeId();
+			String getContentType();
+			@Adaptive
+			ObjectOutput serialize(URL url, OutputStream) throws IOException;
+			@Adaptive
+			ObjectInput deserialize(URL url, InputStream input) throws IOException;
+			
+			
+其他扩展点
+	TelnetHandler   扩展新的Telnet命令
+	StatusChecker	扩展状态检查，默认实现了内存memory和load的检查
+	Container		扩展容器，默认使用Spring作为服务容器 
+	CacheFactory	扩展缓存，可以缓存方法的返回值，已有实现为lru threadlocal jcache expiring
+	Validation		扩展校验器的实现 jvalidation
+	LoggerAdapter	扩展日志适配器，已有slf4j jcl log4j jdk log4j2
+	Compiler		@Adaptive会生成java代码 然后使用编译器编译出class

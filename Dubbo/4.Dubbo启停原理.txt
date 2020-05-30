@@ -1,0 +1,37 @@
+配置解析
+	基于xml的配置解析
+		基于schema设计
+			spring.schemas文件：dubbo.xsd				约束xml配置时的标签和对应的属性
+			spring.handlers文件: DubboNamespaceHandler  初始化和解析dubbo标签
+		集成Spring，利用Spring的解析
+
+	基于注解的配置解析
+		@EnableDubbo    组合了@EnableDubboConfig和@DubboComponentScan
+
+
+服务暴露
+	远程服务暴露
+		将服务实例通过代理转换成Invoker
+		把Invoker通过具体的协议(如Dubbo)转换成Exporter
+	本地服务暴露
+		默认把远程服务用injvm协议再暴露一份，就是把服务保存在内存中，避免了跨网络进行远程通信
+		
+服务消费
+	单注册中心消费
+		通过持有远程服务实例生成Invoker
+		把Invoker通过动态代理转换成实现用户接口的动态代理引用。Invoker承载了网络连接、服务调用和重试等功能。
+	多注册中心消费
+		按照配置注册中心的顺序消费，配置靠前优先消费
+		多个Invoker会通过Cluster合并成一个Invoker
+	直连服务消费
+		dubbo可以绕过注册中心直接向指定服务(直接指定目标ip端口)发起RPC调用
+		
+优雅停机
+	收到进程退出信号，Spring容器会触发容器销毁事件
+	provider端会取消注册服务元数据信息
+	consumer端会收到最新地址列表(不包含准备停机的地址)
+	dubbo协议发送readonly事件报文通知consumer服务不可用   (consumer收到最新的地址列表可能有延迟)
+	服务端等待已经执行的任务结束并拒绝新任务执行
+	
+	注：Spring注册了JVM停止的钩子 Dubbo也注册了JVM停止的钩子 
+	

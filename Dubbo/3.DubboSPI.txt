@@ -1,0 +1,57 @@
+Java SPI
+	SPI：Service Provider Interface
+	使用了策略模式，只申明接口，具体的实现由程序外部的配置指定
+	
+	META-INF/service/目录下创建一个接口全路径命名的文件
+	在代码中通过java.util.ServiceLoader来加载具体的实现类
+	
+	缺点：
+		Java SPI会实例化所有实现
+		如果扩展加载失败，则连扩展的名称都获取不到
+		没有IoC AOP等高级功能
+	
+【Dubbo SPI】
+
+	META-INF/dubbo/目录下创建一个接口全路径命名的文件，内容为key=扩展点实现类全路径名，多个实现用逗号分隔
+	兼容Java SPI，Dubbo启动时会加载META-INF/service/  META-INF/dubbo/  META-INF/dubbo/internal/下的配置文件
+	
+	分类
+		Class缓存
+			Dubbo SPI获取扩展类时，先从缓存中获取。如果缓存不存在，则加载配置文件，根据配置把Class缓存加载到内存中，并不直接初始化。
+		实例缓存
+			不仅缓存Class，也会缓存Class实例化后的对象。每次获取先从缓存中获取，获取不到则加载配置并缓存。
+			性能比Java SPI好 因为会按需实例化
+			
+	扩展类四种特性
+		自动包装
+			如果一个扩展类包含其他扩展点作为构造函数的参数，则这个扩展类会被认为是Wrapper类 （框架会自动注入这个扩展点的实例） 这是一种装饰器模式。 Spring中@Bean的注入方式类似
+		自动加载
+			如果扩展类是另一个扩展点的成员属性，并且拥有setter方法，则框架也会自动注入对应的扩展点实例  Spring中@Resourc注入的方式类似
+			如果自动注入的扩展点有多个实现，需要自适应特性来选择具体注入的实例。	
+		自适应
+			使用@Adaptive注解动态的通过URL中的参数来确定要使用哪个具体的实现类。有点类似@Qualifier 
+		自动激活
+			使用@Activate注解可以标记对应的扩展点默认被激活启用，该注解还可以通过传入不同的参数，设置扩展单在不同的条件下被自动激活。
+			
+	
+	扩展点注解
+		@SPI   类/接口/枚举  主要是接口上    		标记接口是一个扩展点(一个Dubbo SPI接口，运行时需要通过配置找到具体的实现类) 
+		@Adaptive   类/接口/枚举/方法   主要在方法  即通过参数动态获取实现类，方法级别的注解会自动生成代码并编译，最终会调用具体实现类的方法
+													如果直接标注在实现类上，就不需要动态生成代码实现
+		@Activate   类/接口/枚举/方法               用于有多个扩展点实现，需要根据不同条件激活的场景  类似spring中@Profile @Order @DependsOn 等的功能
+		
+	ExtensionLoader的工作原理
+		getExtension
+		getAdaptiveExtension
+		getActivateExtension
+		
+	动态编译
+		JDK编译器
+		Javassist编译器		默认编译器  可通过<dubbo:application compiler="">配置
+		Adaptive编译器
+	
+	
+	
+【其他】
+	spring的SPI机制: spring-factories
+	
