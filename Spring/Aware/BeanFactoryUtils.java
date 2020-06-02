@@ -45,6 +45,7 @@ public abstract class BeanFactoryUtils {
         return name != null && name.contains("#");
     }
 
+	// 获取原始的bean name，即截取掉#以及#之前的所有字符
     public static String originalBeanName(String name) {
         Assert.notNull(name, "'name' must not be null");
         int separatorIndex = name.indexOf("#");

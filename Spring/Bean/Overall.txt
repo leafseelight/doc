@@ -1,0 +1,2 @@
+XmlBeanDefinitionReader从xml中加载bean定义信息，并注册
+再@Configuration上使用@ImportResource导入外置的xml配置文件，也会使用XmlBeanDefinitionReader去加载解析
