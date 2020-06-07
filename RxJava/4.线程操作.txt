@@ -1,0 +1,24 @@
+RxJava线程
+	默认RxJava在当前线程中运行，是单线程的，这样实现出来的是一个同步的函数响应式。
+	一般需要Observable生成发射数据流，Operators加工数据流在后台线程中运行，Observer在前台线程中接收并响应数据。
+	
+
+调度器Scheduler
+	对线程控制器的抽象
+	内置的Scheduler
+		single		使用定长为1的线程池，重复利用这个线程			new ScheduledThreadPool(1)
+		new Thread	每次都是启用新线程，并在新线程中执行操作
+		computation	使用固定线程池，大小为CPU核数，适合CPU密集型运算	new FixedSchedulerPool
+		io			适合I/O操作的Scheduler，内部实现是一个无数量上限的线程池，可以重用空闲线程，比单纯的new Thread()更有效率。支持异步阻塞io
+		trampoline	直接在当前线程执行，如果当前线程有其他任务正在执行，则会暂停其他任务
+		Schedulers.from		将java.util.concurrent.Executor转换成一个调度器实例，即可以自定义一个Executor来作为调度器
+		
+线程调度
+	默认Observable和Observer在一个线程中
+	切换线程
+		subscribeOn
+			接收一个Scheduler参数，指定对数据的处理运行在特定的线程调度器上
+			多次执行subscribeOn只有一次起作用
+		observeOn
+			接收一个Scheduler参数，指定下游操作符运行在特定的线程调度器上
+			多次执行observeOn，每次都会起作用，线程会一直切换

@@ -1,0 +1,77 @@
+Observable
+	被观察者
+	RxJava2.x开始不支持背压
+	
+	do操作符：给Observable的生命周期的各个阶段加上一系列的回调监听
+		doOnSubscribe			观察者订阅之后回调
+		doOnLifecycle			可以在观察者订阅之后 设置是否取消订阅
+		doOnNext				Observable每发射一项数据就会调用一次，参数Consumer接收发射的数据项，一般用于在subscribe之前对数据进行处理
+		doOnEach				Observable每发射一项数据就会调用一次，不仅包括onNext，还包括onError和onCompleted
+		doAfterNext				在onNext之后执行，doOnNext在onNext之前执行
+		doOnComplete			当它产生的Observable在正常终止调用onComplete时会被调用
+		doFinally				在当它产生的Observable终止之后会被调用，无论是正常终止还是异常终止。doFinally优先于doAfterTerminate
+		doAfterTerminate        注册一个Action，当Observable调用onComplete或onError时调用
+		
+		
+	Cold Observable
+		只有观察者订阅了，才开始执行发射数据流。Cold Observable与Observer是一对一的关系，有多个不同的订阅者时，消息是重新完整发送的，各自的事件是独立的。
+		
+	Hot Observable
+		无论有没有观察者订阅，事件始终都会发生。Hot Observable与Observer是一对多的关系，可以与多个订阅者共享信息。
+		对于某些事件不确定发生及不确定Observable发射的元素数量的情况使用Hot Observable，如UI交互事件，网络环境的变化，地理位置的变化，服务器推送消息到达等。
+		
+	Cold --> Hot
+		方案一：使用publish操作符将Observable转成ConnectableObservable，生成的ConnectableObservable需要调用connetc()才会真正执行
+		方案二：使用Subject/Processor
+					Subject既是Observable 又是Observer(Subscriber), 不支持背压。Subject作为观察者可以订阅目标Cold Observables，然后作为Observable转发或者发送新的事件。
+					Subject线程不安全，调用toSerialized()变成线程安全的
+					Processor是RxJava2.x新增的 支持背压
+					
+	Hot --> Cold
+		方案一：ConnectableObservable的refCount操作符，返回一个普通的Observable
+		方案二：Observable的share操作符。share操作符封装了publish().refCount()调用
+		
+	
+Flowable
+	被观察者
+	支持非阻塞式的背压，同时实现Reactive Streams的Publisher接口
+	
+Single
+	被观察者
+	SingleEmitter只有onSuccess和onError事件，通过onSuccess发射数据（Observable和Flowable通过onNext发射数据），且只有发射的第一个数据会被处理。
+	SingleObserver只有onSuccess和onError，没有onComplete
+	可以通过toXXX方法转成Observable Flowable Completable Maybe
+	
+Completable
+	创建后不会发射任何数据
+	CompletableEmitter只有onComplete和onError事件，没有map flatMap等操作符
+	可以通过toXXX方法转成Observable Flowable Single Maybe
+	
+Maybe
+	RxJava2.x后新增
+	Single和Completable的结合
+	MaybeEmitter没有onNext方法，需要通过onSuccess发射数据，最多只能发射一个数据，后面的将不会被处理
+	可以通过toXXX方法转成Observable Flowable Single Completable
+	
+==========================================================================================================================================================================
+Subject 
+	既是Observable又是Observer，可以看做是桥梁或者代理
+	
+	AsyncSubject
+		Observer会接收AsyncSubject的onComplete()之前的最后一个数据，subject.onComplete()必须调用了才会开始发送数据
+	BehaviorSubject
+		Observer会先接收到BehaviorSubject被订阅之前的最后一个数据，再接收订阅之后发射的数据。如果BehaviorSubject被订阅之前没有发送数据，则会发送一个默认数据。
+		可以实现预加载
+	ReplySubject
+		ReplySubject会发射所有来自原始Observable的数据给观察者，无论是何时订阅的。当然可以限制被订阅前缓存的数据量大小以及缓存时间
+	PublishSubject
+		Observer只接收PublishSubject被订阅之后发送的数据
+		可以实现一个简单的事件总线 RxBus 但是没有背压
+		
+	Subject作为Observable时，可以通过不停调用onNext来发送事件，直到遇到onComplete
+	如果使用subscribeOn操作符将subject切换到I/O线程，由于I/O线程初始化需要时间，可能导致部分subject发射的数据被丢弃，就是主线程转发的这部分数据到I/O线程失败了。使用Observable.create代替	
+	
+	
+Processor
+	RxJava2.x新增的，继承自Subscriber、Publisher，支持背压。Subject不支持背压
+	

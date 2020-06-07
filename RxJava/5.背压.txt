@@ -1,0 +1,18 @@
+背压
+	back pressure
+	在异步场景下，被观察者发送事件的的速度远快于观察者处理的速度，从而导致下游的buffer溢出，这种现象就叫背压
+	
+	RxJava是基于push模型的，只要生产者数据准备好了就会发射出去，所以可能导致背压。
+	而pull模型不会产生背压，因为生产者比较快，生产者会等待消费者处理完之后再生产新的数据
+	
+	
+RxJava1.x中部分Cold Observable支持背压，但是缓存池很小，只有16	
+RxJava2.x中Observable不再支持背压，由Flowable来支持背压，默认队列大小为128
+
+背压策略
+	MISSING			通过create方法创建的Flowable没有指定背压策略，不会对通过OnNext发射的数据做缓存或丢弃处理，
+					需要下游通过背压操作符(onBackpressureBuffer()/onBackpressureDrop()/onBackpressureLatest())指定背压策略 
+	ERROR			如果放入Flowable的异步缓存池中的数据超限了，则会抛出MissingBackpressureException异常
+	BUFFER			表示Flowable的异步缓存池同Observable一样，没有固定大小，可以无限添加数据，不会抛出MissingBackpressureException异常，但是会导致OOM
+	DROP			如果Flowable异步缓存池满了，则会丢弃要放入缓存池中的数据
+	LATEST			如果缓存池满了，会丢掉将要放入缓存池中的数据，但是会将最后一条数据强行放入缓存池中

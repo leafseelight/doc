@@ -1,0 +1,180 @@
+高阶函数
+	接受一个或多个函数作为输入，输出一个函数。如微积分中的导数
+	无类型的Lambda演算，所有函数都是高阶的
+	有类型的Lambda演算，高阶函数一般是不多余一个箭头的函数。(大部分函数式编程语言都是从有类型的Lambda演算中来的)
+	
+	
+Lambda表达式
+	源于Lambda演算，包括一条变换规则和一条函数定义方式
+	Java8中@FunctionalInterface注解标识接口是一个函数式接口，即接口中只有一个抽象方法。
+	任何可以接受一个函数式接口实例的地方，都可以使用Lambda表达式
+	
+	Lambda对象的创建时通过字节码指令invokedynamic来完成的，减少了类型和实例的创建消耗，而匿名诶不累需要创建新的对象
+	
+	方法引用
+		类名::方法名    简化的lambda表达式
+		引用静态方法						ContainingClass::staticMethodName		Integer::valueOf是i->Integer.valueOf(i)的简化写法
+		引用特定对象的实例方法				containingObject::instanceMethodName	s::toString是()->s.toString()的简化写法
+		引用特定类型的任意对象的实例方法	ContainingType::methodName				System.out::println是(s)->System.out.println(s)的简化写法，System.out表示PrintStream对象
+		引用构造函数						ClassName::new							String::new是()->new String()的简化写法 
+		
+		
+函数式接口
+	Function<T,R> 
+		从T到R的一元映射函数
+		R apply(T t);
+		default <V> Function<V,R> compose(Function<? super V, ? extends T> before) {
+			return (V v) -> apply(before.apply(v));
+		}
+		// f.compose(g)等价于g.andThen(f)
+		default <V> Function<T,V> andThen(Function<? super R, ? extends V> after) {
+			return (T t) -> after.apply(apply(t));
+		}
+		default <T> Function<T,T> identity() {
+			return t -> t;   // 传递自身的函数调用
+		}
+		
+	Predicate<T>
+		谓词函数，主要作为一个谓词演算推导真假值存在，返回布尔值。一元函数
+		Predicate等价于一个Function的boolean型返回值的子集
+		boolean test(T t);
+		default Predicate<T> and(Predicate<? super T> other) {
+			return (t) -> test(t) && other.test(t);
+		}
+		default Predicate<T> negate() {
+			return (t) -> !test(t);
+		}
+		default Predicate<T> or(Predicate<? super T> other) {
+			return (t) -> test(t) || other.test(t);
+		}
+		static <T> Predicate<T> isEqual(Object targetRef) {
+			return (null == targetRef) ? Objects::isNull : object -> targetRef.equals(object);
+		}
+		
+	Consumer<T>
+		从T到void的一元函数，接受一个入参但不返回任何结果的操作
+		void accept(T t);
+		default Consumer<T> andThen(Consumer<? super T> after) {
+			return (T t) -> {accept(t); after.accept(t);}
+		}
+		
+	Supplier<T>
+		表示结果的供应者。一元函数
+		T get();
+		
+	BiFunction<T,U,R>	
+		二元函数
+		R apply(T t, U u);
+		default <V> BiFunction<T, U, R> andThen(Function<? super R, ? extends V> after) {
+			return (T t, U u) -> after.apply(apply(t, u));
+		}
+		
+	BiConsumer<T, U>
+		void accept(T t, U u);
+		default BiConsumer<T, U> andThen(BiConsumer<? super T, ? super U> after) {
+			return (l, r) -> {accept(l, r); after.accept(l, r);}
+		}
+		
+		
+Java8 Stream
+	数据流，更高层次的Iterator。流中元素数量可以是无限的。
+	特点：
+		无存储：Stream是基于数据源的对象，本身不存储数据元素，而是通过管道将数据源的元素传递给操作
+		函数式编程：对Stream的任何修改都不会修改背后的数据源，比如对Stream执行filter操作并不会删除被过滤的元素，而是会产生一个不包含被过滤元素的新的Stream
+		延迟执行：Stream的操作有零个或多个中间操作和一个结束操作两部分组成，只有执行了结束操作，中间操作才会真正的依次执行
+		可消费性：Stream只能被消费一次，一旦遍历过就会失效。就像迭代器一样，想要再次遍历则必须重新生成一个新的Stream
+
+	Stream的创建
+		通过集合的stream()方法或者parallelStream()
+		使用流的静态方法，如Stream.of(Object[]),IntStream.range(int,int),Stream.iterate(Object,UnaryOperator)
+		通过Arrays.stream(Object[])方法
+		BufferedReader.lines()从文件中获得行的流
+		Files类的操作路径的方法，如list、find、walk等
+		随机数流Random.ints()
+		其他如BitSet.stream(),Pattern.splitAsStream(CharSequence),JarFile.stream()
+		
+		底层都是依赖StreamSupport类来完成Stream的创建
+		
+	中间操作
+		无状态的：元素的处理不受前面元素的影响
+		有状态的：必须等到所有元素处理之后才知道最终结果
+		Stream的中间操作只是一种标记，只有执行了结束操作才会触发实际计算
+
+	结束操作
+		短路操作：不用处理全部元素就能返回结果，短路操作必须一个元素处理一次
+		非短路操作：可以批量处理出具，但是需要处理完全部数据才会返回结果
+		
+		
+	并行流
+		默认创建的Stream的串行流，可以通过parallel()将串行流转成并行流
+		可以使用parallelStream()创建并行流，并行流可以通过sequential()转成串行流
+		
+		并行流使用了Fork/Join
+		
+		
+函数的柯里化
+	把接受多个参数的函数变换成接受一个单一参数的函数，并且返回接受余下参数的且返回结果的新函数
+	f(x,y,z) -> f(x)f(y)f(z)
+	
+========================================================================================================================================================================
+Furure
+	异步编程
+	一般结合Callable一起使用，通过ExecutorService的submit方法执行Callable，并返回Future。
+	缺点：
+		没有通知机制
+		future.get()方法又会变成阻塞的同步操作，或者使用isDone()轮询的判断Future是否完成，这样耗费CPU资源
+
+CompletableFuture
+	Java8新增的异步方式，不会造成阻塞，底层依赖fork/join，也可以指定自定义的线程池实现
+	既能将回调放到与任务不同的线程中执行，又能将回调作为继续执行的同步函数，在与任务相同的线程中执行。能够将控制流分离到不同的事件处理器中
+	
+	//静态工厂
+	runAsync(Runnable runnable)		使用ForkJoinPool.commonPool()作为它的线程池执行异步代码
+	runAsync(Runnable runnable, Executor executor)	使用指定的thread pool执行异步代码
+	supplyAsync(Supplier<U> supplier)	使用ForkJoinPool.commonPool()作为它的线程池执行异步代码，异步操作有返回值
+	supplyAsync(Supplier<U> supplier, Executor executor)  使用指定的thread pool执行异步代码，异步操作有返回值
+	
+	//Completable
+	complete(T t)			完成异步执行，并返回Future的结果。会立即执行，但是只能调用一次，后续的重复调用会失效。入果future.get已经执行并获取到结果，complete则会无效
+	completeExceptionally(Throwable ex)	异步执行不正常的结束
+	
+	//map转换
+	thenApply(Function<? super T,? extendes U> fn)			接收一个Function参数用来转换CompletableFuture，即CompletableFuture<T>转成CompletableFuture<U>
+	thenApplyAsync(Function<? super T,? extendes U> fn)		接收一个Function参数用来转换CompletableFuture，使用ForkJoinPool
+	thenApplyAsync(Function<? super T,? extendes U> fn,Executor executor)	接收一个Function参数用来转换CompletableFuture，使用指定的线程池
+	
+	//flatMap
+	thenCompose(Function<? super T,? extends CompletionStage<U>> fn)	在异步操作完成的时候对异步操作的结果进行一些操作，并且仍然返回CompletableFuture类型
+	thenComposeAsync(Function<? super T,? extends CompletionStage<U>> fn)
+	thenComposeAsync(Function<? super T,? extends CompletionStage<U>> fn,Executor executor)
+	
+	//组合
+	thenCombine(CompletionStage<? extends U> other,BiFunction<? super T,? super U,? extends V> fn) 当两个CompletableFuture都正常完成后，执行提供的fn，用来组合另一个CompletableFuture的结果
+																								   就是CompletableFuture<T>和CompletableFuture<U>组合成CompletableFuture<V>
+																								   被组合的future是并行执行的，与thenCompose不同
+	thenCombineAsync(CompletionStage<? extends U> other,BiFunction<? super T,? super U,? extends V> fn) 
+	thenCombineAsync(CompletionStage<? extends U> other,BiFunction<? super T,? super U,? extends V> fn,Executor executor)
+	
+	thenAcceptBoth(CompletionStage<? extends U> other,BiConsumer<? super T,? super U> action)	当两个CompletableFuture都正常完成后，执行提供的action,用来组合另一个CompletableFuture的结果
+	
+	//计算结果完成时的处理
+	whenComplete(BiConsumer<? super T,? super Throwable> action)
+	handle(BiFunction<? super T,Throwable,? extendes U> fn)      handle()相当于whenComplete+转换
+	thenAccept(Consumer<? super T> action)						 纯消费，不返回新的计算值
+	
+	//Either
+	acceptEither(CompletionStage<? extends T> other,Consumer<? super T> action)		当任意一个CompletableFuture完成时，action这个消费者就会执行
+	applyToEither(CompletionStage<? extends T> other,Function<? super T,U> fn)      当任意一个CompletableFuture完成时，fn被执行，它的返回值会当做新的CompletableFuture<U>的计算结果
+	
+	//其他
+	allOf(CompletableFuture<?>... cfs)				在所有Future对象完成之后结束，并返回一个future。它不能组合多个future的计算结果
+	anyOf(CompletableFuture<?>... cfs)				在任何一个Future对象结束后结束，并返回一个future
+	
+	//异常处理
+	exceptionally(Function<Throwable,? extends T> fn) 只有当CompletableFuture抛出异常的时候才会触发exceptionally中fn的计算。whenComplete也可以捕获异常
+	
+	
+思考
+	微服务架构中，在调用多个服务时使用CompletableFuture或者RxJava来处理多个请求 合并结果等操作。
+	
+		

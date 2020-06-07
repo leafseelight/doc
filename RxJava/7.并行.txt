@@ -1,0 +1,10 @@
+并行是同时发生多个并发事件，但并发不一定是并行。
+Java8借助了fork/join框架来实现并行编程
+
+RxJava并行
+	1.通过flatMap实现并行
+	2.通过Round-Robin算法实现并行
+		一般就是哈希取模
+		
+	ParallelFlowable	
+		并行的Flowable，允许并行的执行一些操作符如map filter concatMap flatMap collect reduce等

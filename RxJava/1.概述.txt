@@ -40,3 +40,18 @@ RxJava
 	Single					只能发射单个数据或错误事件
 	Completable				从来不发射数据，只处理onComplete和onError事件。可以看成Rx的Runnable
 	Maybe					能够发射0或1个数据，要么成功要么失败。类似Optional
+	
+	
+	
+====================================================================================================================================
+Java9新特性
+	模块化Module System
+	增加了Reactive Streams API，并改进了原有的Stream API、Completable API 
+	JSON API轻量级支持
+	JShell
+	接口中的私有方法
+	Linking
+	HTTP 2 Client	
+	...
+	
+RxJava从2.1.3版本开始支持Java9	

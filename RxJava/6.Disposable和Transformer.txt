@@ -1,0 +1,15 @@
+Disposable
+	表示订阅，替换RxJava1.x中的Subscription，提供了取消订阅的功能
+	CompositeDisposable表示复合订阅，可以将多个Disposable加入到这个容器中进行管理
+	
+	RxLifecycle
+		专门管理订阅的库，Android使用
+		
+	AutoDispose
+		专门管理订阅的库，Java平台都可使用
+		
+		
+Transformer
+	转换器，与compose()操作符结合使用
+	能够将Observable/Flowable/Single/Completable/Maybe对象转换成另一个Observable/Flowable/Single/Completable/Maybe对象，与调用一系列的内联操作符是一样的
+	
