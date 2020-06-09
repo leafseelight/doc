@@ -15,3 +15,21 @@ BeanDefinitionRegistry extends AliasRegistry
     String[] getBeanDefinitionNames();
     int getBeanDefinitionCount();
     boolean isBeanNameInUse(String var1);
+	
+SimpleAliasRegistry implements AliasRegistry
+	简单的别名注册表的实现 就是map存放别名
+
+SingletonBeanRegistry
+	抽象单例bean注册表接口
+	void registerSingleton(String var1, Object var2);
+    @Nullable
+    Object getSingleton(String var1);
+    boolean containsSingleton(String var1);
+    String[] getSingletonNames();
+    int getSingletonCount();
+    Object getSingletonMutex();
+	
+DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry
+	默认的单例注册表
+	
+	bean的二级缓存就在此实现

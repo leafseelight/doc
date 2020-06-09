@@ -1,0 +1,115 @@
+SpringApplication
+
+	// 初始化应用主类
+	SpringApplication(Class<?>... primarySources)构造方法
+		main主类Class信息会被封装到SpringApplication的primarySources属性
+		默认信息输出到控制台，允许打印启动日志，允许执行CommandLineRunner，允许注册停止钩子
+		设置主source(即主启动类,主启动类是一个JavaConfig,属于source的概念)
+		设置应用类型(通过加载classpath下的javax.servlet.Servlet，org.springframework.web.context.ConfigurableWebApplicationContext是否成功来判断是否是SERVLET类型的)
+		设置初始化器ApplicationContextInitializer
+			【spring-factories机制的加载时机】
+				获取key为ApplicationContextInitializer的所有值 value即为ApplicationContextInitializer所有实现类的全路径名 结果会缓存到一个多值map中方便下次使用
+				创建所有ApplicationContextInitializer实例并根据Order排序
+				
+		设置监听器ApplicationListener，作用是在启动过程中通过监听事件以回调的方式处理一些逻辑，会创建所有ApplicationListener并根据Order排序
+		设置主启动类的Class类型(通过方法名为main的堆栈信息推断获取)
+	
+	// 运行
+	run()
+		回调SpringApplicationRunListeners的starting事件
+		封装jvm启动参数
+		【准备环境】ConfigurableEnvironment(这部分环境属性是通过启动参数传入的)，准备完成之后回调SpringApplicationRunListeners的environmentPrepared事件
+			prepareEnvironment(SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments)
+		设置spring.beaninfo.ignore属性
+		打印banner		
+		【创建应用上下文】ConfigurableApplicationContext
+			createApplicationContext()
+			根据应用类型实例化应用上下文，SERVLET类型的应用就会实例化AnnotationConfigServletWebServerApplicationContext
+				
+		【准备应用上下文】	
+			prepareContext(context, environment, listeners, applicationArguments, printedBanner)
+			给context设置environment属性
+			如果context设置bean生成器，则设置默认的bean生成器internalConfigurationBeanNameGenerator，并将其注册
+			应用初始化器initializers，即执行所有初始化器的initialize方法
+			回调SpringApplicationRunListeners的contextPrepared事件
+			获取beanFactory并注册springApplicationArguments和springBootBanner
+			加载所有的source
+			回调SpringApplicationRunListeners的contextLoaded事件
+			
+		【刷新应用上下文】
+			refreshContext(context)
+			调用AbstractApplicationContext的refresh()方法
+			给context注册shutdown钩子
+			
+		回调SpringApplicationRunListeners的started事件
+		回调所有的ApplicationRunner和CommandLineRunner的run()方法，可用于应用启动之后的一些项目数据初始化处理
+		回调SpringApplicationRunListeners的running事件
+		(如果启动过程中抛出异常会进行相应的异常处理并回调SpringApplicationRunListeners的failed事件)
+		
+		
+AbstractApplicationContext
+	// 刷新应用上下文
+	refresh()
+		准备刷新 prepareRefresh()
+			设置上下文的激活状态为true，关闭状态为false
+			初始化属性源propertySource, 即初始化servletContextInitParams、servletConfigInitParams，设置为source
+			校验必须属性是否有值
+			
+		创建或获取bean工厂 obtainFreshBeanFactory()	【加载bean definition，建立一个beanName-> beanDefinition 的 map】
+			
+		刷新bean工厂 refreshBeanFactory() 就是给bean工厂设置了一个id
+		
+		准备bean工厂 prepareBeanFactory(beanFactory)
+			设置bean的类加载器、bean表达式解析器、
+			设置ApplicationContextAwareProcessor，忽略特定接口的依赖注册(如感知类接口)，
+			设置ApplicationListenerDetector等一些bean后置处理器
+			注册beanFactory resourceLoader applicationEventPublisher applicationContext
+			注册environment，systemProperties，systemEnvironment，如果未注册的话
+			
+		postProcessBeanFactory 注册bean
+		
+		invokeBeanFactoryPostProcessors 调用bean工厂的后置处理器
+		
+		registerBeanPostProcessors	【注册bean后置处理器与初始化】
+		
+		初始化messageSource
+		
+		初始化应用事件多播器
+		
+		onRefresh()
+			设置themeSource
+			如果是web类型的应用 还会创建WebServer 【此处就是默认创建tomcat的地方】
+			
+		注册监听器
+		
+		finishBeanFactoryInitialization
+			preInstantiateSingletons()
+				获取所有的beandefinition
+				遍历初始化单例bean
+			
+		完成刷新，发布相关的事件	
+		
+		catch：如果过程中抛出异常 则执行destroyBeans和cancelRefresh方法
+		
+		finally：最终会清除一些缓存
+			如反射获取的方法 字段的缓存
+			注解相关的缓存
+			ResolvableType缓存
+			类加载器缓存
+			
+	
+DefaultListableBeanFactory	
+	// 预实例化单例bean (初始化容器内所有单例非懒加载非abstract的bean，供后续业务逻辑进行依赖注入等使用)
+	preInstantiateSingletons()	
+		普通的bean定义加载后是GenericBeanDefinition，会最终包装成RootBeanDefinition
+		如果当前BeanDefinition存在父BeanDefinition，会基于父BeanDefinition生成一个RootBeanDefinition,
+		然后再将调用OverrideFrom子BeanDefinition的相关属性覆写进去
+		
+		【getBean(beanName)】
+			如果是工厂bean
+			getBean("&"+beanName)
+		
+		
+AbstractBeanFactory
+	// 初始化bean
+	【doGetBean】(String name, @Nullable Class<T> requiredType, @Nullable Object[] args, boolean typeCheckOnly)	

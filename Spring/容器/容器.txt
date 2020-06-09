@@ -1,2 +1,43 @@
 BeanFactory
 	bean工厂，抽象出的bean的管理逻辑
+	
+	
+ListableBeanFactory extends BeanFactory
+	可列出的bean工厂
+	
+HierarchicalBeanFactory extends BeanFactory
+	可继承的bean工厂
+	
+	ConfigurableBeanFactory extends HierarchicalBeanFactory, SingletonBeanRegistry
+		可配置的bean工厂
+	
+AutowireCapableBeanFactory extends BeanFactory
+	可自动注入的bean工厂
+	
+ConfigurableListableBeanFactory extends ListableBeanFactory, AutowireCapableBeanFactory, ConfigurableBeanFactory
+	可配置的可列出的bean工厂
+	
+AbstractBeanFactory extends FactoryBeanRegistrySupport implements ConfigurableBeanFactory	
+	抽象bean工厂
+	
+	
+ApplicationContext extends EnvironmentCapable, ListableBeanFactory, HierarchicalBeanFactory, MessageSource, ApplicationEventPublisher, ResourcePatternResolver
+	应用上下文，增加了bean的管理功能，环境的获取、管理，资源的解析能力，事件发布能力
+	
+ConfigurableApplicationContext extends ApplicationContext, Lifecycle, Closeable
+	可配置的应用上下文，增加了生命周期的功能
+	
+【AbstractApplicationContext】 extends DefaultResourceLoader implements ConfigurableApplicationContext
+	应用上下文基础实现
+
+GenericApplicationContext extends AbstractApplicationContext implements BeanDefinitionRegistry
+	通用应用上下文
+	
+GenericWebApplicationContext extends GenericApplicationContext implements ConfigurableWebApplicationContext, ThemeSource
+	通用Web应用上下文，持有ServletContext
+	
+ServletWebServerApplicationContext extends GenericWebApplicationContext implements ConfigurableWebServerApplicationContext
+	ServletWeb应用上下文 内置了WebServer
+	
+AnnotationConfigServletWebServerApplicationContext extends ServletWebServerApplicationContext implements AnnotationConfigRegistry
+	基于注解配置的ServletWeb应用上下文

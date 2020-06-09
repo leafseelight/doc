@@ -1,0 +1,11 @@
+@FunctionalInterface
+BeanFactoryPostProcessor
+	bean工厂后置处理器
+	void postProcessBeanFactory(ConfigurableListableBeanFactory var1) throws BeansException;
+	
+PropertyResourceConfigurer extends PropertiesLoaderSupport implements BeanFactoryPostProcessor, PriorityOrdered
+	重写了postProcessBeanFactory方法，调用了processProperties(beanFactory, mergedProps)方法来注入property属性到bean中
+	
+PlaceholderConfigurerSupport extends PropertyResourceConfigurer implements BeanNameAware, BeanFactoryAware	
+	
+PropertyPlaceholderConfigurer extends PlaceholderConfigurerSupport	
