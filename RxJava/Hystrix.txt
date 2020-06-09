@@ -1,0 +1,64 @@
+HystrixCommand
+	execute()	同步执行。从依赖的服务返回单一的结果对象，或是在发生错误的时候抛出异常。
+	queue()		异步执行。直接返回一个Future对象，其中包含了服务执行结果时要返回的单一结果对象。
+	
+	run()		任务的核心逻辑，子类实现。返回一个单一的结果，或者抛出异常。
+	
+HystrixObservableCommand
+	observe()		返回Observable对象，代表了多个操作的结果，是一个Hot Observable
+	toObservable()	返回Observable对象，代表了多个操作的结果，是一个Cold Observable 
+	
+	construct()	任务的核心逻辑，子类实现。返回一个Observable对象来发射多个结果，或者通过onError发送错误通知
+
+	
+Hystrix使用的是RxJava1
+	基本过程：
+	Observable用来向订阅者Subscriber对象发布事件，Subscriber对象则在接收到事件后对其进行处理，在Hystrix中事件指的就是对依赖服务的调用
+	Observable对象每发出一个事件，就会调用对应观察者Subscriber对象的onNext()方法
+	每一个Observable的执行，最后一定会调用Subscriber.onComplete()或者Subscriber.onError()来结束该事件的操作流	
+	
+	Hot Observable：无论Observable(事件源)是否有订阅者，都会在创建后对事件进行发布。所以其每一个订阅者都可能是从事件源的中途开始的，并可能只看到了整个操作的局部过程
+	Cold Observable：在没有订阅者的时候不会发布事件，而是进行等待，知道有订阅者之后才发布事件。所以能保证其每个订阅者都能看到整个操作的全部过程。
+	
+	execute和queue底层也是使用了RxJava
+	queue()通过toObservable()获得一个Cold Observable，并且通过toBlocking()将该Observable转换成BlockingObservable，它可以把数据以阻塞的方式发射出来。
+	而toFuture()则是把BlockingObservable转换成一个Future，即创建一个Future返回，并不会阻塞，使得消费者可以自行决定如何处理异步操作。
+	execute()则通过queue()返回的Future的阻塞方法get()来实现同步操作的。
+	这两个实现都只能返回单一结果，因为这个Future要求bservable只发射一个数据。
+	
+请求缓存
+	如果命令的请求缓存功能开启，且该命令命中缓存，则缓存的结果会立即以Observable对象的形式返回
+	
+断路器是否打开
+	在命令结果没有缓存命中的时候，Hystrix在执行命令前需要检查断路器是否为打开状态。
+	如果断路器是打开的，则Hystrix不会执行命令，而是转接到fallback处理逻辑
+	如果断路器是关闭的，则判断线程池/请求队列/信号量是否占满
+	
+线程池/请求队列/信号量是否占满
+	如果占满，则Hystrix不会执行命令，而是转接到fallback处理逻辑
+	这个线程池不是容器的线程池，而是每个依赖服务的专有线程池。
+	Hystrix为了保证不会因为某个依赖服务的问题影响到其他依赖服务而采用了【舱壁模式】来隔离每个依赖的服务
+	
+超时
+	如果run()或construct()方法的执行时间超过了命令设置的超时阈值，当前处理线程将会抛出一个TimeoutException（如果该命令不在其自身线程中执行，则会通过单独的计时线程来抛出）。
+	在这种情况下，Hystrix会转接到fallback处理逻辑。
+	同时，如果当前命令没有被取消或中断，那么它最终会忽略run()或者construct()方法的返回。
+	
+	如果命令没有抛出异常并返回了结果，那么Hystrix在记录一些日志并采集监控报告之后将该结果返回。
+	在使用run()的情况下，Hystrix会返回一个Observable，它发射单个结果并产生onCompleted的结果通知；
+	在使用construct()的情况下，Hystrix会直接返回该方法产生的Observable对象。
+	
+计算断路器的健康度
+	Hystrix会将成功、失败、拒绝、超时等信息报告给断路器，断路器会维护一组计数器来统计这些数据。
+	断路器使用这些统计数据来决定是否将断路器打开，来对某个依赖服务的请求进行熔断/短路，直到恢复期结束。
+	若在恢复期结束后，根据统计数据判断如果还是未达到健康指标，就再次熔断/短路。
+	
+fallback处理
+	当命令执行失败的时候，Hystrix会进入fallback尝试回退处理，也叫服务降级。
+	fallback触发情况
+		1）命令处于熔断/短路状态，断路器打开的时候
+		2）当前命令的线程池、请求队列或者信号量被占满的时候
+		3）HystrixObservableCommand.construct()或HystrixCommand.run()抛出异常的时候
+	
+	
+	
