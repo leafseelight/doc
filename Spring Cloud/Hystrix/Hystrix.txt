@@ -58,7 +58,30 @@ fallback处理
 	fallback触发情况
 		1）命令处于熔断/短路状态，断路器打开的时候
 		2）当前命令的线程池、请求队列或者信号量被占满的时候
-		3）HystrixObservableCommand.construct()或HystrixCommand.run()抛出异常的时候
+		3）HystrixObservableCommand.construct()或HystrixCommand.run()抛出异常的时候(包括超时 超时会抛出TimeoutException)
+		   抛出HystrixBadRequestException异常不会触发fallback？
+		   
+		
+	降级逻辑需实现一个通用的响应结果，并且该结果可缓存，不需要从网络中获取。
+	如果降级逻辑非得依赖网络获取，那么这个网络请求必须包装在HystrixCommand或HystrixObservableCommand中，从而形成一个级联的降级策略
+	最终的降级逻辑不应该依赖网络请求，而应该是一个稳定的处理逻辑。
 	
+	使用HystrixCommand时实现getFallback()来实现降级逻辑
+	使用HystrixObservableCommand时实现resumeWithFallback()来实现降级逻辑，该方法会返回一个Observable对象来发射一个或多个结果
 	
+	如果没有降级逻辑或者降级方法中抛出了异常，Hystrix依然会返回一个Observable对象，
+	但是它不会发射任何数据，而是通过onError方法通知命令立即中断请求，并通过onError()方法将引起命令失败的异常发送给调用者。
+	实现的降级逻辑必须要稳定，尽量避免异常抛出。
 	
+	如果降级方法中抛出了异常，Hystrix会根据不同的执行方法做出不同的处理：
+	execute()		抛出异常
+	queue()			正常返回Future对象，但是在调用get()来获取结果时会抛出异常
+	observe()		正常返回Observable对象，当订阅它的时候，将立即通过调用订阅者的onError方法来通知中止请求
+	toObservable()	正常返回Observable对象，当订阅它的时候，将通过调用订阅者的onError方法来通知中止请求
+	
+返回成功的响应
+	toObservable()	返回最原始的Observable，必须通过订阅它才会真正触发命令的执行流程
+	observe()		在toObservable()产生原始的Observable之后立即订阅它，让命令能够马上开始异步执行，并返回一个Observable对象，
+					当调用它的subscribe方法时，将重新产生结果和通知给订阅者
+	execute()
+	queue()

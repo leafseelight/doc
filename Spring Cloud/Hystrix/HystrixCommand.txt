@@ -1,0 +1,40 @@
+API
+HystrixCommand<R> extends AbstractCommand<R> implements HystrixExecutable<R>, HystrixInvokableInfo<R>, HystrixObservable<R>
+
+	protected abstract R run()								// 命令执行的核心逻辑 子类实现
+	protected R getFallback()								// 降级逻辑 默认抛出异常
+	protected final Observable<R> getExecutionObservable()	// run()包装成Observable，并添加订阅回调事件(内容就是设置执行线程为当前线程)
+	protected final Observable<R> getFallbackObservable()	// getFallback()包装成Observable
+	protected String getFallbackMethodName()				// 降级方法名称 默认是getFallback
+	protected boolean isFallbackUserDefined()				// 是否定义了降级 如果没有会尝试设置默认的getFallback
+	protected boolean commandIsScalar()						// 命令是否是标量 默认true
+	
+	public R execute()										// 同步执行命令，就是执行了queue().get()
+	public Future<R> queue()								// 异步执行命令
+	
+	静态内部类Setter设置HystrixCommandGroupKey HystrixCommandKey HystrixThreadPoolKey HystrixCommandProperties HystrixThreadPoolProperties等属性值
+	
+HystrixObservableCommand<R> extends AbstractCommand<R> implements HystrixObservable<R>, HystrixInvokableInfo<R>	
+
+	protected boolean shouldOutputOnNextEvents()			// 默认true
+	protected final Observable<R> getExecutionObservable()	// 获取命令执行的Observable 调用了construct()
+	protected final Observable<R> getFallbackObservable()	// 获取降级Observable 调用了resumeWithFallback()
+	protected Observable<R> resumeWithFallback()			// 降级逻辑 默认是抛出异常的Observable
+	protected String getFallbackMethodName()				// 降级方法名称 默认是resumeWithFallback
+	protected boolean isFallbackUserDefined()				// 是否定义了降级 如果没有会尝试设置默认的resumeWithFallback
+	protected boolean commandIsScalar()						// 命令是否是标量 默认false
+	
+	protected abstract Observable<R> construct()			// 构造命令执行的核心逻辑 子类实现
+	
+	
+HystrixObservable<R> extends HystrixInvokable<R>	
+	Observable<R> observe();								// 实现类AbstractCommand实现
+    Observable<R> toObservable();							// 实现类AbstractCommand实现
+	
+=======================================================================================================================================================	
+HystrixCommand
+	默认的命令key的名字是子HystrixCommand类的类名
+	默认的执行线程就是当前线程 不会创建新的线程。执行降级方法也是当前线程
+	默认的执行超时时间是1000s，如果超时会执行降级方法。超时也是执行完成，而且不属于执行失败(执行失败是抛出异常) ？
+	如果抛出异常会执行降级方法
+	
