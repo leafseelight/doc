@@ -2,6 +2,13 @@
 #vim /etc/hostname
 #vim /etc/hosts
 
+#网络
+
+#域名解析
+vim /etc/resolve.conf
+#nameserver 8.8.8.8
+#nameserver 8.8.4.4
+
 # 关闭selinux 否则mysql安装不成功
 setenforce 0 && sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
 
@@ -38,6 +45,7 @@ yum -y install nodejs
 yum -y install nginx && systemctl enable nginx && systemctl restart nginx 
  
 【mysql】 
+【yum源默认的mariadb版本太低了】
 #yum默认安装5.5.60-MariaDB MariaDB Server
 yum -y install mariadb-server
 #cp /etc/my.cnf /etc/my.cnf.bak

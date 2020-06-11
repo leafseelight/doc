@@ -1,0 +1,39 @@
+#使用yum安装
+#如果要指定版本 需要创建mariadb的repo文件 并设置版本信息
+#如果yum安装失败 需要检查配置文件信息 网络等
+
+#首先卸载mariadb
+#yum -y remove mariadb*
+yum -y remove mariadb-server
+#yum -y remove MariaDB-client
+#卸载之后清空mysql目录
+#rm -rf /var/lib/mysql/*
+
+yum install MariaDB-server MariaDB-client
+
+#修改mysql配置文件，默认是/etc/my.cnf
+#注意配置文件中指定的pid log socket文件所在的目录需要提前创建，并且设置目录权限为mysql
+# mkdir -p /data/mysql/data /data/mysql/log /data/mysql/run
+# chown -R mysql:mysql /data/mysql
+
+#使用systemctl安装成服务
+#允许开机启动
+systemctl enable mariadb
+#重启mariadb
+systemctl restart mariadb
+
+#如果重启失败 检查启动信息
+#systemctl restart mariadb
+
+#查看更详细的信息
+#journalctl -xe
+
+#一般启动失败主要是原有mysql未卸载干净或者写入权限问题
+#删除ib_logfile0和ib_logfile1两个日志文件
+
+#默认root用户无密码(密码为空)
+#修改root密码并开放登录ip  
+mysql命令直接进入mysql控制台执行：
+	GRANT ALL PRIVILEGES ON *.* TO root@'%' IDENTIFIED BY '【pass】';
+	GRANT ALL PRIVILEGES ON *.* TO root@'localhost' IDENTIFIED BY '【pass】';
+	FLUSH PRIVILEGES;
