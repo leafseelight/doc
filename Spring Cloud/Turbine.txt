@@ -1,0 +1,15 @@
+集群监控
+	Turbine是一个集群监控工具，收集服务实例(或者直接从mq中收集)的指标信息，然后发送给Hystrix Dashboard等工具进行展示
+	
+	基本使用
+		spring-cloud-starter-turbine依赖和actuator依赖，还需要引入注册中心
+		应用主类使用@EnableTurbine启用Turbine
+		配置
+			turbine.app-config					指定需要收集监控信息的服务名
+			turbine.cluster-name-expression		指定集群名称。聚合集群，服务非常多时可以启动多个Turbine服务来监控，每个Turbine监控的一组服务形成一个集群
+			turbine.combine-host-port			为true表示让同一主机上的服务通过主机名与端口号的组合来进行区分。默认以host区分不同的服务，这样本机通服务多个实例时将无法区分
+			
+		如果与消息代理结合，即从消息代理中收集指标信息,如Rabbitmq，实现异步收集
+		需要再引入spring-cloud-starter-turbine-amqp
+		并在应用主类使用@EnableTurbineStream
+		同时服务需要引入spring-cloud-netflix-hystrix-amqp依赖来将指标信息发送到mq

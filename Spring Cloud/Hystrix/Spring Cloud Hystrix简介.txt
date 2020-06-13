@@ -40,6 +40,17 @@ Hystrix断路器
 		@HystrixCommand			  方法	    给方法添加断路器，【断路器是在调用方添加的】
 			fallbackMethod		  指定降级方法
 			commandKey
+			observableExecutionMode	实现响应式命令时，设置使用observe()还是toObservable()的执行方式
+			commandProperties
+		@CacheResult			  方法      标记请求命令返回的结果应被缓存，必须与@HystrixCommand命令一起使用
+			cacheKeyMethod		  执行生成cacheKey的方法，否则默认会以方法的所有参数作为key
+		@CacheRemove			  方法      让请求命令的缓存失效
+			cacheKeyMethod 
+			commandKey			  必须指定
+		@CacheKey				  方法参数  在请求命令的参数上做标记，使其作为缓存的key。如果使用了cacheKeyMethod，则此注解不起作用
+		@HystrixCollapser		  方法      设置请求合并器
+			batchMethod						指定批量请求的实现方法
+			collapserProperties				合并配置
 			
 			
 【命令模式】
@@ -56,3 +67,100 @@ Hystrix断路器
 	实现思路
 		wait/notify机制 + 非阻塞队列
 		阻塞队列
+		
+		
+什么时候不需要降级
+	执行写操作的命令，写操作一般本身就返回void或者空Observable，写入失败应该通知调用者。
+	执行批处理或离线计算的命令，这类操作应该通知调用者让调用者稍后重试，而不是静默降级。
+	
+异常处理
+	fallback
+	
+命令名称、分组以及线程池划分
+	如果使用了poolKey 优先使用poolKey来划分线程池，否则会使用groupKey进行线程池划分
+	建议使用poolKey
+	
+请求缓存
+
+请求合并
+	HystrixCollapser
+	需要服务方提供对应单个操作的批量操作的接口
+	降低了网络请求次数，降低线程池的压力
+	请求合并会造成额外开销，可能造成响应时间变长，因为需要等待一定窗口时间来收集请求然后合并发起
+	
+	适用场景
+		高延迟服务，此时延迟时间窗的时间消耗影响不大
+		延迟时间窗内的并发量大
+		
+		
+【配置】
+	分为全局配置和实例配置。全局配置使用配置文件，实例配置时使用Setter(继承HystrixCommand方式在构造中传入Setter)或者使用@HystrixProperty注解或者配置文件
+
+	Command属性
+		execution配置(控制的是HystrixCommand.run()的执行)
+			execution.isolation.strategy		设置隔离策略
+				THREAD 	  线程池隔离。默认值，在独立的线程池上执行，并发限制受线程池中线程数量的限制
+				SEMAPHORE 信号量隔离。在调用线程上执行，并发量受信号量计数的限制。
+					hystrix.command.default.execution.isolation.strategy
+					hystrix.command.<command>.execution.isolation.strategy
+			execution.isolation.thread.timeoutInMilliseconds   配置HystrixCommand执行的超时时间。超时后命令会被标记为TIMEOUT然后进入降级处理逻辑。默认1000ms
+					hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds
+			execution.timeout.enabled							配置HystrixCommand.run()的执行是否启用超时时间。默认true，如果为false，则上面的超时时间配置将失效。	
+			execution.isolation.thread.interruptOnTimeout		配置当HystrixCommand.run()执行超时的时候是否将其中断，默认true
+			execution.isolation.thread.interruptOnCancel		配置当HystrixCommand.run()执行被取消的时候是否将其中断，默认true
+			execution.isolation.semaphore.maxConcurrentRequests 当隔离策略使用信号量的时候，配置信号量的大小，默认10
+			
+		fallback配置(控制的是HystrixCommand.getFallback()的执行，也适用于信号量隔离策略)
+			fallback.enabled          								设置是否启用降级，默认true
+			fallback.isolation.semaphore.maxConsurrentRequests		设置降级方法执行的最大并发数，超出则后续fallback会抛出异常。fallback本身是使用信号量来控制并发量的。默认10
+			
+		circuitBreaker配置(控制断路器HystrixCircuitBreaker的行为)
+			circuitBreaker.enabled								配置当服务请求命令失败时，是否使用断路器来跟踪其健康指标和熔断请求。默认true
+			circuitBreaker.requestVolumeThreshold               配置在滚动时间窗中，断路器熔断的最小请求数。默认20  【滚动时间窗默认10s】
+			circuitBreaker.sleepWindowInMilliseconds		    设置断路器打开之后的休眠时间窗。时间窗结束之后，断路器状态变成半开，尝试请求。如果依然失败继续打开断路器，否则关闭。默认5000ms
+			circuitBreaker.errorThresholdPercentage             配置断路器打开的错误百分比条件，生效的前提是requestVolumeThreshold先满足。默认值50，即50%
+			circuitBreaker.forceOpen						    是否强制打开断路器 默认false，优先级高于forceClosed
+			circuitBreaker.forceClosed							是否强制关闭断路器 默认false
+			
+		metrics配置(配置从HystrixCommand和HystrixObservableCommand中捕获的指标信息)
+			metrics.rollingStats.timeInMilliseconds				设置滚动时间窗的长度 默认10000ms。该配置无法动态刷新，避免运行期间检测数据丢失
+			metrics.rollingStats.numBuckets						设置滚动时间窗统计指标信息时划分"桶"的数量 默认10 即1s采集一次
+			metrics.rollingStats.timeInMilliseconds				
+			metrics.rollingPercentile.enabled 				    设置对命令执行的延迟是否使用百分位数来跟踪和计算 默认true
+			metrics.rollingPercentile.timeInMilliseconds		设置百分位统计的滚动窗口的持续时间 默认60000ms
+			metrics.rollingPercentile.numBuckets				设置百分位统计滚动窗口中使用"桶"的数量 默认6 
+			metrics.rollingPercentile.bucketSize				设置在执行过程中每个桶中保留的最大执行次数 默认100 
+			metrics.healthSnapshot.intervalInMilliseconds		设置采集影响断路器状态的健康快照(请求的成功、错误百分比)的间隔等待时间 默认500ms
+			
+		requestContext设置(配置HystrixCommand使用的HystrixRequestContext的设置)
+			requestCache.enabled								配置是否开启请求缓存 默认true 
+			requestLog.enabled 									配置HystrixCommand的执行和事件是否打印日志到HystrixRequestLog中
+			
+		collapser配置
+			maxRequestsInBatch						设置一次请求合并处理中允许的最大请求数，默认无上限
+				hystrix.collapser.default.maxRequestsInBatch
+			timeDelayInMilliseconds					设置批处理过程中每个命令延迟的时间   默认10ms
+			requestCache.enabled					设置批处理过程中是否开启请求缓存 默认true 
+			
+		threadPool属性
+			coreSize								设置执行命令线程池的核心线程数，即命令执行的最大并发数 默认10 
+				hystrix.threadpool.default.coreSize 
+			maxQueueSize                            设置线程池的最大队列大小。默认-1就是使用SynchronousQueue，否则使用LinkedBlockingQueue
+			queueSizeRejectionThreshold				为队列设置拒绝阈值。LinkedBlockingQueue时有效
+			metrics.rollingStats.timeInMillseconds  设置滚动时间窗的长度，用于线程池的指标度量 默认10000ms
+			metrics.rollingStats.numBuckets			设置滚动时间窗被划分成桶的数量
+			
+			
+=====================================================================================================================================================================================
+Hystrix Dashbord(仪表盘)
+	引入spring-cloud-starter-hystrix-dashboard依赖，hystrix和actuactor依赖也需要
+	主类加@EnableHystrixDashboard启用Hystrix仪表盘功能
+	服务实例需要启用断路器@EnableCircuitBreaker 
+	
+	默认的集群监控：http://turbine-hostname:port/turbine.stream							需要结合Turbine使用
+	指定的集群监控：http://turbine-hostname:port/turbine.stream?cluster=[clusterName]
+	单体应用的监控：http://hystrix-app:port/hystrix.stream 
+	
+	
+			
+		

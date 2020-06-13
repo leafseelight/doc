@@ -11,7 +11,7 @@ public interface HystrixCircuitBreaker {
 
     boolean isOpen();			// 断路器是否打开
 
-    void markSuccess();			// 标记为成功
+    void markSuccess();			// 闭合断路器
 
 	// 一个简单的不执行操作的断路器实现 就是永远不断路 永远允许请求通过
     public static class NoOpCircuitBreaker implements HystrixCircuitBreaker {
@@ -65,6 +65,8 @@ public interface HystrixCircuitBreaker {
 
 		// 是否允许测试
 		// 如果断路器打开且当前时间过了上次断路器打开时间加上窗口时间之和 则允许
+		// 作用就是在断路器打开并休眠一段时间(默认5s)，允许一些请求尝试访问, 此时断路器的半开状态，如果此时请求继续失败，路由器又进入打开状态，并且继续等待下一个休眠窗口过去之后再次尝试，
+		// 如果请求成功，则关闭断路器。
         public boolean allowSingleTest() {
             long timeCircuitOpenedOrWasLastTested = this.circuitOpenedOrLastTestedTime.get();
             return this.circuitOpen.get() 
@@ -78,7 +80,7 @@ public interface HystrixCircuitBreaker {
                 return true;
             } else {
                 HealthCounts health = this.metrics.getHealthCounts();
-				// 一段时间内请求数的阈值 默认20
+				// 一段时间内请求数的阈值 默认10s20次
 				// 如果一段时间内的请求数未达到阈值，即使这段时间内的请求全部失败，也不会继续去判断错误百分比，不会打开断路器
                 if (health.getTotalRequests() < (long)(Integer)this.properties.circuitBreakerRequestVolumeThreshold().get()) {
                     return false;
@@ -98,7 +100,7 @@ public interface HystrixCircuitBreaker {
     }
 
     public static class Factory {
-        private static ConcurrentHashMap<String, HystrixCircuitBreaker> circuitBreakersByCommand = new ConcurrentHashMap();
+        private static ConcurrentHashMap<String, HystrixCircuitBreaker> circuitBreakersByCommand = new ConcurrentHashMap();  // commandKey与断路器的映射关系
 
         public Factory() {
         }
