@@ -1,0 +1,86 @@
+模块
+	一个文件就是一个模块
+	
+	__filename	当前模块的文件名，是绝对路径（符号链接会被解析）
+	__dirname 	当前模块的目录名，相当于path.dirname(__filename)、
+	exports		对于module.exports的更简短的引用形式，用于指定一个模块所导出的内容。exports是module.exports的一个引用  【如果要导出一个类或对象，必须使用module.exports】
+	module    	对当前模块的引用
+	
+	
+			
+require
+	require(id)  		  引入模块或者json文件，会解析路径并加载模块，返回该模块被导出的内容 module.exports
+						  可以从node_modules引入模块，也可以使用相对路径引入本地模块或json文件
+						  
+	require.cache		  被引入的模块将缓存在这个对象中。下次引入将直接从缓存中获取。 可以直接操作缓存，设置同名key以及对应的值，来替换原生模块的实现				  
+	require.main		  返回nodejs进程启动时的入口模块
+						  require.main.filename获取入口文件名
+						  require.main === module 判断一个文件是否被直接运行(判断入口是不是当前模块)
+						  
+	require.resolve(request[, options])		解析模块的全路径 但不加载
+	require.resolve.paths(request)			返回被查询解析路径的模块的路径的数组
+	
+	
+module对象	
+	在每个模块中， module 的自由变量是对表示当前模块的对象的引用，由node自动创建
+	module 实际上不是全局的，而是每个模块本地的
+	
+	module.children		被该模块引用的模块对象
+	module.exports			
+						exports 变量是在模块的文件级作用域内可用的，且在模块执行之前赋值给 module.exports
+						直接使用exports是一种快捷方式
+	module.filename		模块的完全解析后的文件名					
+	module.id			模块的标识符，通常是完全解析后的文件名
+	module.loaded		模块是否已经加载完成或者正在加载中
+	module.parent		最先引用该模块的模块
+	module.paths		模块的搜索路径
+	module.require(id)	提供了一种加载模块的方法
+	
+	
+Module对象	
+	可以理解为对module的更高级抽象
+	通过require('module')获取
+	
+	require('module').builtinModules			返回一个数组，列出所有内置模块名称
+	require('module').createRequire(filename)	用于构造 require 函数的文件名
+	
+	
+===============================================================================================================================================================================
+引入模块 
+	1.路径分析
+		优先缓存中获取
+		如果不带路径，按核心模块加载
+		如果是相对路径，则转成真实路径
+		如果不是核心模块也不是路径形式，会查找当前目录下的node_modules目录中是否存在，如不存在，依次查找父目录下的node_modules目录
+	
+	2.文件定位
+		文件扩展名分析：如果不带文件扩展名，按照.js .json .node的次序补足扩展名并尝试
+		目录分析和包：如果没有找到文件，而找到一个同名目录，则会将目录当成一个包来处理。
+					  查找当前包下的package.json文件，其main属性就是指定的入口文件，如果没有main属性或者没有package.json文件，则默认依次查找index.js index.json index.node文件
+	
+	3.编译执行
+		JavaScript模块的编译：
+			编译时Node会对获取的js文件内容进行头尾包装，头部添加(function (exports, require, module, __filename, __dirname) {});  【每个模块都会有的变量的来源】
+		C/C++模块的编译：
+			C/C++模块是.node结尾的文件
+			Node调用process.dlopen()方法进行加载和执行，.node文件其实不需要编译，因为已经是C/C++模块编译生成的。【不同平台下的.node文件是不兼容的，跨平台需要重新编译】
+		JSON文件的编译：
+			利用fs模块同步读取json文件内容，调用JSON.parse()方法得到对象，然后赋给模块的exports
+		
+	
+模块
+	核心模块：Node提供的模块。部分核心模块在node进程启动时就直接加载进内存，路径分析时优先判断，并且不需要文件定位和编译执行，是最快的
+		js编写的
+			存放在lib目录下。
+			会编译成C/C++代码，编译成功后缓存到NativeModule._cache对象上。
+		C/C++编写的
+			存放在src目录下。
+			全部由C/C++编写的模块也叫内建模块
+		
+	文件模块：用户编写的模块。运行时动态加载
+		编译成功后缓存到Module._cache对象上。
+	
+缓存	
+	引入的模块会进行缓存，无论核心模块还是文件模块。避免二次引入的开销。从缓存中获取是优先级最高的。
+	
+	
