@@ -1,0 +1,30 @@
+assert
+	断言
+		const assert = require('assert'); 			 // 使用传统的断言模式 使用抽象的相等性比较(==) 
+		const assert = require('assert').strict;	 // 使用严格的断言模式 推荐
+		
+		断言失败抛出AssertionError 是Error的子类
+		
+console
+	控制台
+		console实例是全局的，使用时不需要require('console')
+			全局的console是一个特殊的Console，其输出发送到 process.stdout 和 process.stderr。相当于new console.Console({ stdout: process.stdout, stderr: process.stderr });
+		
+		Console类 	使用require('console').Console 或 console.Console访问
+		
+path
+	路径
+		path.basename(path[, ext])  返回path的最后一部分，类似Unix的basename命令
+		path.delimiter				返回对应平台的路径界定符，windows是; POSIX是: 
+		path.dirname(path)			返回path的目录名，类似Unix的dirname命令
+		path.extname(path)			返回path的扩展名
+		path.format(pathObject)		从对象返回路径字符串
+		path.isAbsolute(path)
+		path.join([...paths])
+		path.normalize(path)		规范化给定的path 会解析.和..
+		path.parse(path)			将路径解析为pathObject，包含dir root base name ext属性
+		path.relative(from, to)		根据当前工作目录返回 from 到 to 的相对路径
+		path.posix					提供对path方法的POSIX特定实现的访问
+		path.win32					提供对path方法的windows特定实现的访问
+		path.sep					提供特定平台的路径分隔符
+		path.resolve([...paths])	将路径或路径片段的序列解析为绝对路径

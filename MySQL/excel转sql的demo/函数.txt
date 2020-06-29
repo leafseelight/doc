@@ -1,0 +1,8 @@
+excel另存为csv
+
+如：需要生成INSERT INTO sf_area(area_id,province_id,city_id,province_name,city_name,area_name) VALUES (1,NULL,NULL,'北京市','北京市','NULL');
+对第一个数据行最后设置函数fx
+="INSERT INTO sf_area(area_id,province_id,city_id,province_name,city_name,area_name) VALUES ("&A2&","&B2&","&C2&",'"&D2&"','"&E2&"','"&F2&"');"
+
+执行函数并应用到所有行
+注意'NULL'这种情况需要进行二次替换

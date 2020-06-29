@@ -1,0 +1,34 @@
+
+以下几个变量看起来是全局变量，实际它们仅在模块的作用域中
+	__dirname
+	__filename
+	exports
+	module
+	require()
+	
+	
+	
+全局变量
+	Buffer类
+	
+	setImmediate(callback[, ...args])
+	clearImmediate(immediateObject)
+	setInterval(callback, delay[, ...args])
+	clearInterval(intervalObject)
+	setTimeout(callback, delay[, ...args])
+	clearTimeout(timeoutObject)
+	
+	console			用于打印到stderr和stdout
+	
+	global			全局的命名空间变量
+					浏览器中的顶层作用域就是全局作用域，但是node中的顶层作用域依然是在模块的作用域中。
+					
+	process			进程对象
+
+	queueMicrotask(callback)		将微任务放入队列以便调用callback，如果 callback 抛出异常，则将会触发 process 对象的 'uncaughtException' 事件
+	
+	TextDecoder
+	TextEncoder
+	URL
+	URLSearchParams
+	WebAssembly						作为所有的 W3C WebAssembly 的相关功能的命名空间的对象
