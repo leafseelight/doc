@@ -46,6 +46,11 @@ NPM常用功能
 							
 							-g 全局模式，将一个包安装成一个全局可用的可执行命令。不是将一个包安装成全局包，不是在任意地方都可以使用require()来引用到它
 							--registry=''	通过非官方源的其他镜像源安装
+							
+							--save		会在dependencies下添加对应的依赖
+							--save-dev  会在devDependencies下添加对应的依赖
+							
+							
 	钩子命令			package.json中的scripts字段就是提供了钩子
 	初始化				npm init，以交互式的方式生成package.json包描述文件
 	注册包仓库账号		npm adduser
