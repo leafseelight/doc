@@ -8,15 +8,24 @@ npx webpack
 	入口起点(entry point)指示 webpack 应该使用哪个模块，来作为构建其内部依赖图的开始。
 	每个依赖项随即被处理，最后输出到称之为 bundles 的文件中
 	
+	多入口应用场景
+		分离应用程序app和三方库vendor入口
+		多页面应用程序，每个页面有一个入口，可以复用一些代码/模块
+	
 出口output
 	指定webpack 在哪里输出它所创建的 bundles，以及如何命名这些文件，默认值为 ./dist
+	多个入口可以只有一个出口，但是出口文件名称不能相同，使用占位符[name]
 	
 加载器loader
-	处理非js文件。loader 可以将所有类型的文件转换为 webpack 能够处理的有效模块
-	loader 能够 import/require 导入任何类型的模块（例如 .css 文件）
+	处理非js文件。loader可以将所有类型的文件转换为webpack能够处理的有效模块
+	loader能够import/require导入任何类型的模块（例如 .css 文件）
+	也可以在每个import语句中显式指定loader (内联的方式)
+	
+	如css-loader、ts-loader、raw-loader
 	
 插件plugins
-	可以处理很多任务，如打包优化和压缩，重新定义环境中的变量等
+	可以处理很多任务，如打包优化和压缩，重新定义环境中的变量等。解决loader无法处理的事情。
+	插件是一个具有apply属性的JavaScript对象，apply属性会被webpack compiler调用
 	
 模式mode
 	通过选择development或production之中的一个，来设置mode参数,也可以使用命令行参数的方式：webpack --mode=development/production
@@ -27,18 +36,36 @@ npx webpack
 	
 配置文件
 	webpack.config.js
+	配置文件是导出一个对象的js文件
 	配置内容是一个json数据结构：
 	{
 		entry: './src',									#配置一个或多个入口起点 entry point，默认值为./src      单入口时，entry是entry.main的简写
 		output: {
 			path: path.resolve(__dirname, 'dist'),		#配置bundle的路径
 			filename: 'my-first-webpack.bundle.js'		#配置bundle的文件名
+			publicPath: ''								#输出到CDN 可以留空然后动态设置
 		},
 		module: {
 			rules: [
 			  { 
 				test: /\.txt$/, 						#用于标识出应该被对应的 loader 进行转换的某个或某些文件
 				use: 'raw-loader' 						#表示进行转换时，应该使用哪个 loader
+			  },
+			  { test: /\.ts$/, 
+				use: 'ts-loader' 
+			  },
+			  { test: /\.css$/, 
+				use: [
+					  { 
+						loader: 'style-loader' 
+					  },
+					  {
+						loader: 'css-loader',
+						options: {
+						  modules: true
+						}
+					  }
+				]
 			  }
 			]
 		},
@@ -47,3 +74,23 @@ npx webpack
 		]
 	}	
 	
+	
+	
+----------------------------------------------------------------------------------------
+webpack模块
+	ES2015 import 语句
+	CommonJS require() 语句
+	AMD define 和 require 语句
+	css/sass/less 文件中的 @import 语句。
+	样式(url(...))或 HTML 文件(<img src=...>)中的图片链接(image url)
+	
+模块解析
+	resolver是解析依赖模块的一个库。
+	
+	绝对路径
+	相对路径：会被解析成绝对路径，以资源文件(使用import/require的文件)所在目录作为上下文目录。
+	模块路径：会在resolve.modules指定的目录下搜索，如果路径指向一个文件且有文件扩展名，则直接打包，如果没有文件扩展名，则以resolve.extensions选项作为文件扩展名来解析；
+			  如果路径指向一个文件夹，且文件夹中包含package.json，则以resolve.mainFields配置的字段到package.json中查找
+			  
+	会进行缓存
+	loader的解析与模块解析类似

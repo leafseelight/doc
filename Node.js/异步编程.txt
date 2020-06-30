@@ -1,3 +1,25 @@
 异步编程的难点
 	1.异常处理
+		异步方法上使用try/catch并不会捕获回调函数执行抛出的异常
+		将异常作为回调函数的第一个实参传回，如果为空值，表明异步调用没有异常抛出
+		不要对回调函数try/catch, 避免回调函数被执行两次
 		
+	2.函数嵌套过深
+		
+	3.阻塞代码
+		没有sleep线程睡眠这样的功能，可以通过空循环实现(不推荐，浪费CPU)，推荐使用setTimeout
+		
+	4.多线程编程
+		child_process和cluster
+		
+	5.异步转同步
+		有时候需要同步反而缺少原生同步API的支持
+		
+		
+事件发布/订阅模式
+	回调函数事件化。
+	Node的events模块就是发布订阅模式的一个简单实现，
+	比浏览器中的DOM事件简单，不存在事件冒泡，不存在preventDefault() stopPropagation() stopImmediatePropogation()等控制事件传递的方法。
+	
+	Node的核心模块中有半数继承了events模块，通过util模块的inherits方法可以继承
+	once()方法可以使侦听器(回调函数)只执行一次
