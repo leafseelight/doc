@@ -34,11 +34,16 @@ npx webpack
 																   NoEmitOnErrorsPlugin,OccurrenceOrderPlugin,SideEffectsFlagPlugin和UglifyJsPlugin.
 	【只设置NODE_ENV，则不会自动设置mode】
 	
+构建目标targets
+	默认是web，可省略,即编译为类浏览器环境里使用（使用任意内置模如fs或path来加载chunk）
+	如果设置为node，会编译为类Node.js环境可用（使用Node.js require加载chunk）
+	
 配置文件
 	webpack.config.js
 	配置文件是导出一个对象的js文件
 	配置内容是一个json数据结构：
 	{
+		target: 'web',
 		entry: './src',									#配置一个或多个入口起点 entry point，默认值为./src      单入口时，entry是entry.main的简写
 		output: {
 			path: path.resolve(__dirname, 'dist'),		#配置bundle的路径
@@ -94,3 +99,11 @@ webpack模块
 			  
 	会进行缓存
 	loader的解析与模块解析类似
+	
+Manifest清单
+	打包时，编译器开始执行、解析和映射应用程序时，会保留所有模块的详细要点，并形成manifest清单文件。
+	发送给浏览器之后，运行时(runtime)通过manifest来解析和加载模块，此时不管哪种模块引入方式都转成了__webpack_require__方法
+	
+模块热替换HMR
+	Hot Module Replacement
+	在运行过程中添加、修改或删除模块，无需重新加载整个页面
