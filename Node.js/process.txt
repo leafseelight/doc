@@ -1,0 +1,95 @@
+process对象是全局变量，可以不用require()
+process对象是EventEmitter的实例
+
+beforeExit事件
+	node清空事件循环并在退出前触发beforeExit事件
+	但是在beforeExit事件上注册的监听器可以进行异步调用，从而导致Node进程继续。
+	调用监听器回调函数时会将process.exitCode的值作为唯一参数传入
+	
+	调用process.exit()或未捕获的异常，将不会触发beforeExit事件
+	
+disconnect事件
+	IPC通道关闭时触发
+	 
+【exit事件】
+	显式调用process.exit()方法或事件循环不再需要执行任何其他工作时触发。
+	此时无法阻止退出事件循环，并且一旦所有 'exit' 事件的监听器都已完成运行时，Node.js 进程将终止
+	
+	exit事件的监听器中如果执行异步操作将不会生效
+	
+message事件
+	如果使用IPC通道衍生Node进程，则只要子进程收到父进程使用childprocess.send()发送的消息，就会触发 'message' 事件
+	
+multipleResolves事件
+	只要Promise有以下情况，就会触发'multipleResolves'事件：
+		resolve不止一次、reject不止一次、resolve后reject、reject后resolve。
+		
+rejectionHandled事件
+
+【uncaughtException事件】
+	当未捕获的JavaScript异常一直冒泡回到事件循环时，会触发 'uncaughtException' 事件
+	一般是用它在进程结束前执行一些已分配资源（比如文件描述符，句柄等等）的同步清理操作，用它来尝试恢复应用正常运行的操作是不安全的
+	
+unhandledRejection事件	
+
+warning事件
+
+
+----------------------------
+信号事件
+
+----------------------------
+
+process.abort()						使node进程立即结束，并生成一个核心文件。worker线程中无此特性
+process.allowedNodeEnvironmentFlags	NODE_OPTIONS 环境变量中允许的特殊只读标志的集合
+process.arch						CPU架构
+process.cpuUsage([previousValue])	CPU使用量
+process.memoryUsage()				内存使用量
+process.platform					os平台
+process.argv						当 Node.js 进程被启动时传入的命令行参数 
+									【第一个参数是process.execPath，即node命令文件】
+									【第二个参数是被执行的js文件名】
+process.argv0						保存当 Node.js 启动时传入的 argv[0] 的原始值的只读副本		
+process.channel						保存 IPC 通道的引用
+process.connected					返回 IPC 通道是否保持连接
+process.disconnect()				关闭到父进程的 IPC 通道
+process.cwd()						返回node进程的当前工作目录
+process.chdir(directory)			变更 Node.js 进程的当前工作目录
+process.config						包含用于编译当前 Node.js 可执行文件的配置选项的 JavaScript 表示形式
+process.debugPort					调试器使用的端口		
+process.dlopen(module, filename[, flags])				允许动态加载共享对象
+process.emitWarning(warning[, options])					用于触发自定义或应用特定的进程警告
+process.emitWarning(warning[, type[, code]][, ctor])	
+
+【process.env】						返回包含用户环境的对象( Windows 操作系统上，环境变量不区分大小写)
+									在 process.env 上为属性赋值会隐式地将值转换为字符串
+									使用 delete 可以从 process.env 中删除属性
+									
+process.execPath					启动 Node.js 进程的可执行文件的绝对路径名								
+process.execArgv					当 Node.js 进程被启动时传入的命令行参数 
+									这些选项在 process.argv 属性返回的数组中不会出现，
+									并且这些选项中不会包括 Node.js 的可执行脚本名称或者任何在脚本名称后面出现的选项
+									
+process.exit([code])				以退出状态 code 指示 Node.js 同步地终止进程
+									如果省略 code，则使用成功代码 0 或 process.exitCode 的值（如果已设置）退出
+									一般不需要显式退出，如果事件循环中没有待处理的额外工作，则 Node.js 进程将自行退出
+process.exitCode					设置默认退出码，否则是0
+process.kill(pid[, signal])					
+process.pid							返回进程的pid
+process.ppid						父进程pid
+
+process.nextTick(callback[, ...args])	将 callback 添加到下一个时间点的队列	
+
+process.send(message[, sendHandle[, options]][, callback])	如果Node.js是使用 PC通道衍生的，则可以使用process.send()方法将消息发送到父进程。 
+															消息将会作为父进程的 ChildProcess 对象上的 'message' 事件被接收。
+
+process.stderr
+process.stderr.fd
+process.stdin
+process.stdin.fd
+process.stdout
+process.stdout.fd
+
+process.uptime()				进程时间运行秒长
+process.version					node的版本信息
+process.versions				node及其依赖的版本信息															
