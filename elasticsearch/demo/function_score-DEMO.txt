@@ -1,0 +1,53 @@
+#需求：
+	需要按照用户的相关权限来限制其只能访问到特定的数据
+	
+	方案一：利用script修改得分，将不符合条件的数据的得分降低，并设置命中的最低得分
+
+		eg：
+			SearchRequestBuilder searchRequestBuilder = getTransportClient().prepareSearch(getIndex()).setTypes(getType())
+            .setFrom(goodsQuery.getFrom()).setSize(goodsQuery.getPageSize());
+		
+			BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();	// 其他查询条件..
+		
+			if(!CollectionUtils.isEmpty(sites)){
+			  Map<String,Object> params = new HashMap<>();
+			  params.put("sites", sites);
+			  params.put("prefix", "sf_");
+			  params.put("split", "_");
+			  params.put("emptyStr", "");
+
+			  // sf_1_3_1622_0301010004F
+
+			  String inlineScript = "long goodsInfoId = doc['goodsInfoId'].value;" +
+					  "      String goodsInfoItemNo = doc['goodsInfoItemNo'].value;" +
+					  "      String webSiteDeskNo = null;" +
+					  "      if (goodsInfoItemNo != null && goodsInfoItemNo.startsWith(params.prefix)) {" +
+					  "        String substring = goodsInfoItemNo.substring(3, goodsInfoItemNo.lastIndexOf(params.split));" +
+					  "        webSiteDeskNo = substring.substring(substring.indexOf(params.split) + 1, substring.lastIndexOf(params.split));" +
+					  "        if (webSiteDeskNo != null && !params.emptyStr.equals(webSiteDeskNo) && params.sites.contains(webSiteDeskNo)) {" +
+					  "          return 1;" +
+					  "        }" +
+					  "      }" +
+					  "      return -1;";
+
+
+			  Script script = new Script(ScriptType.INLINE,"painless", inlineScript, params);
+			  ScriptScoreFunctionBuilder scoreFunctionBuilder = new ScriptScoreFunctionBuilder(script);
+			  FunctionScoreQueryBuilder functionScoreQueryBuilder = QueryBuilders.functionScoreQuery(queryBuilder, scoreFunctionBuilder).boostMode(CombineFunction.MULTIPLY);
+			  searchRequestBuilder.setQuery(functionScoreQueryBuilder);
+			} else {
+			  searchRequestBuilder.setQuery(queryBuilder);
+			}
+			
+			searchRequestBuilder.addSort(SortBuilders.scoreSort().order(SortOrder.DESC));
+			searchRequestBuilder.setMinScore(0);
+			
+			SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+			
+		缺点：
+			不适合复杂的逻辑
+			文本型的字段值计算时需要设置isFieldData为true，会占用大量内存空间。建议涉及到计算操作的值不要用文本类型
+			
+	方案二：
+		考虑将用户权限数据存入到索引中 利用es的关联查询操作
+		未尝试
