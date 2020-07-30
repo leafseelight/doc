@@ -9,6 +9,7 @@
 		
 			BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();	// 其他查询条件..
 		
+			// 外部传入可查看的站点信息数据sites
 			if(!CollectionUtils.isEmpty(sites)){
 			  Map<String,Object> params = new HashMap<>();
 			  params.put("sites", sites);
@@ -16,7 +17,9 @@
 			  params.put("split", "_");
 			  params.put("emptyStr", "");
 
-			  // sf_1_3_1622_0301010004F
+			  // 匹配索引中的数据是否属于可访问的站点
+			  // 此处goodsInfoItemNo中保存了站点信息 说明：应该将站点单独用字段保存[可优化]
+			  // goodsInfoItemNo：编号。规则：sf_1_3_1622_0301010004F
 
 			  String inlineScript = "long goodsInfoId = doc['goodsInfoId'].value;" +
 					  "      String goodsInfoItemNo = doc['goodsInfoItemNo'].value;" +
@@ -45,9 +48,17 @@
 			SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
 			
 		缺点：
-			不适合复杂的逻辑
+			不适合复杂的逻辑 
+			脚本中的逻辑难以调试
 			文本型的字段值计算时需要设置isFieldData为true，会占用大量内存空间。建议涉及到计算操作的值不要用文本类型
 			
 	方案二：
-		考虑将用户权限数据存入到索引中 利用es的关联查询操作
-		未尝试
+		考虑将用户权限数据存入到索引中 利用es的类似关联查询的操作
+		只是一种想法，未尝试
+		
+	方案三：
+		es搜索返回数据之后 应用层再次过滤
+		缺点：
+			分页信息混乱，甚至会造成第一页数据被全部过滤，后面的数据也无法展示的情况  [致命缺点]
+			性能差 
+		实际场景不应使用这种方式	
