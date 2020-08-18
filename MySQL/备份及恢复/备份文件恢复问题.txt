@@ -2,10 +2,13 @@
 
 1.恢复时报错：Row size too large (> 8126). Changing some columns to TEXT or BLOB or using ROW_FORMAT=DYNAMIC or ROW_FORMAT=COMPRESSED may help. In current row format, BLOB prefix of 768 bytes is stored inline.
 	将建表语句中的ROW_FORMAT=COMPACT删除 （或者设置ROW_FORMAT=DYNAMIC或ROW_FORMAT=COMPRESSED）
-	对于大文件无法用普通编辑器打开，可以使用sed，如: sed -i 's/ROW_FORMAT=COMPACT//g' [file]
+	对于大文件无法用普通编辑器打开，可以使用sed，如: sed -i 's/ROW_FORMAT=COMPACT//gi' [file]  或者 sed -i 's/ROW_FORMAT = Compact//gi' [file]
+	(大文件可以通过head -n50 [file]查看表信息的ROW_FORMAT=COMPACT具体写法)
+	
 	
 2.恢复的数据中 主键为0的数据丢失 没有恢复成功
  	修改新库的配置文件my.cnf， 设置[mysqld]下的sql_mode配置，追加NO_AUTO_VALUE_ON_ZERO
+	【注意NO_AUTO_VALUE_ON_ZERO这个配置最好在恢复备份数据后取消掉，因为如果代码中新增语句主键是0将报错：主键在0这个值上冲突】
 	
 3.恢复后的数据中文乱码问题	
 	1) mysql -uroot -p --default-character-set=utf8 [dbname] < [bakup.sql] 		实测不行
