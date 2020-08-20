@@ -1,0 +1,7 @@
+
+如：
+	np_goods商品表 主键goods_id，商品名goods_name，分类cat_id。需要查询出商品名和分类id都相等的重复数据
+
+select g1.* from np_goods g1 inner join np_goods g2 where g1.goods_name = g2.goods_name and g1.cat_id = g2.cat_id and g1.goods_id != g2.goods_id;
+或
+select g1.* from np_goods g1, np_goods g2 where g1.goods_name = g2.goods_name and g1.cat_id = g2.cat_id and g1.goods_id != g2.goods_id;

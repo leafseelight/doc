@@ -1,0 +1,66 @@
+#安装gcc make
+yum -y install gcc make
+
+------------------------------------------------------------------------------------
+
+#安装libfastcommon
+wget https://github.com/happyfish100/libfastcommon/archive/V1.0.38.tar.gz
+
+tar -zxvf V1.0.38.tar.gz -C /usr/local/
+
+cd /usr/local/libfastcommon-1.0.38
+
+./make.sh
+./make.sh install
+
+-------------------------------------------------------------------------------------
+
+#安装FastDFS
+wget https://github.com/happyfish100/fastdfs/archive/V5.11.tar.gz
+
+tar -zxvf V5.11.tar.gz -C /usr/local/
+
+cd /usr/local/fastdfs-5.11
+
+./make.sh
+./make.sh install
+
+	#查看fastdfs可执行命令
+	#ls -la /usr/bin/fdfs*
+	
+	
+#Tracer服务
+	配置/etc/fdfs/tracker.conf
+	修改base_path的值，如/home/fastdfs/tracker (base_path是tracker存储data和log的日志，必须提前创建好目录)
+	#fdfs_trackerd服务默认端口22122
+	
+	#启动
+	/usr/bin/fdfs_trackerd /etc/fdfs/tracker.conf start
+	
+#Storage服务
+	配置/etc/fdfs/storage.conf
+	修改base_path的值，如/home/fastdfs/storage (base_path是storage存储data和log的日志，必须提前创建好目录)
+	#fdfs_trackerd服务默认端口23000 同一个组的storage端口号必须一致
+	group_name=group1  #默认组名，根据实际情况修改
+	store_path_count=1  #存储路径个数，需要和store_path个数匹配
+	store_path0=/home/fastdfs/file  #如果为空，则使用base_path
+	tracker_server=ip:22122 #配置该storage监听的tracker的ip和port，ip不能是127.0.0.1
+	
+	#启动
+	/usr/bin/fdfs_storaged /etc/fdfs/storage.conf start
+	
+	
+-----------------------------------------------------------------------------------------
+结合nginx
+server {
+  listen 10000;
+  server_name file.bluecat.cc;
+
+  location /bluecat/M00 {
+        alias /home/fastdfs/file/data;
+  }
+
+}
+
+或者使用fastdfs-nginx-module
+	
