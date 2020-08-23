@@ -1,0 +1,26 @@
+Buffer是全局对象，堆外内存，不由V8分配。
+在C++层面进行申请内存，在js中分配。
+
+slab分配机制
+	动态内存管理机制
+	slab是一块申请好的固定大小的内存区域，有三种状态：full(完全分配状态)、partial(部分分配状态)、empty(没有被分配状态)
+	
+	node中以8k为界限来区分Buffer是大对象还是小对象，8k就是每个slab的大小值
+	
+分配小对象
+	如果指定Buffer的大小小于8Kb，会分配一个8k的局部变量pool作为中间对象，新申请的SlowBuffer指向它
+	一个slab可能会分配给多个Buffer对象使用。
+	一个字节的Buffer对象 如果不释放 也会造成整个8KB的内存没有被释放
+分配大对象
+	超过8KB的Buffer对象，将直接分配一个SlowBuffer对象作为slab单元，这个slab单元会被这个大Buffer对象独占
+	
+
+SlowBuffer是C++中定义的，其所占内存不在V8的堆中
+
+Buffer的转换
+	支持的编码类型只有ASCII UTF-8 Base64 Binery Hex等几种
+	
+fs读取文件的data事件，每次读取的内容实际是Buffer对象而不是字符串，这样对于输入流中有宽字节编码时，就会产生乱码
+所以要对输入流setEncoding或者正确拼接多个Buffer(用数组将所有Buffer接收存储之后最终按照正确编码转成字符串)
+
+网络传输使用二进制数据，即转成Buffer，比直接传输字符串性能高一倍。可以考虑将静态内容使用Buffe的方式传输	

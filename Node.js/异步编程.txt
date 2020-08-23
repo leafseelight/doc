@@ -23,3 +23,31 @@
 	
 	Node的核心模块中有半数继承了events模块，通过util模块的inherits方法可以继承
 	once()方法可以使侦听器(回调函数)只执行一次
+	
+	..
+	
+Promise/Deferred模式
+	【侧重于封装异步的调用部分】
+	【回调函数一定程度上使得函数的return和throw功能丧失】
+	Promise：传递异步操作的消息。3种状态：Pending进行中/未完成态，Resolved/Fulfilled已完成/完成态，Rejected已失败/失败态
+			 Promise无法取消，一旦新建就会立即执行。所以一般会包在一个函数中，需要时去调用这个函数。
+			 Promise 构造函数接受一个函数作为参数，该函数的两个参数分别是 resolve 方法和 reject 方法
+			 如果异步操作成功，则用 resolve 方法将 Promise 对象的状态，从「未完成」变为「成功」（即从 pending 变为 resolved）；
+			 如果异步操作失败，则用 reject 方法将 Promise 对象的状态，从「未完成」变为「失败」（即从 pending 变为 rejected）。
+
+			 
+	Deferred：延迟对象
+	Promise通过封装异步调用，实现了success和error的分离以及逻辑处理延迟，使得回调函数相对优雅。
+	
+	Deferred是Node实现同步的一个方式
+	
+流程控制库	
+	【侧重于异步执行结果的保存以及回调函数的注入】
+	尾触发与next
+	async
+		series()方法实现一组任务的串行执行，无依赖的异步串行执行
+		parallel()方法并行执行异步操作
+		waterfall()有依赖的异步串行执行
+		auto()自动
+	Step
+		
