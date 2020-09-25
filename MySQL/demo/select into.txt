@@ -1,0 +1,31 @@
+DELIMITER //
+CREATE PROCEDURE `copyNewData`(IN time_arg varchar(32))
+BEGIN
+
+	#说明：
+	#1.time_arg参数必须是datetime时间格式且必须用单引号括起来(如'2020-09-24' 或'2020-09-24 17:08:37')，注意生产环境执行的新增语句不要有重复数据。
+	#2.脚本执行过程和该存储过程不要同时执行 避免死锁
+
+	#select time_arg;
+
+	#清空sn_goods_bak表并将新增商品数据复制到sn_goods_bak表中
+	truncate table sn_goods_bak;
+	insert into sn_goods_bak select * from sn_goods where create_time >= time_arg;
+
+	#清空sn_goods_img_bak表并将新增商品对应的图片数据复制到sn_goods_img_bak表中
+	truncate table sn_goods_img_bak;
+	insert into sn_goods_img_bak select * from sn_goods_img b where b.create_time >= time_arg and b.skuid in (select g.skuid from sn_goods g where g.create_time >= time_arg);
+
+	#清空sn_goods_param_bak表并将新增商品对应的属性数据复制到sn_goods_param_bak表中
+	truncate table sn_goods_param_bak;
+	insert into sn_goods_param_bak select * from sn_goods_param b where b.create_time >= time_arg and b.goods_skuid in (select g.skuid from sn_goods g where g.create_time >= time_arg);
+
+	#清空sn_prod_cluster_bak表并将新增商品对应的簇数据复制到sn_prod_cluster_bak表中
+	truncate table sn_prod_cluster_bak;
+	insert into sn_prod_cluster_bak select * from sn_prod_cluster b where b.create_time >= time_arg and b.skuId in (select g.skuid from sn_goods g where g.create_time >= time_arg);
+
+END // 
+DELIMITER ;
+
+
+

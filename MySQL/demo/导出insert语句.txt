@@ -1,0 +1,10 @@
+select 
+concat ('INSERT INTO `sn_goods` (`skuid`, `cmmdtyType`) VALUES (\'',skuid,'\',  \'',cmmdtyType, '\');')
+from sn_goods 
+where create_time >= '2020-09-24'
+into outfile '/tmp/a.txt'
+lines terminated by '\r\n';
+
+
+
+#concat有长度限制
