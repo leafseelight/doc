@@ -1,0 +1,65 @@
+zookeeper启动参数(linux系统)分析java启动
+
+	-D：设置系统属性 在程序中可以通过System.getProperty()获得
+	-cp：即-classpath，表示指定运行所依赖的其他类的路径(绝对路径)或类库和jar包，linux环境下需要用:分隔开。
+		 一般使用-cp时的启动方式为java -cp {依赖的jar集合} {主启动类}
+		 而使用java -jar x.jar时会使用jar包中的清单文件META-INF\MANIFEST.MF，清单文件的Main－Class属性指定的入口类。
+		 -jar方式不需要指定依赖的其他jar包
+		 所以有时java -jar启动错误就是因为jar包中没有清单文件或者清单文件中没有主启动类，可能打jar包的方式不正确
+
+java 
+	-Dzookeeper.log.dir=/usr/local/apache-zookeeper-3.6.2-bin/bin/../logs 
+	-Dzookeeper.log.file=zookeeper-root-server-localhost.bluecatlee.log 
+	-Dzookeeper.root.logger=INFO,CONSOLE 
+	-XX:+HeapDumpOnOutOfMemoryError 				#oom时dump堆内存快照
+	-XX:OnOutOfMemoryError=kill -9 %p 				#在jvm中 %p会被替换为当前jvm的pid 因此这个选项表示oom时杀死jvm进程自身 用可用ExitOnOutOfMemory选项替换
+	-cp /usr/local/apache-zookeeper-3.6.2-bin/bin/../zookeeper-server/target/classes:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../build/classes:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../zookeeper-server/target/lib/*.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../build/lib/*.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/zookeeper-prometheus-metrics-3.6.2.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/zookeeper-jute-3.6.2.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/zookeeper-3.6.2.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/snappy-java-1.1.7.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/slf4j-log4j12-1.7.25.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/slf4j-api-1.7.25.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/simpleclient_servlet-0.6.0.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/simpleclient_hotspot-0.6.0.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/simpleclient_common-0.6.0.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/simpleclient-0.6.0.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/netty-transport-native-unix-common-4.1.50.Final.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/netty-transport-native-epoll-4.1.50.Final.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/netty-transport-4.1.50.Final.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/netty-resolver-4.1.50.Final.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/netty-handler-4.1.50.Final.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/netty-common-4.1.50.Final.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/netty-codec-4.1.50.Final.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/netty-buffer-4.1.50.Final.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/metrics-core-3.2.5.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/log4j-1.2.17.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/json-simple-1.1.1.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/jline-2.14.6.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/jetty-util-9.4.24.v20191120.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/jetty-servlet-9.4.24.v20191120.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/jetty-server-9.4.24.v20191120.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/jetty-security-9.4.24.v20191120.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/jetty-io-9.4.24.v20191120.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/jetty-http-9.4.24.v20191120.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/javax.servlet-api-3.1.0.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/jackson-databind-2.10.3.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/jackson-core-2.10.3.jar:
+		/usr/local/apachezookeeper-3.6.2-bin/bin/../lib/jackson-annotations-2.10.3.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/commons-lang-2.6.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/commons-cli-1.2.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../lib/audience-annotations-0.5.0.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../zookeeper-*.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../zookeepe-server/src/main/resources/lib/*.jar:
+		/usr/local/apache-zookeeper-3.6.2-bin/bin/../conf: 
+		
+	-Xmx1000m 												#设置jvm的最大内存
+	-Dcom.sun.management.jmxremote 
+	-Dcom.sun.management.jmxremote.local.only=false 		#允许远程监控
+
+org.apache.zookeeper.server.quorum.QuorumPeerMain 			 #主启动类 
+
+/usr/local/apache-zookeeper-3.6.2-bin/bin/../conf/zoo.cfg    #参数 会作为main方法的参数传入

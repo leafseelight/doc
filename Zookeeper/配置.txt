@@ -1,0 +1,81 @@
+#心跳间隔时间 默认2000ms
+#zk中的一个时间单元 很多时间配置都是以此为基础的
+tickTime=2000
+
+#集群中从服务器Flower与主服务器Leader之间初始连接时最多能容忍的心跳数
+#F初始连接时需要同步L的数据 一般zk数据不是特别大的时候不需要修改
+initLimit=10
+
+#集群中F与L之间的请求和应答最多能容忍的心跳数
+syncLimit=5
+
+#存放快照的目录 不要使用/tmp目录
+#zookeeper启动时会在当前目录下生成一个zookeeper_server.pid文件 
+#集群模式下在这个目录下需要配置myid文件
+#默认情况下 事务日志也会存在该目录下 事务日志的写性能直接影响zk性能 建议同时配置dataLogDir
+dataDir=/data/zookeeper
+
+#指定事务日志存放路径 尽量配置单独的磁盘或挂载点
+dataLogDir=/data/zookeeper/log
+
+#端口 用于给客户端连接
+clientPort=2181
+
+#单个客户端与单台服务器之间的连接数的限制，是ip级别的。0表示不限制
+#不是单台ZK对所有客户端的连接数限制
+#maxClientCnxns=60
+
+#指定了要保留的文件数目 默认3个 与下面的参数结合使用
+#autopurge.snapRetainCount=3
+
+#自动清理事务日志和快照文件的时间间隔(小时) 0表示不开启这个功能，默认是0
+#autopurge.purgeInterval=1
+
+#metricsProvider.className=org.apache.zookeeper.metrics.prometheus.PrometheusMetricsProvider
+#metricsProvider.httpPort=7000
+#metricsProvider.exportJvmInfo=true
+
+#集群配置
+#x与myid文件中的值是一致的 如1表示第1号机器
+#右边可以配置两个端口 第一个端口用于F和L之间的数据同步和其他通信 第二个端口用于Leader选举过程中的通信
+#server.x=[hostname]:nnnnn[:nnnnn]
+server.1=172.17.128.31:2888:3888
+server.2=172.17.128.32:2888:3888
+server.3=172.17.128.33:2888:3888
+
+#机器分组和权限设置
+#group.x=nnnnn[:nnnnn]weight.x=nnnnn
+
+
+#---------其他---------
+#最大请求堆积数，提高系统吞吐性，但是得防止内存溢出因而需要限制上限
+#globalOutstandingLimit=1000
+
+#预先开辟磁盘空间，用于后续写入事务日志。默认是64M，每个事务日志大小就是64M
+#preAllocSize
+
+#每进行snapCount次事务日志输出后，触发一次快照(snapshot), 
+#此时，ZK会生成一个snapshot.*文件，同时创建一个新的事务日志文件log.*。
+#默认是100000.（真正的代码实现中，会进行一定的随机数处理，以避免所有服务器在同一时间进行快照而影响性能）
+#snapCount
+
+#Session超时时间限制，如果客户端设置的超时时间不在这个范围，那么会被强制设置为最大或最小时间。
+#默认的Session超时时间是在2 *  tickTime ~ 20 * tickTime 这个范围
+#minSessionTimeout
+#maxSessionTimeout
+
+#Leader默认接收客户端连接并提供正常的读写服务
+#如果只想让Leader在集群中协调，可以设置为no
+#leaderServes
+
+#Leader选举过程中 打开一次连接的超时时间 默认是5s
+#cnxTimeout
+
+#对所有客户端请求都不做ACL检查
+#skipACL
+
+#是否需要在事务日志提交的时候调用 FileChannel.force来保证数据完全同步到磁盘
+#forceSync
+
+#开启四字命令
+#4lw.commands.whitelist=*

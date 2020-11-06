@@ -1,0 +1,171 @@
+主要应用
+	统一命名服务、状态同步服务、集群管理、分布式应用配置项的管理等
+
+数据结构
+	类似目录节点树
+	
+	默认节点:
+	/zookeeper
+		/config
+		/quota
+	
+	每个子目录项如 NameService 都被称作为 znode，这个 znode 是被它所在的路径唯一标识，如 Server1 这个 znode 的标识为 /NameService/Server1
+	znode 可以有子节点目录，并且每个 znode 可以存储数据，注意 EPHEMERAL 类型的目录节点不能有子节点目录
+	znode 是有版本的，每个 znode 中存储的数据可以有多个版本，也就是一个访问路径中可以存储多份数据
+	znode 可以是临时节点，一旦创建这个 znode 的客户端与服务器失去联系，这个 znode 也将自动删除，Zookeeper 的客户端和服务器通信采用长连接方式，每个客户端和服务器通过心跳来保持连接，这个连接状态称为 session，如果 znode 是临时节点，这个 session 失效，znode 也就删除了
+	znode 的目录名可以自动编号，如 App1 已经存在，再创建的话，将会自动命名为 App2
+	znode 可以被监控，包括这个目录节点中存储的数据的修改，子节点目录的变化等，一旦变化可以通知设置监控的客户端，这个是 Zookeeper 的核心特性，Zookeeper 的很多功能都是基于这个特性实现的
+	
+
+(以下基于3.6.2版本)	
+服务端
+	./zkServer.sh [--config <conf-dir>] {start|start-foreground|stop|version|restart|status|print-cmd}
+	
+客户端工具
+	bin/zkCli.sh [-server localhost:2181]
+	
+	客户端命令：
+	
+		#查看客户端版本信息
+		version 
+		
+		#退出
+		quit 
+		
+		#查看节点包含的内容 必须指定path
+		# -s 显示详细信息 相当于state path 
+		# -R 递归显示左右子节点
+		ls [-s] [-w] [-R] path
+		
+		#创建节点 -e临时节点 -s有序节点
+		#不能一次性创建多级节点
+		create [-s] [-e] [-c] [-t ttl] path [data] [acl]
+		
+		#获取节点的值
+		get [-s] [-w] path
+		
+		#修改节点数据
+		set [-s] [-v version] path data
+		
+		#删除节点 -v指定版本
+		#节点下有子节点存在时无法删除，需要使用deleteall
+		delete [-v version] path
+		
+		#删除全部节点
+		deleteall path [-b batch size]
+		
+		#查看节点状态
+		stat [-w] path
+		
+		#查看历史命令 
+		history 
+		
+		#重新执行某个命令 每次执行命令 cmdno会递增 可以通过history查看历史命令的cmdno
+		redo cmdno
+		
+		#连接zk服务端
+		connect host:port
+		#关闭与zk服务端的连接
+		close 
+		
+		#显示配额
+		listquota path
+		#设置配额 -n子节点个数  -b节点最大长度
+		setquota -n|-b val path
+		#删除配额
+		delquota [-n|-b] path
+		
+		#节点认证，如addauth digest username:password
+		addauth scheme auth
+		
+		#设置、获取acl
+		getAcl [-s] path
+		setAcl [-s] [-v version] [-R] path acl
+		
+		#获取节点的子节点数
+		getAllChildrenNumber path
+		#获取节点的临时节点
+		getEphemerals path
+		
+		config [-c] [-w] [-s]
+		reconfig [-s] [-v version] [[-file path] | [-members serverID=host:port1:port2;port3[,...]*]] | [-add serverId=host:port1:port2;port3[,...]]* [-remove serverId[,...]*]
+		
+		#添加监听，可选模式[PERSISTENT(不监听子节点), PERSISTENT_RECURSIVE(默认，递归监听子节点)]
+		addWatch [-m mode] path 
+		removewatches path [-c|-d|-a] [-l]
+		#设置和显示监视状态
+		printwatches on|off
+		
+		#强制同步
+		sync path
+	
+
+	节点状态
+		cZxid = 0xb										#节点创建时的xid
+		ctime = Fri Nov 06 11:25:38 CST 2020			#节点创建时间
+		mZxid = 0x10									#节点最近一次更新时的xid
+		mtime = Fri Nov 06 13:23:41 CST 2020			#节点最近一次的更新时间
+		pZxid = 0xd										#节点或子节点最后一次创建或删除对应的xid
+		cversion = 2									#节点数据更新次数
+		dataVersion = 3									#本节点数据更新次数
+		aclVersion = 0									#节点acl的更新次数
+		ephemeralOwner = 0x0							#如果是临时节点，表示与该节点绑定的session id。0(16进制为0x0)表示非临时节点
+		dataLength = 4									#节点数据长度
+		numChildren = 2									#子节点个数
+		
+	ACL
+		Acl由三部分构成：1为scheme，2为user，3为permission，一般情况下表示为scheme:id:permissions
+		scheme和id
+			world: 它下面只有一个id, 叫anyone, world:anyone代表任何人，zookeeper中对所有人有权限的结点就是属于world:anyone的
+			auth: 它不需要id, 只要是通过authentication的user都有权限（zookeeper支持通过kerberos来进行authencation, 也支持username/password形式的authentication)
+			digest: 它对应的id为username:BASE64(SHA1(password))，它需要先通过username:password形式的authentication
+			ip: 它对应的id为客户机的IP地址，设置的时候可以设置一个ip段，比如ip:192.168.1.0/16, 表示匹配前16个bit的IP段
+			super: 在这种scheme情况下，对应的id拥有超级权限，可以做任何事情(cdrwa)
+
+		permissions
+			CREATE(c): 创建权限，可以在在当前node下创建child node
+			DELETE(d): 删除权限，可以删除当前的node
+			READ(r): 读权限，可以获取当前node的数据，可以list当前node所有的child nodes
+			WRITE(w): 写权限，可以向当前node写数据
+			ADMIN(a): 管理权限，可以设置当前node的permission
+
+
+
+其他操作
+	linux四字命令，需要结合nc命令适用，且zookeeper配置文件需要开启权限
+	
+	#查看节点状态是follower还是leader
+	echo stat | nc 127.0.0.1 2181
+	
+	#是否启动了服务 如果响应imok则表示启动了
+	echo ruok | nc 127.0.0.1 2181
+	
+	#列出服务配置的详细信息
+	echo conf | nc 127.0.0.1 2181
+	
+	#列出服务环境的详细信息
+	echo envi | nc 127.0.0.1 2181
+	
+	#列出未处理的请求
+	echo reqs | nc 127.0.0.1 2181
+	
+	
+心跳机制
+	客户端与服务端连接成功后是一次会话session，会话有其超时时间 【连接断开session不是立马失效】
+	客户端向服务端ping包来维持会话
+	
+节点类型
+	持久的（persistent）
+	临时的（ephemeral）						【session过期后 临时节点会被删除】【临时节点不能创建子节点】
+	持久有序的（persistent_sequential）
+	临时有序的（ephemeral_sequential）		【常用于实现分布式锁】
+	
+watcher机制
+	客户端将watcher注册到服务端，同时将watcher对象保存到客户端的watch管理器中
+	服务端监听到数据变化(触发事件)时会主动通知客户端，客户端的watch管理器会触发相关的watcher来回调
+
+	被订阅对象发生变化时会异步通知客户端，不需要客户端轮询。是一种分布式场景下的观察者模式的实现
+	watcher是一次性的 触发了就会立即删除 再次使用需要重新注册
+	【老版本get path watch这种方式注册只能触发一次监听？实测addWatch方式添加的监听是可以一直触发的】
+	watcher回调是顺序串行执行的，要避免回调逻辑过于复杂阻塞其他watcher的回调
+	只监听数据变化，不监听变化的前后内容
