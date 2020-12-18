@@ -1,0 +1,81 @@
+
+入口
+ObjectMapper
+	public String writeValueAsString(Object value)
+		使用SegmentedStringWriter作为默认的Writer
+		创建WriterBasedJsonGenerator作为默认的Json生成器
+		
+		protected final void _writeValueAndClose(JsonGenerator g, Object value)
+			创建DefaultSerializerProvider并配置，然后调用其serializeValue方法
+		
+		
+DefaultSerializerProvider	
+	public void serializeValue(JsonGenerator gen, Object value) 序列化值 封装了处理空值和rootName等通用逻辑
+		根据具体的值类型获取对应的JsonSerializer实现
+		private final void _serialize(JsonGenerator gen, Object value, JsonSerializer<Object> ser)
+			调用具体的json序列化器的序列化方法
+			
+		
+JsonSerializer<T>		
+	public void serialize(Object value, JsonGenerator g, SerializerProvider provider)	具体序列化器实现	 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+#################################################################################################	
+【Json生成器】	
+JsonGenerator
+	JsonGenerator enable(JsonGenerator.Feature var1)				// 配置
+	JsonGenerator disable(JsonGenerator.Feature var1)
+	JsonGenerator configure(JsonGenerator.Feature f, boolean state)
+	
+	writeStartArray()			// 写[
+	writeEndArray()				// 写]
+	writeStartObject()			// 写{
+	writeEndObject()			// 写}
+	writeFieldName(String var1) // 写字段key
+	
+	writeString(String var1)	// 写各种类型的值
+	writeNumber(int var1)
+	writeNumber(long var1)
+	writeBoolean(boolean var1)
+	writeNull()
+	writeObject(Object var1)
+	writeTree(TreeNode var1)
+	 
+	flush()
+	close()	
+	
+	内部枚举类Feature的值：				【JsonGenerator的特性】
+	AUTO_CLOSE_TARGET(true),			#调用close方法时，关闭目标资源
+	AUTO_CLOSE_JSON_CONTENT(true),
+	FLUSH_PASSED_TO_STREAM(true),
+	WRITE_BIGDECIMAL_AS_PLAIN(false),	是否将数值型写成字符串 否
+	STRICT_DUPLICATE_DETECTION(false),	
+	IGNORE_UNKNOWN(false);
+	
+GeneratorBase extends JsonGenerator	
+JsonGeneratorImpl extends GeneratorBase
+
+WriterBasedJsonGenerator extends JsonGeneratorImpl    json生成器的具体实现
+	protected char[] _outputBuffer;			// 写的数据存在字符数组中
+	protected final Writer _writer;			// 封装了一个Writer，json生成器调用close()方法的时候会把缓冲的数据写到writer中
+
+
+####################################################################################################	
+【Json序列化器】
+JsonSerializer<T>
+	void serialize(T var1, JsonGenerator var2, SerializerProvider var3) 	序列化，子类实现。子类会用到Json生成器的方法
+
+StdSerializer<T> extends JsonSerializer<T>
+StdScalarSerializer<T> extends StdSerializer<T>
+
+BooleanSerializer extends StdScalarSerializer<Object>	布尔序列化器，序列化实现就是调用json生成器的writeBoolean(val);
+
+StringSerializer extends StdScalarSerializer<Object>	字符串序列化器，实现就是调用json生成器的writeString((String)value)
+		

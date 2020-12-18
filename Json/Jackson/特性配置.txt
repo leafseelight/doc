@@ -1,0 +1,121 @@
+PropertyNamingStrategy
+	命名策略
+	结合@JsonNaming注解使用
+	
+	SNAKE_CASE				//蛇形(下划线) 小写
+	UPPER_CAMEL_CASE		//驼峰(首字母大写)
+	LOWER_CAMEL_CASE		//驼峰(首字母小写) 默认
+	LOWER_CASE				//全小写
+	KEBAB_CASE				//中划线 小写
+	LOWER_DOT_CASE			//点号分隔 小写
+
+
+JsonInclude.Include
+	排除规则
+	使用@JsonInclude注解
+	或者全局配置：objectMapper.setSerializationInclusion(Include incl)
+
+
+	ALWAYS,											// 默认总是包含所有字段
+	NON_NULL,										// 序列化时不包含null值的字段
+	NON_ABSENT,										// null值字段、引用类型空引用(如AtomicReference空引用、Optional空引用) 将被排除
+	NON_EMPTY,										// null值字段、空串字段、空引用的应用类型字段 将被排除
+	NON_DEFAULT,									// 所有以上空的 以及默认值字段都会被排除
+	CUSTOM,											// 自定义 结合filter
+	USE_DEFAULTS;
+
+
+SerializationFeature
+	序列化特性
+
+	WRAP_ROOT_VALUE(false),							// 套一层根节点 根节点key一般默认是类名或者类型名
+													// 启用后结合@JsonRootName注解自定义根节点名称
+													
+    INDENT_OUTPUT(false),							// 缩进输出 即格式化
+	
+    FAIL_ON_EMPTY_BEANS(true),						// 序列化空bean默认会报错，设为false可以序列化为{}
+													// 没有setter getter的bean是空bean，因为框架的BeanSerializer需要getter/setter方法
+   
+    FAIL_ON_SELF_REFERENCES(true),					// 默认存在自引用时会抛出异常
+													// 自引用是自己引用自己 同一个对象 不仅仅是类型相同
+													
+    WRAP_EXCEPTIONS(true),							// 是否包装序列化过程中遇到的异常
+													// 就是在顶级异常的msg信息中展示异常出现的地方，更详细
+													
+    FAIL_ON_UNWRAPPED_TYPE_IDENTIFIERS(true),		// 遇到未知属性时报错
+	
+    WRITE_SELF_REFERENCES_AS_NULL(false),			// 为true表示存在自引用时 值设为null。前提是禁用FAIL_ON_SELF_REFERENCES才有效
+	
+    CLOSE_CLOSEABLE(false),							// 写完是否关闭资源。 数据是可关闭资源(实现了Closeable接口)时使用
+	
+    FLUSH_AFTER_WRITE_VALUE(true),					// 写完刷出缓冲区
+	
+    WRITE_DATES_AS_TIMESTAMPS(true),				// 将Date类型写成时间戳(13位毫秒值),否则是标准UTC时间格式
+	
+    WRITE_DATE_KEYS_AS_TIMESTAMPS(false),			// Date类型是key时，key的值是否写成时间戳
+	
+    WRITE_DATES_WITH_ZONE_ID(false),				// 时区序列化为+08:00形式
+	
+    WRITE_DURATIONS_AS_TIMESTAMPS(true),			// 持续时间序列化为时间戳.. 什么是持续时间？ 实测Duration类型的值无效
+	
+    WRITE_CHAR_ARRAYS_AS_JSON_ARRAYS(false),		// 将字符数组写成json数组 默认是写成一个字符串
+	
+    WRITE_ENUMS_USING_TO_STRING(false),				// 序列化枚举类型时使用toString()方法
+	
+    WRITE_ENUMS_USING_INDEX(false),					// 序列化枚举类型时使用枚举项的索引值
+	
+    WRITE_ENUM_KEYS_USING_INDEX(false),				// 枚举类型作为key是使用枚举项的索引值
+	
+    WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED(false),		// 集合或数组中只有一个元素时 拆包
+	
+    WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS(true),		// 时间序列化成纳秒
+	
+    ORDER_MAP_ENTRIES_BY_KEYS(false),				// map按key排序  最好不要依赖json框架的map排序功能
+	
+    EAGER_SERIALIZER_FETCH(true),					// 饥饿式获取序列化器
+	
+    USE_EQUALITY_FOR_OBJECT_ID(false);
+	
+	
+DeserializationFeature 
+	反序列化特性
+
+    USE_BIG_DECIMAL_FOR_FLOATS(false),
+    USE_BIG_INTEGER_FOR_INTS(false),
+    USE_LONG_FOR_INTS(false),
+    USE_JAVA_ARRAY_FOR_JSON_ARRAY(false),
+    FAIL_ON_UNKNOWN_PROPERTIES(true),					// 遇到未知字段抛出异常 可以关闭
+    FAIL_ON_NULL_FOR_PRIMITIVES(false),
+    FAIL_ON_NUMBERS_FOR_ENUMS(false),
+    FAIL_ON_INVALID_SUBTYPE(true),
+    FAIL_ON_READING_DUP_TREE_KEY(false),
+    FAIL_ON_IGNORED_PROPERTIES(false),
+    FAIL_ON_UNRESOLVED_OBJECT_IDS(true),
+    FAIL_ON_MISSING_CREATOR_PROPERTIES(false),
+    FAIL_ON_NULL_CREATOR_PROPERTIES(false),
+    FAIL_ON_MISSING_EXTERNAL_TYPE_ID_PROPERTY(true),
+    FAIL_ON_TRAILING_TOKENS(false),
+    WRAP_EXCEPTIONS(true),
+    ACCEPT_SINGLE_VALUE_AS_ARRAY(false),
+    UNWRAP_SINGLE_VALUE_ARRAYS(false),
+    UNWRAP_ROOT_VALUE(false),
+    ACCEPT_EMPTY_STRING_AS_NULL_OBJECT(false),
+    ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT(false),
+    ACCEPT_FLOAT_AS_INT(true),
+    READ_ENUMS_USING_TO_STRING(false),							
+    READ_UNKNOWN_ENUM_VALUES_AS_NULL(false),
+    READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE(false),
+    READ_DATE_TIMESTAMPS_AS_NANOSECONDS(true),
+    ADJUST_DATES_TO_CONTEXT_TIME_ZONE(true),
+    EAGER_DESERIALIZER_FETCH(true);	
+	
+	
+JsonGenerator.Feature {
+	Json生成器特性
+	
+	AUTO_CLOSE_TARGET(true),
+	AUTO_CLOSE_JSON_CONTENT(true),
+	FLUSH_PASSED_TO_STREAM(true),
+	WRITE_BIGDECIMAL_AS_PLAIN(false),			// 写bigdecimal类型的值时使用toPlainString
+	STRICT_DUPLICATE_DETECTION(false),
+	IGNORE_UNKNOWN(false);	

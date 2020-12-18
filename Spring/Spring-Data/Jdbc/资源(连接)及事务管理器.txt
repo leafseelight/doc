@@ -1,0 +1,19 @@
+ResourceHolder	资源容器 定义了基本的重置 解绑 判断是否为空的方法
+
+ResourceHolderSupport	资源容器支持类 
+	implements ResourceHolder
+	定义了对资源的基本操作：rollbackOnly回滚标识 deadline超时时间 referenceCount资源被引用的次数
+
+ConnectionHolder
+	extends ResourceHolderSupport
+	定义了连接的基本操作：获取连接 释放连接  保存点
+
+
+
+TransactionManager 事务管理器 (空接口)
+
+PlatformTransactionManager 平台事务管理器 提供基本功能：获取事务，提交，回滚
+	extends TransactionManager
+	
+ResourceTransactionManager 资源事务管理器 扩展功能：获取资源工厂
+	extends PlatformTransactionManager	

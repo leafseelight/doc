@@ -1,0 +1,8 @@
+RowMapper<T>	行映射器 定义了基本的映射数据行的方法
+	T mapRow(ResultSet var1, int var2) throws SQLException;
+	
+	
+ColumnMapRowMapper implements RowMapper<Map<String, Object>>  行映射为Map， key为列名,value为列值	【注意value是Object类型】
+
+SingleColumnRowMapper<T> implements RowMapper<T> 只映射一列，处理基本数据类型的 不是处理JavaBean的
+	如果列值和需要映射成的类型不一致 会使用ConversionService(扩展点)进行转换 不能转换则抛出异常
