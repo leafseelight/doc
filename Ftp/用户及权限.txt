@@ -1,0 +1,32 @@
+匿名用户ftp
+	默认主目录 /var/ftp			(root 755)  
+	默认下载目录 /var/ftp/pub	(root 755)
+	匿名用户没有对默认目录的写权限，不能创建/删除 文件/文件夹
+	匿名用户使用ftp或anonymous登陆名都可以登陆，对应在服务器上的用户是ftp
+	
+	相关配置：
+	anonymous_enable=YES			允许匿名用户	
+	write_enable=YES				允许写操作。这个是全局设置，对所有用户的
+	anon_upload_enable=YES			允许匿名用户上传文件
+	anon_mkdir_write_enable=YES		允许匿名用户创建目录
+	anon_other_write_enable			允许匿名用户删除文件，重命名文件/目录
+	ftp_username					定义匿名用户的用户名
+	no_anon_password				匿名登入时，是否询问密码，默认是。对于匿名用户登陆，询问密码时不管填什么都可以登陆成功。
+	anon_root						匿名用户的主目录，默认/var/ftp。 主目录不能是777权限
+	anon_umask						匿名用户上传的文件的权限掩码 默认077
+	
+	deny_email_enable				如果启用，必须提供/etc/vsftpd/banner_emails文件
+									如果是匿名登陆，需要按要求输入email address，如果输入的邮件地址在文件内，则不允许登陆
+	banned_email_file				默认/etc/vsftpd/banner_emails								
+	
+	
+	一般在/var/ftp目录下新建upload目录作为上传目录并修改目录权限(修改目录的其他用户权限可写或者直接修改目录的所属用户)
+	chmod o+w /var/ftp/upload
+	chown -R ftp /var/ftp/upload2
+	
+
+	
+	
+本地用户
+
+虚拟用户	

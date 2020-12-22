@@ -31,7 +31,8 @@ xferlog_enable=YES
 # 启用FTP数据端口的连接请求
 connect_from_port_20=YES
 
-# 可以给上传的匿名文件指定所属用户，不推荐指定root
+# 可以给上传的匿名文件(匿名用户的文件)指定所属用户，不推荐指定root
+# 指定的用户必须在系统中存在
 #chown_uploads=YES
 #chown_username=whoever
 

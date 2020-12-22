@@ -1,0 +1,44 @@
+
+PORT 主动模式
+
+	cmd下ftp客户端使用的就是主动模式，会提示使用PASV模式。
+	cmd不支持被动模式，所以使用quote PASV或literal PASV都是无效的。
+	
+PASV 被动模式	
+	
+
+-------------
+
+大部分命令是支持可交互方式的
+文件操作都是支持相对目录方式的，与基本的linux文件操作差不多
+文件操作如果有/ 也是相对于当前用户的工作目录的
+
+
+#打开链接。需要输入用户名密码
+#匿名用户的用户名是ftp，不需要密码
+open {ftpServerAddress}
+
+#关闭当前连接
+close
+
+#显示当前目录 基于工作目录的相对目录
+pwd
+
+#查看当前目录下的内容
+ls
+
+#切换目录
+cd {remote-directory}
+
+#创建目录
+mkdir {directory-name}
+
+#重命名文件
+rename {from_name} {to_name}
+
+#上传文件 如果不指定remote_file 则remote_file与local_file相同(注意：包括目录。目录一般不同，所以可能会上传失败)
+#上传同名文件会覆盖
+put {local_file} [{remote_file}]
+
+#删除文件
+delete {remote-file}
