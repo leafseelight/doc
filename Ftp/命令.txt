@@ -9,36 +9,50 @@ PASV 被动模式
 
 -------------
 
-大部分命令是支持可交互方式的
-文件操作都是支持相对目录方式的，与基本的linux文件操作差不多
-文件操作如果有/ 也是相对于当前用户的工作目录的
+ftp 
+	大部分命令是支持可交互方式的
+	文件操作都是支持相对目录方式的，与基本的linux文件操作差不多
+	文件操作如果有/ 也是相对于当前用户的工作目录的
 
+	ftp默认连接的是21端口 即ftp服务器的控制端口。传输数据时使用20端口(PORT模式的话)
 
-#打开链接。需要输入用户名密码
-#匿名用户的用户名是ftp，不需要密码
-open {ftpServerAddress}
+	help查看所有命令 
 
-#关闭当前连接
-close
+	#打开链接。需要输入用户名密码
+	#匿名用户的用户名是ftp，不需要密码
+	open {ftpServerAddress}
 
-#显示当前目录 基于工作目录的相对目录
-pwd
+	#关闭当前连接
+	close
 
-#查看当前目录下的内容
-ls
+	#显示当前目录 基于工作目录的相对目录
+	pwd
 
-#切换目录
-cd {remote-directory}
+	#查看当前目录下的内容
+	ls
 
-#创建目录
-mkdir {directory-name}
+	#切换目录
+	cd {remote-directory}
 
-#重命名文件
-rename {from_name} {to_name}
+	#创建目录
+	mkdir {directory-name}
 
-#上传文件 如果不指定remote_file 则remote_file与local_file相同(注意：包括目录。目录一般不同，所以可能会上传失败)
-#上传同名文件会覆盖
-put {local_file} [{remote_file}]
+	#重命名文件
+	rename {from_name} {to_name}
 
-#删除文件
-delete {remote-file}
+	#上传文件 如果不指定remote_file 则remote_file与local_file相同(注意：包括目录。目录一般不同，所以可能会上传失败)
+	#上传同名文件会覆盖
+	put {local_file} [{remote_file}]
+
+	#删除文件
+	delete {remote-file}
+	
+	
+sftp
+	sftp是ssh自带的 本身与vsftpd没有任何关系。
+	
+	大部分命令与ftp相同或类似
+	help查看所有命令
+	
+	sftp {host}
+	sftp连接的是22端口 因为是通过ssh(默认端口22)连接的。可以通过-P参数指定端口
