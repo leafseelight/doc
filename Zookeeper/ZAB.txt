@@ -1,0 +1,42 @@
+ZAB协议
+	原子广播协议。是Paxos算法的一种实现。
+	zk主要依赖ZAB实现分布式数据的一致性
+	
+	zookeeper使用一个单一的主进程处理客户端的事务写请求，当服务器状态发生变化后，集群采用ZAB协议以事务提案的方式广播到所有副本进程上，
+	为保证全局的序列变更，为每一个事务分配一个全局的递增编号xid
+	
+	在zookeeper集群中，对于任一节点，若客户端提交读请求，当前节点会根据自己保存的数据进行相应；
+	如果是写请求且当前节点不是leader，该节点会将写请求转发给leader，leader会以提案的方式广播该写操作，超过半数同意该操作，则提交写操作请求。
+	然后leader再次广播所有订阅者同步数据
+	
+	cp
+	zk选举过程需30-102s 这段时间服务不可用
+	zk集群中加一台Follower会导致写性能降低
+	
+zk集群中的三类角色
+	Leader		zk集群中写请求的唯一处理者，他收到写请求后会先根据请求发出提议，大多数服务统一之后记性数据修改。
+				同时，他还可以进行投票、发起决议，更新系统状态。
+	Follower	接收客户的读请求，将结果返回客户端；将写请求转给leader；在选举中投票。
+	Observer	无选leader投票权与写操作投票权的Follower，主要是为了协助Follower处理读请求。不能反馈ACK。
+	
+	其他：
+	Learner：	学习者，从Leader中同步数据的server，一般来说，Follower与Observer相对于Leader合称Learner。
+	QuorumServer：法定服务器，具有投票权的主机。在leader选举过程中参与选举与被选举的主机称为QuorumServer，不包括Observer，即Leader+Follower。
+	
+	
+zk集群中zkServer的三种模式
+	恢复模式：服务重启或Leader崩溃后进入恢复模式，恢复模式包含两个阶段：Leader选举阶段与初始化同步阶段。这两个阶段使zk恢复正常服务状态。
+	广播模式：广播模式分为两种：初始化广播与更新广播。
+			  Leader选举结束后，Leader将自己的epoch及自身拥有的但其他Server没有的事务广播给Learner，这是初始化广播。
+			  当集群正常时，当Leader事务提案被大多数Follower同意后，Leader会修改自身数据，并将修改后的数据广播给其他Learner，这是更新广播。
+	同步模式：同步模式分为两种：初始化同步及更新同步。
+	          Leader选举结束并发布初始化广播后，所有Learner会将Leader广播的事务及epoch同步到本地，这是初始化同步。
+			  当集群正常时，Leader发布更新广播后，所有Learner会将Leader广播的事务同步到本地，这是更新同步。
+			  
+三个数据
+	zxid	64位的Long类型，高32位表示epoch，低32位表示事务表示xid。即zxid包括epoch和xid两部分。
+
+	epoch	代表纪元、时代，每个Leader都会有一个不同的epoch，每一次新的选举结束后都会产生新的Leader与epoch，所有的zkServer都会更新epoch。
+
+	xid		zk的事务id，每一个写操作都是一个事务，会产生唯一的xid。xid为依次递增的流水号。
+			每一个写操作都是由Leader发起提案，由所有Follower进行表决，每个提案都会有zxid。

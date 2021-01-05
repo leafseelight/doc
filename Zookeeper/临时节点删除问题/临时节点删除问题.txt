@@ -1,0 +1,29 @@
+场景：zk某个目录下存有大量不同业务的临时节点数据(可能是分布式锁失效了),需要针对特定业务删除该目录下对应的临时节点，同一业务的临时节点的前缀一样
+
+zookeeper客户端命令不提供模糊查询的功能，如何精确找到所需节点并删除？批量删除也不支持模糊匹配
+
+	1.写程序 查找出所有符合正则规则的节点 然后删除。可以用python写成脚本
+	
+	2.客户端连接的时候是可以直接传入待执行命令的
+	  ./zkCli.sh ls /locks
+	  量大时输出到文件：./zkCli.sh ls /locks > /tmp/tmp.txt
+	  输出内容较多 一般所需的结果在最后一行或倒数第二行(无异常信息打印时在倒数第一行)
+	  tail -n 1 /tmp/tmp.txt > /tmp/tmp2.txt
+	  按逗号分隔转成列 然后匹配前缀 输出到新的文件
+	  cat tmp2.txt | awk 'BEGIN{RS=","}{print $1}' | grep ttt_lock > /tmp/tmp3.txt
+	  
+	  一站式命令：
+	  ./zkCli.sh ls /locks | tail -n 1 | sed 's/.//' | sed 's/.$//' | awk 'BEGIN{RS=","}{print $1}' | grep ttt_lock > /tmp/tmp4.txt
+	  ./zkCli.sh ls 【目录】 | tail -n 1 | sed 's/.//' | sed 's/.$//' | awk 'BEGIN{RS=","}{print $1}' | grep 【匹配字符串】 > 【输出文件】
+	  
+	  最后删除筛选出的节点
+	  #./zkCli.sh delete /ompc_locks/ykcloud.ocs.order.refund.agree6_0_902030054920888114
+	  循环删除
+	  while read -r line; do ./zkCli.sh delete /locks/${line} > /dev/null; done < /tmp/tmp4.txt; 
+	  while read -r line; do ./zkCli.sh delete 【目录】/${line} > /dev/null; done < 【文件】; 
+	  
+	
+	3.如果开启了四字命令 可以将dump信息输出到文件 然后从dump信息中获取准确的临时节点名称(文件内容处理) 然后通过删除命令一个一个删除
+	  [dump信息中包含未经处理的会话和临时节点]
+	  echo dump | nc localhost 2181 > /tmp/tmp.txt
+	  cat tmp.txt | grep '/locks/ttt_lock'				#获取/locks/ttt_lock前缀的节点
