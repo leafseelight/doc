@@ -1,0 +1,140 @@
+jdbc版
+	从下往上看
+
+AbstractPlatformTransactionManager
+	【创建事务】
+	TransactionStatus getTransaction(@Nullable TransactionDefinition definition)
+		如果事务定义参数为空 则创建一个默认的事务定义
+		获取事务对象txObject
+			如果是jdbc，返回DataSourceTransactionManager.DataSourceTransactionObject
+			如果允许嵌套事务 则会设置txObject允许保存点
+			从事务同步管理器TransactionSynchronizationManager中获取事务资源(存在本地变量中)，并设置到txObject。
+				这个资源就是数据库连接Connection，当然中间还有一层包装ConnectionHolder 可能是个代理类 		 【什么时候放进去的？看下面】
+			
+		如果事务是否已经存在transaction
+			就是txObject中存在ConnectionHolder且ConnectionHolder已经持有了Connection时
+			handleExistingTransaction 处理已存在的事务 
+				如果隔离级别是PROPAGATION_NEVER 抛出异常 
+				如果隔离级别是 PROPAGATION_NOT_SUPPORTED 以非事务方式运行 如果当前存在事务则将当前事务挂起
+					suspend(transaction)
+					prepareTransactionStatus
+				如果隔离级别是 PROPAGATION_REQUIRES_NEW 创建一个新的事务并挂起当前事务
+					suspend(transaction)
+					startTransaction
+				如果隔离级别是 PROPAGATION_NESTED 嵌套事务
+					如果允许使用保存点
+						prepareTransactionStatus
+					否则 
+						startTransaction
+			
+		否则如果传播机制是PROPAGATION_MANDATORY
+			抛出异常 (PROPAGATION_MANDATORY表示支持当前事务 如果没有事务则抛出异常)
+			
+		否则如果传播机制不是PROPAGATION_REQUIRED、PROPAGATION_REQUIRES_NEW、PROPAGATION_NESTED这类可能会创建新事务的
+			prepareTransactionStatus
+				newTransactionStatus
+				prepareSynchronization
+			
+		否则 
+			suspend(null)
+				如果事务同步集合中有值的话，
+					遍历每个事务同步对象TransactionSynchronization，并挂起   【从TransactionSynchronizationManager中获取事务同步集合(存在本地变量中)】
+						挂起的实现看TransactionSynchronization的实现，【对于jdbc是哪种实现？】
+					清空事务同步集合
+					返回的旧的事务同步集合等事务信息存在AbstractPlatformTransactionManager.SuspendedResourcesHolder中
+				否则 
+					返回null
+				
+			startTransaction 开启事务
+				newTransactionStatus 创建事务状态DefaultTransactionStatus对象
+				
+				doBegin 开启事务核心 子类实现
+					如果是jdbc实现
+						从事务对象txObject中获取连接对象connection
+						设置txObject的旧的隔离级别(从connection中获取)
+						设置txObject的事务是否只读属性
+						如果连接自动提交事务
+							设置txObject的mustRestoreAutoCommit为true 将connection的自动提交设置为false
+							
+						prepareTransactionalConnection
+							如果是只读 直接执行SET TRANSACTION READ ONLY
+						
+						如果是新的事务
+							绑定资源
+								数据源dataSource存到事务同步管理器TransactionSynchronizationManager的resources，key为数据源，value为连接(holder)
+								
+				prepareSynchronization
+					如果是新的事务 进行一些其他的操作 如将事务名称 隔离级别 是否只读等信息保存到事务管理器的变量中(都是线程本地变量)
+								
+			最终返回事务状态TransactionStatus	
+			
+			
+ ----------------------------------------
+	【提交】
+	void commit(TransactionStatus status)
+		如果事务状态已完成 抛出异常 
+		检查回滚标识
+			如果本地回滚标识为true
+				processRollback(defStatus, false)
+			如果是全局回滚
+				processRollback(defStatus, true)
+				
+		提交
+			processCommit(defStatus)		
+				prepareForCommit 准备提交 空实现
+				triggerBeforeCommit	提交前处理
+					TransactionSynchronization对象的before事件处理
+				triggerBeforeCompletion		
+					TransactionSynchronization对象的beforeCompletion事件处理
+			
+				如果事务有保存点
+					releaseHeldSavepoint 
+						释放安全点 清除持有的安全点对象
+				如果是新事务
+					直接提交 底层就是调用connection对象的commit
+				
+				【最后会处理unexpectedRollback
+					事务对象是默认事务对象且设置了rollbackOnly时 unexpectedRollback为true 此时会抛出异常UnexpectedRollbackException
+				】
+				
+				会catch不同的异常
+					如果是UnexpectedRollbackException
+						triggerAfterCompletion
+					如果是TransactionException 
+						...
+						
+			
+ -------------------------------------------
+ 【回滚】
+  void rollback(TransactionStatus status)
+	如果事务状态已完成 抛出异常 
+	processRollback(defStatus, false)
+		如果有保存点 回滚到保存点，回滚到保存掉也会调用底层connection的方法
+		否则如果是新事务
+			执行回滚 底层就是调用connection对象的rollback
+		否则 
+			如果有事务，设置事务对象的回滚标识为true		【注意 spring提供的传播机制的关键就是事务的回滚标识的处理】
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			

@@ -1,0 +1,92 @@
+TransactionDefinition 事务定义接口
+
+	#7种传播机制(spring提供的机制)
+	int PROPAGATION_REQUIRED = 0;		//支持当前事务 如果没有事务就创建一个新的事务(默认) 
+    int PROPAGATION_SUPPORTS = 1;		//支持当前事务 如果没有事务的话以非事务方式运行
+    int PROPAGATION_MANDATORY = 2;		//支持当前事务 如果没有事务则抛出异常
+    int PROPAGATION_REQUIRES_NEW = 3;	//创建一个新的事务并挂起当前事务
+    int PROPAGATION_NOT_SUPPORTED = 4;  //以非事务方式运行 如果当前存在事务则将当前事务挂起
+    int PROPAGATION_NEVER = 5;			//以非事务方式运行 如果存在事务则抛出异常
+    int PROPAGATION_NESTED = 6;			//如果当前存在事务 则在嵌套事务内运行。如果当前没有事务 则和PROPAGATION_REQUIRED类似
+	
+    #4种隔离级别
+    int ISOLATION_READ_UNCOMMITTED = 1;  // 读未提交
+    int ISOLATION_READ_COMMITTED = 2;	 // 读已提交
+    int ISOLATION_REPEATABLE_READ = 4;	 // 可重复读
+    int ISOLATION_SERIALIZABLE = 8;		 // 串行
+	
+	int ISOLATION_DEFAULT = -1;
+    int TIMEOUT_DEFAULT = -1;
+	
+	
+TransactionAttribute extends TransactionDefinition
+	事务属性接口 扩展了事务定义
+	// 标识
+	String getQualifier();
+	// 指定回滚针对的异常
+    boolean rollbackOn(Throwable var1);
+	
+	
+Transactional 注解
+    @AliasFor("transactionManager")
+    String value() default "";
+
+    @AliasFor("value")
+    String transactionManager() default "";
+
+    Propagation propagation() default Propagation.REQUIRED;
+
+    Isolation isolation() default Isolation.DEFAULT;
+
+    int timeout() default -1;
+
+    boolean readOnly() default false;
+
+    Class<? extends Throwable>[] rollbackFor() default {};
+
+    String[] rollbackForClassName() default {};
+
+    Class<? extends Throwable>[] noRollbackFor() default {};
+
+    String[] noRollbackForClassName() default {};	
+	
+	
+------------------------------------------------------------------------------	
+PlatformTransactionManager extends TransactionManager
+	平台事务管理器接口  继承了TransactionManager(一个标示性的事务管理接口 没有任何方法)
+
+	// 获取事务状态
+	TransactionStatus getTransaction(@Nullable TransactionDefinition var1) throws TransactionException;
+	// 提交
+    void commit(TransactionStatus var1) throws TransactionException;
+	// 回滚
+    void rollback(TransactionStatus var1) throws TransactionException;
+	
+	
+TransactionStatus extends TransactionExecution, SavepointManager, Flushable
+	事务状态接口	继承了事务执行接口 保存点管理接口
+	
+	// 是否有保存点
+	boolean hasSavepoint();
+	// 刷出事务
+    void flush();
+	
+TransactionExecution
+	事务执行接口
+	// 是否是一个新的事务
+	boolean isNewTransaction();
+	// 标记为回滚
+    void setRollbackOnly();
+	// 是否被标记为回滚
+    boolean isRollbackOnly();
+	// 事务是否已完成
+    boolean isCompleted();
+	
+SavepointManager
+	保存点管理器接口 基本的保存点操作
+	// 创建保存点
+	Object createSavepoint() throws TransactionException;
+	// 回滚保存点
+    void rollbackToSavepoint(Object var1) throws TransactionException;
+	// 释放保存点
+    void releaseSavepoint(Object var1) throws TransactionException;
