@@ -1,3 +1,15 @@
+@EnableTransactionManagement
+	启用事务管理注解
+	// 是否代理目标类
+	// true表示使用cglib代理；false表示如果目标类实现了接口 则使用jdk动态代理，否则使用cglib代理
+	boolean proxyTargetClass() default false;
+	// 事务通知模式(切面织入方式) 
+	// 默认是代理模式
+    AdviceMode mode() default AdviceMode.PROXY;
+
+	int order() default 2147483647;
+
+
 TransactionDefinition 事务定义接口
 
 	#7种传播机制(spring提供的机制)
