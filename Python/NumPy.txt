@@ -1,0 +1,50 @@
+ndarray
+	N维数组对象
+	是一系列同类型数据的集合，以0下标为开始进行集合中元素的索引。
+	ndarray对象是用于存放同类型元素的多维数组
+	ndarray中的每个元素在内存中都有相同存储大小的区域
+	
+	内部结构
+		shape：一个表示数组形状的元组，表示各维度大小的元组。
+		dtype：数组中项目的类型由单独的data-type object (dtype)指定， 其中一个与每个ndarray相关联
+		一个指向数据（内存或内存映射文件中的一块数据）的指针。
+		
+		
+		一个跨度元组（stride），其中的整数指的是为了前进到当前维度下一个元素需要"跨过"的字节数。
+		
+	ndarray对象由计算机内存的连续一维部分组成，并结合索引模式，将每个元素映射到内存块中的一个位置。
+	内存块以行顺序(C样式)或列顺序(FORTRAN或MatLab风格，即前述的F样式)来保存元素。	
+		
+	numpy.array(object, dtype = None, copy = True, order = None, subok = False, ndmin = 0)
+		object	数组或嵌套的数列
+		dtype	数组元素的数据类型，可选
+		copy	对象是否需要复制，可选
+		order	创建数组的样式，C为行方向，F为列方向，A为任意方向（默认）
+		subok	默认返回一个与基类类型一致的数组
+		ndmin	指定生成数组的最小维度
+		
+	numpy 支持的数据类型比 Python 内置的类型要多很多
+
+
+	数据类型对象 (dtype)
+		数据类型对象（numpy.dtype 类的实例）用来描述与数组对应的内存区域是如何使用的
+		
+	NumPy 数组的维数称为秩（rank），秩就是轴的数量，即数组的维度，一维数组的秩为 1，二维数组的秩为 2，以此类推。
+	在 NumPy中，每一个线性的数组称为是一个轴（axis），也就是维度（dimensions）。
+	比如说，二维数组相当于是两个一维数组，其中第一个一维数组中每个元素又是一个一维数组。
+	所以一维数组就是 NumPy 中的轴（axis），第一个轴相当于是底层数组，第二个轴是底层数组里的数组。而轴的数量——秩，就是数组的维数。
+	
+	ndarray.ndim	秩，即轴的数量或维度的数量
+	ndarray.shape	数组的维度，对于矩阵，n 行 m 列
+	ndarray.size	数组元素的总个数，相当于 .shape 中 n*m 的值
+	ndarray.dtype	ndarray 对象的元素类型
+	ndarray.itemsize	ndarray 对象中每个元素的大小，以字节为单位
+	ndarray.flags	ndarray 对象的内存信息
+	ndarray.real	ndarray元素的实部
+	ndarray.imag	ndarray 元素的虚部
+	ndarray.data	包含实际数组元素的缓冲区，由于一般通过数组的索引获取元素，所以通常不需要使用这个属性。
+	
+	
+	
+	
+	
