@@ -1,0 +1,59 @@
+包管理和环境管理工具，支持对任何语言的包管理
+
+packages
+	conda包的后缀：.tar.bz2或.conda
+
+	包相关的基础命令
+
+		conda search {package_name}		搜索包
+		conda install {package_name}	安装包
+		conda build {my_package_name}	构建包 需要安装conda-build 
+		
+		
+	包结构
+		.
+		├── bin
+		│   └── pyflakes
+		├── info				// 存放包的元数据的目录
+		│   ├── LICENSE.txt
+		│   ├── files			// 包的文件清单(不包含/info下的文件)
+		│   ├── index.json		// 包的平台、版本、依赖和构建信息
+		│   ├── paths.json		// 包中每个文件的路径、文件大小、sha信息、path类型(硬链接或软连接)
+		│   └── recipe			// 构建方案的目录
+		└── lib
+			└── python3.5
+				
+	元包metapackage
+		作为元数据单独使用，不包含任何文件
+	
+
+channel
+	包存储的地方 相当于仓库 可以在install时指定channel，如conda install scipy --channel conda-forge  (--channel参数简写为-c)
+	
+environments	
+
+	Anaconda目录结构
+		.
+		——pkgs		存放包的目录
+		——envs		设置的自定义环境的目录
+		
+		
+#########命令############
+conda --version								查看conda版本
+conda update conda							更新conda本身
+conda create --name snowflakes biopython	创建环境名为snowflakes并安装biopython	
+conda activate snowflakes					激活环境 如果未指定环境名 则会激活(切换至)默认环境base
+conda info --envs							查看环境列表
+conda search beautifulsoup4 				从仓库搜索可安装的包
+conda install beautifulsoup4	·			安装包到当前环境
+conda list									查看已安装的包
+
+conda config --add channels conda-forge		添加channel			channel信息会保存在.condarc文件中
+conda config --set auto_update_conda False	设置配置auto_update_conda
+conda info									显示conda的配置信息 就是显示.condarc文件中的内容
+
+
+.condarc文件放在用户目录下 也可以放在特定的env目录下
+
+。。
+	
