@@ -1,0 +1,117 @@
+<schema name="TENANPRO" sqlMaxLimit="100" checkSQLschema="true" dataNode="dn57">
+                <table name="pmt_pcy_bl_area_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_cdepreciate_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_cortunit_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_depreciate_dtl" dataNode="dn57"/>
+                <table name="PMT_PCY_BL_EC_GOODS_PRICE" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_ecshop_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_exceptfltr_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_exceptfltr_sub_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_giftgroup_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_giftgroup_sub_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_hdr" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_level_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_levelfltr_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_levelfltr_sub_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_orn_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_ornsub_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_settlement_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_subunit_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_subunittype_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_ticket_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_ticket_hdr" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_ticket_item_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_ticket_serials" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_vip_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_bl_vip_level_dtl" dataNode="dn57"/>
+                <table name="pmt_pcy_dimension_set" dataNode="dn57"/>
+                <table name="pmt_pcy_gift_item_lable" dataNode="dn57"/>
+                <table name="pmt_pcy_gift_item_lable_back" dataNode="dn57"/>
+                <table name="pmt_pcy_item_lable_back" dataNode="dn57"/>
+                <table name="pmt_pcy_lable_series_tml" dataNode="dn57"/>
+                <table name="pmt_sd_back_gift_book" dataNode="dn57"/>
+                <table name="pmt_sd_bl_giftgroup_dtl" dataNode="dn57"/>
+                <table name="pmt_sd_bl_giftgroup_sub_dtl" dataNode="dn57"/>
+                <table name="pmt_sd_bl_level_dtl" dataNode="dn57"/>
+                <table name="pmt_sd_bl_order_batch" dataNode="dn57"/>
+                <table name="pmt_sd_bl_order_dtl" dataNode="dn57"/>
+                <table name="pmt_sd_bl_order_gift" dataNode="dn57"/>
+                <table name="pmt_sd_bl_order_gift_group" dataNode="dn57"/>
+                <table name="pmt_sd_bl_order_hdr" dataNode="dn57"/>
+                <table name="sd_bl_so_pcy_ticket_dtl" dataNode="dn57"/>
+				<table name="sys_consume_success_detail" dataNode="dn57"/>
+                <table name="sys_consume_success_detail_his" dataNode="dn57"/>
+                <table name="sys_consume_success_detail_new" dataNode="dn57"/>
+                <table name="sys_consume_success_log_his" dataNode="dn57"/>
+                <table name="sys_consume_success_log_new" dataNode="dn57"/>
+                <table name="sys_msg_trans_refind_id" dataNode="dn57" primaryKey="series"/>
+				<table name="pmt_pcy_bl_activity"  dataNode="dn57" />
+				<table name="pmt_pcy_bl_customer_group_dtl" dataNode="dn57"/>
+				<table name="pmt_pcy_bl_freight_free_area" dataNode="dn57" primaryKey="series"/>
+				<table name="pmt_pcy_bl_giftfreight_dtl" dataNode="dn57" primaryKey="series"/>
+				<table name="pmt_pcy_bl_ticket_except_dtl" dataNode="dn57" primaryKey="series"/>
+				<table name="pmt_pcy_freight_free_area_lable" dataNode="dn57" primaryKey="series"/>
+				<table name="pmt_pcy_gift_inv_tsc" dataNode="dn57"/>
+				<table name="pmt_pcy_giftfreight_lable" dataNode="dn57" primaryKey="series"/>
+				<table name="pmt_sd_bl_buy_limit_tsc" dataNode="dn57"/>
+				<table name="pmt_third_sync_concurrent" dataNode="dn57"/>
+				<table name="promotion_generate_lable_log"  dataNode="dn57" />
+				<table name="pmt_pcy_platform_support_rule" primaryKey="series" type="global" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" />
+				<table name="pmt_pcy_view_config" primaryKey="series" type="global" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" />
+                <table name="sys_consume_success_log" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod-long" primaryKey="series"/>
+                <table name="pmt_pcy_bl_dis_freight_free_fltr_dtl" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod6reserved_no" primaryKey="series"/>
+                <table name="pmt_pcy_bl_dis_freight_free_fltr_sub_dtl" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod6reserved_no" primaryKey="series"/>
+                <table name="pmt_pcy_giftticket_lable" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod6reserved_no" primaryKey="series"/>
+                <table name="pmt_pcy_item_dis_freight_free_lable" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod6reserved_no" primaryKey="series"/>
+                <table name="pmt_pcy_item_lable" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod6reserved_no" primaryKey="series"/>
+				<table name="pmt_pcy_item" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod6reserved_no" primaryKey="series"/>
+				<table name="pmt_pcy_item_sql_log" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod6reserved_no" primaryKey="series"/>
+				<table name="pmt_pcy_level_group" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod6reserved_no" primaryKey="series"/>
+				<table name="pmt_pcy_org" dataNode="dn57,dn58,dn59,dn60,dn61,dn62" rule="mod6reserved_no" primaryKey="series"/>
+</schema>
+
+
+<dataNode name="dn57" dataHost="master57" database="tenanpro_01" />
+<dataNode name="dn58" dataHost="master58" database="tenanpro_02" />
+<dataNode name="dn59" dataHost="master59" database="tenanpro_03" />
+<dataNode name="dn60" dataHost="master60" database="tenanpro_04" />
+<dataNode name="dn61" dataHost="master61" database="tenanpro_05" />
+<dataNode name="dn62" dataHost="master62" database="tenanpro_06" />
+
+
+<dataHost name="master57" maxCon="1000" minCon="10" balance="0"  writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+        <heartbeat>select user()</heartbeat>
+        <writeHost host="hostM1" url="172.17.128.21:3306" user="xxx" password="yyy">
+        <readHost host="hostS1" url="172.17.128.21:3306" user="xxx" password="yyy" />
+        </writeHost>
+</dataHost>
+<dataHost name="master58" maxCon="1000" minCon="10" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+        <heartbeat>select user()</heartbeat>
+        <writeHost host="hostM2" url="172.17.128.21:3306" user="xxx" password="yyy">
+        <readHost host="hostS2" url="172.17.128.21:3306" user="xxx" password="yyy" />
+        </writeHost>
+</dataHost>
+<dataHost name="master59" maxCon="1000" minCon="10" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+        <heartbeat>select user()</heartbeat>
+        <writeHost host="hostM3" url="172.17.128.21:3306" user="xxx" password="yyy">
+        <readHost host="hostS3" url="172.17.128.21:3306" user="xxx" password="yyy" />
+        </writeHost>
+</dataHost>
+<dataHost name="master60" maxCon="1000" minCon="10" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+        <heartbeat>select user()</heartbeat>
+        <writeHost host="hostM4" url="172.17.128.21:3306" user="xxx" password="yyy">
+        <readHost host="hostS4" url="172.17.128.21:3306" user="xxx" password="yyy" />
+        </writeHost>
+</dataHost>
+<dataHost name="master61" maxCon="1000" minCon="10" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+        <heartbeat>select user()</heartbeat>
+        <writeHost host="hostM5" url="172.17.128.21:3306" user="xxx" password="yyy">
+        <readHost host="hostS5" url="172.17.128.21:3306" user="xxx" password="yyy" />
+        </writeHost>
+</dataHost>
+<dataHost name="master62" maxCon="1000" minCon="10" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+        <heartbeat>select user()</heartbeat>
+        <writeHost host="hostM6" url="172.17.128.21:3306" user="xxx" password="yyy">
+        <readHost host="hostS6" url="172.17.128.21:3306" user="xxx" password="yyy" />
+        </writeHost>
+</dataHost>

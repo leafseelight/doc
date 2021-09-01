@@ -1,0 +1,107 @@
+1.【分片枚举】
+	分片函数：io.mycat.route.function.PartitionByFileMap
+	并指定映射文件mapFile
+
+2.【固定分片hash算法】
+	类似十进制求模算法，取 id 的二进制低 10 位，即 id 二进制&1111111111
+	可以让连续的id存到同一个分片，减少插入事务的事务控制难度
+	
+	分片函数：io.mycat.route.function.PartitionByLong
+	并指定分片个数列表partitionCount和分片范围列表partitionLength
+	
+3.【范围约定】
+	适用于提前规划好分片字段的某个范围属于哪个分片
+	分片函数：io.mycat.route.function.AutoPartitionByLong
+	并指定映射文件mapFile
+	
+	mapFile内容如：
+		0-500M=0
+		500M-1000M=1
+		1000M-1500M=2
+		
+		(K表示1000 M表示10000)
+		
+4.【取模】
+	分片函数：io.mycat.route.function.PartitionByMod 
+	并指定分片个数partitionCount
+	
+5.按日期(天)分片 
+	分片函数：io.mycat.route.function.PartitionByDate
+	指定日期格式dateFormat、开始日期sBeginDate、结束日期sEndDate、分区天数sPartionDay
+	
+	(分区天数n，即默认从开始日期算起，分隔 n 天一个分区)
+	(如果配置了 sEndDate 则代表数据达到了这个日期的分片后后循环从开始分片插入)
+	
+6.取模范围约束
+	取模与范围约束的结合，取模后的值按照范围约定属于哪个分片
+	主要为了后续数据迁移做准备，即可以自主决定取模后数据的节点分布
+	
+	分片函数：io.mycat.route.function.PartitionByPattern
+	
+7.截取数字做hash求模范围约束
+	类似取模范围约束，支持数据符号字母取模
+
+	分片函数：io.mycat.route.function.PartitionByPrefixPattern
+	
+8.应用指定
+	在运行阶段由应用自主决定路由到哪个分片
+	就是应用传的分区字段的值的前缀(必须是数字)就是分区号
+	
+	分片函数：io.mycat.route.function.PartitionDirectBySubString
+	
+9.截取数字hash解析
+	是截取字符串中的 int 数值 hash 分片
+	适用于分片字段中有特殊业务标识子串的场景
+
+	分片函数：io.mycat.route.function.PartitionByString
+	
+10.【一致性hash】
+	解决了分布式数据的扩容问题
+	
+	分片函数：io.mycat.route.function.PartitionByMurmurHash
+	
+11.按单月小时分片
+	单月内按照小时拆分，最小粒度是小时，一天最多24个分片，最少一个分片，一个月结束后下个月从头开始循环
+	因此每个月月尾需要手工清理数据
+	
+	分片函数：io.mycat.route.function.LatestMonthPartion
+	指定一天切分的分片数splitOneDay
+	
+	(类似日志的切割)
+	
+12.范围求模分片
+	先进行范围分片计算出分片组，组内再求模
+	优点可以避免扩容时的数据迁移，又可以一定程度上避免范围分片的热点问题
+	
+	分片函数：io.mycat.route.function.PartitionByRangeMod
+
+13.日期范围hash分片
+	思想与范围求模一致，当由于日期在取模会有数据集中问题，所以改成 hash 方法
+
+	分片函数：io.mycat.route.function.PartitionByRangeDateHash
+
+14.冷热数据分片
+	分片函数：io.mycat.route.function.PartitionByHotDate
+
+15.【自然月分片】
+	按月份列分区 ，每个自然月一个分片
+	
+	分片函数：io.mycat.route.function.PartitionByMonth 
+	
+16.	有状态分片算法
+	这个是为数据迁移设计的，目前有crc32slot
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	

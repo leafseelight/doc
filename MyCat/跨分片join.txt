@@ -1,0 +1,61 @@
+1.全局表
+	全局表的插入、更新操作会实时在所有节点上执行，保持各个分片的数据一致性
+	全局表的查操作，只从一个节点获取
+	全局表可以跟任何一个表进行join操作
+	
+	全局表的配置只要在table标签内设置type="global"即可
+	
+	全局表适合保存字典表，是数据冗余的思想
+	
+	高级特性：
+		全局表一致性检测：
+			在server.xml中配置<property name="useGlobleTableCheck">1</property> <!-- 1 为开启全局表一致性检测、0 为关闭 -->
+			通过在全局表增加_MYCAT_OP_TIME 字段来进行一致性检测，类型为 bigint，create语句通过 mycat执行会自动加上这个字段，其他情况请自己手工添加。
+			1).sql拦截
+				mycat会拦截sql并改写 自动为insert和update语句加上_MYCAT_OP_TIME的值(13位long时间戳) 如果sql中原来就设置了会被mycat设的值覆盖
+				注意insert有坑 这种情况insert语句不能省略字段名
+			2).一致性的定时检测
+				检测全局表的内部列是否存在
+				检测全局表的记录总数
+				检测全局表的时间戳的最大值
+		
+			_MYCAT_OP_TIME这个字段只要加了就行，bigint类型，可以加索引， 业务层不需要对其进行操作
+	
+2.ER Join
+	子表的记录与所关联的父表记录存放在同一个数据分片上
+	
+	如：
+		<table name="customer" dataNode="dn1,dn2" rule="sharding-by-intfile">
+			<childTable name="orders" joinKey="customer_id" parentKey="id"/>
+		</table>
+
+		父表：customer表 ，字表：orders表
+		joinKey：关联字段，即orders表的customer_id字段 
+		parentKey：关联的父表字段，即customer表的id字段
+
+	(这个方案也有局限性 只能两表关联查 表再多的话就不适用。暂时没有实现多对多的ER join)
+	
+	分片字段的选择：
+		优先业务字段
+		没有可选的业务字段时，可以用主键字段，主键字段如果是顺序递增的，会有一个数据分布均匀的优点
+		
+	【ER关系的父子表 不能在同一个事务里新增！因为同一个事物 父表数据尚未提交，子表无法查到父表】	
+
+===== 以上两种方案是最常用的 ====
+		
+3.Share join		
+	Share join是一个简单的跨分片join实现，基于HBT的方式实现
+	支持两个表的join 原理就是解析sql，拆分成单表的sql语句，然后把各个节点的数据集汇总
+	/*!mycat:catlet=demo.catlets.ShareJoin */
+	/*!mycat:catlet=io.mycat.catlets.ShareJoin */
+	
+	(很显然 这个效率非常低)
+	
+4.catlet(人工智能?)
+	也是先把分片数据全部拿出来，然后异步处理join
+	好像和Share join类似，加了异步操作，估计还是share join基础上的优化，是真的人工..
+	
+	(涉及到的join算法、分组算法、排序算法待解决)
+	
+5.Spark/Storm 对 join 扩展	
+	利用Spark/Storm进行join操作

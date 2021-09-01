@@ -1,0 +1,40 @@
+1.本地文件方式
+	 sequence_conf.properties
+	 
+	 server.xml中配置<system><property name="sequnceHandlerType">0</property></system> <!-- 0表示本地文件方式 -->
+	 
+	 如：insert into table1(id,name) values (next value for MYCATSEQ_GLOBAL,'test');
+	 问题：mycat重启 sequence值会重置？
+	 
+2.数据库方式
+	用一个表来存
+	sequence_db_conf.properties配置sequence表所在分片 只配置一个分片 避免出现分片不一致
+
+	其他类似的使用表生成sequence的方案：
+		1).https://github.com/bluecatlee/algorithm/blob/master/snowflake/extra/%E6%95%B0%E6%8D%AE%E5%BA%93sequence%E8%A1%A8%E7%9A%84%E4%B8%80%E7%A7%8D%E5%AE%9E%E7%8E%B0.md
+		2).https://github.com/bluecatlee/SOA/tree/main/gs4d-sequence
+		
+3.本地时间戳方式
+	利用雪花算法
+	sequence_time_conf.properties
+	
+	雪花算法的其他实现示例：
+		https://github.com/bluecatlee/algorithm/tree/master/snowflake
+	
+4.分布式zk id生成器
+	Zk 的连接信息统一在 myid.properties 的 zkURL 属性中配置
+	sequence_distributed_conf.properties
+	
+	(应该是雪花算法的变体)
+	
+5.zk递增方式	
+	类似本地文件方式 利用了zk的文件目录格式存储特性吧
+	
+6.其他
+	1).catlet注解：
+		如：/*!mycat:catlet=demo.catlets.BatchGetSequence */SELECT mycat_get_seq('GLOBAL',100);
+	2).zookeeper
+		顺序节点
+		
+7.自增长主键
+	可以算作数据库方式的一种
